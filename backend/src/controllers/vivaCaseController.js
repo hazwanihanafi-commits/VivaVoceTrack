@@ -91,13 +91,13 @@ export const createVivaCase = async (req, res, next) => {
 
       body.EmailBody || "",
 
-      "Draft",
+      body.EmailStatus || "Draft",
 
-      "",
+"",
 
-      body.ReminderEnabled || "Yes",
+body.ReminderEnabled ? "Yes" : "No",
 
-      "Draft",
+body.CurrentStatus || "Draft",
 
       "",
 
