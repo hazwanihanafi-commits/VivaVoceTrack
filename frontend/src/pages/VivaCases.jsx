@@ -162,7 +162,7 @@ function getExaminerName(examinerId) {
 
       {/* Header */}
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 
         <div>
 
@@ -188,7 +188,7 @@ function getExaminerName(examinerId) {
 
       {/* Summary */}
 
-      <div className="grid grid-cols-4 gap-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
 
         <Card
           title="Total Cases"
@@ -236,7 +236,7 @@ function getExaminerName(examinerId) {
           Create New Viva Case
         </h2>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
           {/* Student */}
 
@@ -540,129 +540,122 @@ function getExaminerName(examinerId) {
 
         </div>
 
-        {/* Buttons */}
+       {/* Buttons */}
 
-        <div className="mt-8 flex gap-4">
+<div className="mt-8 flex flex-col gap-4 md:flex-row">
 
-          <button
-            onClick={saveDraft}
-            className="flex items-center gap-2 rounded-xl bg-gray-700 px-6 py-3 text-white hover:bg-gray-800"
-          >
+  <button
+    onClick={saveDraft}
+    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gray-700 px-6 py-3 text-white hover:bg-gray-800 md:w-auto"
+  >
+    <Save size={18} />
+    Save Draft
+  </button>
 
-            <Save size={18} />
+  <button
+    onClick={sendToExaminer}
+    className="flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 px-6 py-3 text-white hover:bg-purple-700 md:w-auto"
+  >
+    <Send size={18} />
+    Send to Examiners
+  </button>
 
-            Save Draft
-
-          </button>
-
-          <button
-            onClick={sendToExaminer}
-            className="flex items-center gap-2 rounded-xl bg-purple-600 px-6 py-3 text-white hover:bg-purple-700"
-          >
-
-            <Send size={18} />
-
-            Send to Examiners
-
-          </button>
-
-        </div>
+</div>
 
       </div>
 
-      {/* Existing Cases */}
+{/* Existing Cases */}
 
-      <div className="rounded-2xl bg-white p-8 shadow">
+<div className="rounded-2xl bg-white p-4 md:p-8 shadow">
 
-        <div className="mb-5 flex items-center justify-between">
+  <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 
-          <h2 className="text-xl font-bold">
-            Existing Viva Cases
-          </h2>
+    <h2 className="text-xl font-bold">
+      Existing Viva Cases
+    </h2>
 
-          <input
-            placeholder="Search case..."
-            className="rounded-xl border p-3 w-72"
-          />
+    <input
+      placeholder="Search case..."
+      className="w-full md:w-72 rounded-xl border p-3"
+    />
 
-        </div>
+  </div>
 
-        <table className="w-full">
+  {/* Responsive Table */}
+  <div className="overflow-x-auto">
 
-          <thead>
+    <table className="min-w-[900px] w-full">
 
-            <tr className="border-b bg-gray-50">
+      <thead>
 
-              <th className="p-3 text-left">Case ID</th>
-              <th className="p-3 text-left">Student</th>
-              <th className="p-3 text-left">Internal</th>
-              <th className="p-3 text-left">External</th>
-              <th className="p-3 text-left">Due Date</th>
-              <th className="p-3 text-left">Status</th>
-              <th className="p-3 text-center">Action</th>
+        <tr className="border-b bg-gray-50">
 
-            </tr>
+          <th className="p-3 text-left">Case ID</th>
+          <th className="p-3 text-left">Student</th>
+          <th className="p-3 text-left">Internal</th>
+          <th className="p-3 text-left">External</th>
+          <th className="p-3 text-left">Due Date</th>
+          <th className="p-3 text-left">Status</th>
+          <th className="p-3 text-center">Action</th>
 
-          </thead>
+        </tr>
 
-          <tbody>
+      </thead>
 
-            {cases.map((item) => (
+      <tbody>
 
-              <tr
-                key={item.CaseID}
-                className="border-b hover:bg-gray-50"
-              >
+        {cases.map((item) => (
 
-                <td className="p-3 font-semibold">
-                  {item.CaseID}
-                </td>
+          <tr
+            key={item.CaseID}
+            className="border-b hover:bg-gray-50"
+          >
 
-                <td className="p-3">
-                  {getStudentName(item.StudentID)}
-                </td>
+            <td className="p-3 font-semibold whitespace-nowrap">
+              {item.CaseID}
+            </td>
 
-                <td className="p-3">
-                  {getExaminerName(item.InternalExaminerID)}
-                </td>
+            <td className="p-3 whitespace-nowrap">
+              {getStudentName(item.StudentID)}
+            </td>
 
-                <td className="p-3">
-                  {getExaminerName(item.ExternalExaminerID)}
-                </td>
+            <td className="p-3 whitespace-nowrap">
+              {getExaminerName(item.InternalExaminerID)}
+            </td>
 
-                <td className="p-3">
-                  {item.ReportDueDate}
-                </td>
+            <td className="p-3 whitespace-nowrap">
+              {getExaminerName(item.ExternalExaminerID)}
+            </td>
 
-                <td className="p-3">
+            <td className="p-3 whitespace-nowrap">
+              {item.ReportDueDate}
+            </td>
 
-                  <StatusBadge
-                    status={item.CurrentStatus}
-                  />
+            <td className="p-3">
+              <StatusBadge status={item.CurrentStatus} />
+            </td>
 
-                </td>
+            <td className="p-3 text-center">
 
-                <td className="p-3">
+              <button className="rounded-lg bg-purple-100 px-4 py-2 text-sm font-medium text-purple-700 hover:bg-purple-200">
 
-                  <button className="rounded-lg bg-purple-100 px-4 py-2 text-sm font-medium text-purple-700 hover:bg-purple-200">
+                View
 
-                    View
+              </button>
 
-                  </button>
+            </td>
 
-                </td>
+          </tr>
 
-              </tr>
+        ))}
 
-            ))}
+      </tbody>
 
-          </tbody>
+    </table>
 
-        </table>
+  </div>
 
-      </div>
-
-    </div>
+</div>
 
   );
 }
