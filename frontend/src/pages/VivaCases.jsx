@@ -8,7 +8,7 @@ import {
   Calendar,
   Link,
 } from "lucide-react";
-const API = "http://localhost:5000/api";
+const API = "https://vivatrack-backend.onrender.com/api";
 
 export default function VivaCases() {
   const [students, setStudents] = useState([]);
