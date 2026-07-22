@@ -1,24 +1,37 @@
 import {
-  Bell,
   Search,
-  Settings,
+  Bell,
+  Moon,
+  Sun,
+  ChevronDown,
   CalendarDays,
 } from "lucide-react";
 
+import { useState } from "react";
+
 export default function Topbar() {
+  const [dark, setDark] = useState(false);
+
+  const today = new Date().toLocaleDateString("en-MY", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
   return (
-    <header className="h-20 rounded-3xl bg-white/10 backdrop-blur-3xl border border-white/20 shadow-xl px-8 flex items-center justify-between">
+    <header className="bg-white rounded-2xl shadow-sm border border-gray-200 h-20 px-8 flex items-center justify-between">
 
       {/* Left */}
 
       <div>
 
-        <h2 className="text-3xl font-bold text-white">
+        <h1 className="text-3xl font-bold text-gray-800">
           Dashboard
-        </h2>
+        </h1>
 
-        <p className="text-white/60">
-          Welcome back to VivaTrack
+        <p className="text-sm text-gray-500 mt-1">
+          Welcome back, Dr. Hazwani
         </p>
 
       </div>
@@ -29,46 +42,90 @@ export default function Topbar() {
 
         {/* Search */}
 
-        <div className="flex items-center bg-white/10 rounded-full px-4 py-2 border border-white/20">
+        <div className="hidden lg:flex items-center bg-gray-100 rounded-xl px-4 h-11 w-80">
 
           <Search
             size={18}
-            className="text-white/70"
+            className="text-gray-500"
           />
 
           <input
             type="text"
-            placeholder="Search student..."
-            className="ml-3 bg-transparent outline-none text-white placeholder:text-white/40 w-52"
+            placeholder="Search student, matric no..."
+            className="ml-3 flex-1 bg-transparent outline-none text-sm"
           />
 
         </div>
 
-        <button className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 transition flex items-center justify-center">
+        {/* Date */}
 
-          <CalendarDays className="text-white" />
+        <div className="hidden xl:flex items-center gap-2 text-gray-600">
+
+          <CalendarDays size={18} />
+
+          <span className="text-sm">
+
+            {today}
+
+          </span>
+
+        </div>
+
+        {/* Dark Mode */}
+
+        <button
+          onClick={() => setDark(!dark)}
+          className="w-11 h-11 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
+        >
+          {dark ? (
+            <Sun size={18} />
+          ) : (
+            <Moon size={18} />
+          )}
+        </button>
+
+        {/* Notifications */}
+
+        <button className="relative w-11 h-11 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center">
+
+          <Bell size={19} />
+
+          <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full"></span>
 
         </button>
 
-        <button className="relative w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 transition flex items-center justify-center">
+        {/* User */}
 
-          <Bell className="text-white" />
+        <button className="flex items-center gap-3 rounded-xl hover:bg-gray-100 px-3 py-2 transition">
 
-          <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500"></span>
+          <div className="w-11 h-11 rounded-full bg-[#53257F] text-white flex items-center justify-center font-bold">
+
+            H
+
+          </div>
+
+          <div className="hidden lg:block text-left">
+
+            <div className="font-semibold text-gray-800">
+
+              Dr. Hazwani
+
+            </div>
+
+            <div className="text-xs text-gray-500">
+
+              Administrator
+
+            </div>
+
+          </div>
+
+          <ChevronDown
+            size={18}
+            className="text-gray-500"
+          />
 
         </button>
-
-        <button className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 transition flex items-center justify-center">
-
-          <Settings className="text-white" />
-
-        </button>
-
-        <img
-          src="https://ui-avatars.com/api/?name=Hazwani&background=FDB913&color=fff"
-          alt="avatar"
-          className="w-12 h-12 rounded-full border-2 border-white/20"
-        />
 
       </div>
 
