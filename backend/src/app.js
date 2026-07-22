@@ -6,6 +6,10 @@ import morgan from "morgan";
 // Routes
 import studentRoutes from "./routes/studentRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
+import examinerRoutes from "./routes/examinerRoutes.js";
+import vivaCaseRoutes from "./routes/vivaCaseRoutes.js";
+import reminderRoutes from "./routes/reminderRoutes.js";
+import activityRoutes from "./routes/activityRoutes.js";
 
 // Middleware
 import errorHandler from "./middleware/errorHandler.js";
@@ -65,9 +69,17 @@ app.get("/api/health", (req, res) => {
 /************************************************
  * API Routes
  ************************************************/
-app.use("/api/students", studentRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
+app.use("/api/students", studentRoutes);
+
+app.use("/api/examiners", examinerRoutes);
+
+app.use("/api/vivacases", vivaCaseRoutes);
+
+app.use("/api/reminders", reminderRoutes);
+
+app.use("/api/activity", activityRoutes);
 /************************************************
  * 404 Handler
  ************************************************/
