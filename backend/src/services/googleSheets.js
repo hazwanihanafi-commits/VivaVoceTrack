@@ -10,7 +10,7 @@ const sheets = google.sheets({
   auth,
 });
 
-const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
+const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID;
 
 /************************************************
  * Read Headers
