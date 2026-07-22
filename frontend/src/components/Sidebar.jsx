@@ -1,56 +1,80 @@
 import {
   LayoutDashboard,
-  GraduationCap,
-  Users,
-  UserCheck,
-  CalendarDays,
   FileText,
+  CalendarDays,
+  Users,
+  GraduationCap,
   BarChart3,
   Settings,
+  ClipboardCheck,
 } from "lucide-react";
 
 import { NavLink } from "react-router-dom";
 
 const menus = [
-  { title: "Dashboard", icon: LayoutDashboard, path: "/" },
-  { title: "Students", icon: GraduationCap, path: "/students" },
-  { title: "Supervisors", icon: Users, path: "/supervisors" },
-  { title: "Examiners", icon: UserCheck, path: "/examiners" },
-  { title: "Viva Schedule", icon: CalendarDays, path: "/viva" },
-  { title: "Documents", icon: FileText, path: "/documents" },
-  { title: "Reports", icon: BarChart3, path: "/reports" },
-  { title: "Settings", icon: Settings, path: "/settings" },
+  {
+    title: "Dashboard",
+    icon: LayoutDashboard,
+    path: "/",
+  },
+  {
+    title: "Submissions",
+    icon: FileText,
+    path: "/submissions",
+  },
+  {
+    title: "Viva Schedule",
+    icon: CalendarDays,
+    path: "/viva",
+  },
+  {
+    title: "Examiners",
+    icon: Users,
+    path: "/examiners",
+  },
+  {
+    title: "Viva Reports",
+    icon: ClipboardCheck,
+    path: "/reports",
+  },
+  {
+    title: "Students",
+    icon: GraduationCap,
+    path: "/students",
+  },
+  {
+    title: "Analytics",
+    icon: BarChart3,
+    path: "/analytics",
+  },
+  {
+    title: "Settings",
+    icon: Settings,
+    path: "/settings",
+  },
 ];
 
 export default function Sidebar() {
   return (
-    <aside className="fixed left-0 top-0 w-64 h-screen bg-[#53257F] text-white flex flex-col">
+    <aside className="fixed left-0 top-0 h-screen w-72 bg-white border-r border-slate-200 flex flex-col">
 
       {/* Logo */}
 
-      <div className="h-20 flex items-center px-8 border-b border-white/10">
+      <div className="px-8 py-10">
 
-        <div>
+        <h1 className="text-5xl font-extrabold text-[#6C2BD9] tracking-tight">
+          VivaTrack
+        </h1>
 
-          <h1 className="text-2xl font-bold">
-
-            VivaTrack
-
-          </h1>
-
-          <p className="text-xs text-white/70">
-
-            Universiti Sains Malaysia
-
-          </p>
-
-        </div>
+        <p className="text-slate-500 mt-3 text-lg">
+          Viva Tracking System
+        </p>
 
       </div>
 
       {/* Menu */}
 
-      <div className="flex-1 mt-5 px-3">
+      <div className="flex-1 px-5">
 
         {menus.map((item) => {
 
@@ -62,42 +86,39 @@ export default function Sidebar() {
               key={item.title}
               to={item.path}
               className={({ isActive }) =>
-                `flex items-center gap-4 px-5 py-3 rounded-xl mb-2 transition ${
+                `flex items-center gap-4 px-5 py-4 rounded-2xl mb-3 transition-all duration-200
+                ${
                   isActive
-                    ? "bg-white/10 border-l-4 border-[#FDB913] font-semibold"
-                    : "hover:bg-white/10"
+                    ? "bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg"
+                    : "text-slate-700 hover:bg-slate-100"
                 }`
               }
             >
+              <Icon size={22} />
 
-              <Icon size={20} />
-
-              {item.title}
+              <span className="font-semibold text-lg">
+                {item.title}
+              </span>
 
             </NavLink>
 
           );
-
         })}
 
       </div>
 
       {/* Footer */}
 
-      <div className="p-5 border-t border-white/10">
+      <div className="p-6 border-t border-slate-200">
 
-        <div className="bg-white/10 rounded-xl p-4">
+        <div className="rounded-2xl bg-slate-100 p-5">
 
-          <h3 className="font-semibold">
-
+          <h3 className="font-bold text-slate-800">
             Postgraduate Office
-
           </h3>
 
-          <p className="text-xs text-white/70 mt-1">
-
+          <p className="text-sm text-slate-500 mt-2">
             Universiti Sains Malaysia
-
           </p>
 
         </div>
