@@ -9,9 +9,12 @@ import {
   BarChart3,
   Settings,
   LogOut,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 import { NavLink } from "react-router-dom";
+import { useState } from "react";
 
 const menu = [
   {
@@ -62,28 +65,45 @@ const menu = [
 ];
 
 export default function Sidebar() {
+  const [collapsed, setCollapsed] = useState(false);
+
   return (
-    <aside className="fixed left-0 top-0 h-screen w-72 bg-white/10 backdrop-blur-3xl border-r border-white/20 shadow-2xl flex flex-col">
+    <aside
+      className={`fixed left-0 top-0 h-screen bg-[#53257F] text-white shadow-xl transition-all duration-300 ${
+        collapsed ? "w-20" : "w-64"
+      }`}
+    >
+      {/* Header */}
+      <div className="h-20 px-5 flex items-center justify-between border-b border-white/10">
+        {!collapsed && (
+          <div>
+            <h1 className="text-2xl font-bold tracking-wide">
+              VivaTrack
+            </h1>
 
-      {/* Logo */}
+            <p className="text-xs text-white/70">
+              Universiti Sains Malaysia
+            </p>
+          </div>
+        )}
 
-      <div className="p-8 border-b border-white/10">
-
-        <h1 className="text-3xl font-bold text-white">
-          🎓 VivaTrack
-        </h1>
-
-        <p className="text-white/60 mt-2 text-sm">
-          Universiti Sains Malaysia
-        </p>
-
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="hover:bg-white/10 p-2 rounded-lg"
+        >
+          {collapsed ? (
+            <ChevronRight size={20} />
+          ) : (
+            <ChevronLeft size={20} />
+          )}
+        </button>
       </div>
 
-      {/* Menu */}
-
-      <nav className="flex-1 px-4 py-6 space-y-2">
+      {/* Navigation */}
+      <div className="mt-6 px-3">
 
         {menu.map((item) => {
+
           const Icon = item.icon;
 
           return (
@@ -91,58 +111,54 @@ export default function Sidebar() {
               key={item.title}
               to={item.path}
               className={({ isActive }) =>
-                `flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300
-                 ${
-                   isActive
-                     ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg"
-                     : "text-white/80 hover:bg-white/10 hover:text-white"
-                 }`
+                `flex items-center gap-4 px-4 py-3 mb-2 rounded-xl transition-all duration-200 ${
+                  isActive
+                    ? "bg-[#FDB913] text-[#53257F] font-semibold"
+                    : "hover:bg-white/10"
+                }`
               }
             >
-              <Icon size={22} />
+              <Icon size={20} />
 
-              <span className="font-medium">
-                {item.title}
-              </span>
+              {!collapsed && (
+                <span>{item.title}</span>
+              )}
             </NavLink>
           );
         })}
-      </nav>
+      </div>
 
-      {/* User */}
-
-      <div className="p-5 border-t border-white/10">
+      {/* Footer */}
+      <div className="absolute bottom-0 left-0 w-full p-4 border-t border-white/10">
 
         <div className="flex items-center gap-3">
 
-          <div className="w-12 h-12 rounded-full bg-yellow-400 flex items-center justify-center font-bold">
+          <div className="w-10 h-10 rounded-full bg-[#FDB913] text-[#53257F] flex items-center justify-center font-bold">
             H
           </div>
 
-          <div>
+          {!collapsed && (
+            <div className="flex-1">
+              <div className="font-semibold">
+                Dr. Hazwani
+              </div>
 
-            <p className="text-white font-semibold">
-              Dr. Hazwani
-            </p>
-
-            <p className="text-white/60 text-sm">
-              Administrator
-            </p>
-
-          </div>
+              <div className="text-xs text-white/70">
+                Administrator
+              </div>
+            </div>
+          )}
 
         </div>
 
-        <button className="mt-5 flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-200 transition">
-
-          <LogOut size={18} />
-
-          Logout
-
-        </button>
+        {!collapsed && (
+          <button className="mt-4 flex items-center gap-3 w-full rounded-lg px-3 py-2 hover:bg-red-500/20 text-red-200">
+            <LogOut size={18} />
+            Logout
+          </button>
+        )}
 
       </div>
-
     </aside>
   );
 }
