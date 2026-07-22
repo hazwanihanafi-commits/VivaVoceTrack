@@ -1,290 +1,247 @@
 import {
-  GraduationCap,
+  Users,
   CalendarDays,
+  FileText,
+  GraduationCap,
   CheckCircle2,
-  Clock3,
+  ArrowRight,
 } from "lucide-react";
 
-import { useEffect, useState } from "react";
-import { api } from "../api/api";
+const stats = [
+  {
+    title: "Total Students",
+    value: 128,
+    change: "+8 This Month",
+    icon: Users,
+    color: "bg-blue-100 text-blue-600",
+  },
+  {
+    title: "Upcoming Viva",
+    value: 16,
+    change: "Next 30 Days",
+    icon: CalendarDays,
+    color: "bg-green-100 text-green-600",
+  },
+  {
+    title: "Notice Submitted",
+    value: 42,
+    change: "Awaiting Review",
+    icon: FileText,
+    color: "bg-purple-100 text-purple-600",
+  },
+  {
+    title: "Thesis Submitted",
+    value: 27,
+    change: "Ready for Viva",
+    icon: GraduationCap,
+    color: "bg-orange-100 text-orange-600",
+  },
+  {
+    title: "Viva Completed",
+    value: 89,
+    change: "Successfully Graduated",
+    icon: CheckCircle2,
+    color: "bg-emerald-100 text-emerald-600",
+  },
+];
 
-const cardStyle =
-  "bg-white rounded-2xl shadow-sm border border-gray-200 p-6";
+const workflow = [
+  "Notice Submission",
+  "Supervisor Review",
+  "School Verification",
+  "Examiners",
+  "Viva",
+  "Corrections",
+  "Graduated",
+];
+
+const upcoming = [
+  {
+    student: "Nur Aisyah",
+    date: "24 Jul 2026",
+    venue: "Seminar Room 1",
+  },
+  {
+    student: "Muhammad Faris",
+    date: "26 Jul 2026",
+    venue: "Meeting Room B",
+  },
+  {
+    student: "Lim Wei Jie",
+    date: "29 Jul 2026",
+    venue: "Hybrid",
+  },
+];
+
+const recent = [
+  {
+    matric: "P-CX001",
+    name: "Nur Aisyah",
+    programme: "PhD",
+    status: "Supervisor Review",
+  },
+  {
+    matric: "P-CX002",
+    name: "Muhammad Faris",
+    programme: "Master",
+    status: "School Verification",
+  },
+  {
+    matric: "P-CX003",
+    name: "Lim Wei Jie",
+    programme: "PhD",
+    status: "Viva Scheduled",
+  },
+];
 
 export default function Dashboard() {
-  const [stats, setStats] = useState({
-    totalStudents: 0,
-    upcomingViva: 0,
-    completed: 0,
-    pending: 0,
-  });
-
-  const [students, setStudents] = useState([]);
-
-  useEffect(() => {
-    loadDashboard();
-  }, []);
-
-  async function loadDashboard() {
-    try {
-      const res = await api.get("/dashboard");
-
-      setStats(res.data.data);
-
-      setStudents(res.data.data.recentStudents || []);
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-  const cards = [
-    {
-      title: "Total Students",
-      value: stats.totalStudents,
-      icon: GraduationCap,
-      color: "bg-purple-100 text-purple-700",
-    },
-    {
-      title: "Upcoming Viva",
-      value: stats.upcomingViva,
-      icon: CalendarDays,
-      color: "bg-blue-100 text-blue-700",
-    },
-    {
-      title: "Completed Viva",
-      value: stats.completed,
-      icon: CheckCircle2,
-      color: "bg-green-100 text-green-700",
-    },
-    {
-      title: "Pending",
-      value: stats.pending,
-      icon: Clock3,
-      color: "bg-orange-100 text-orange-700",
-    },
-  ];
-
   return (
     <div className="space-y-8">
-
-      {/* Cards */}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-
-        {cards.map((card) => {
-          const Icon = card.icon;
+      {/* Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
+        {stats.map((item) => {
+          const Icon = item.icon;
 
           return (
             <div
-              key={card.title}
-              className={cardStyle}
+              key={item.title}
+              className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition"
             >
-              <div className="flex justify-between items-center">
-
+              <div className="flex justify-between items-start">
                 <div>
+                  <p className="text-slate-500 text-sm">{item.title}</p>
 
-                  <p className="text-gray-500 text-sm">
+                  <h2 className="text-4xl font-bold mt-3">
+                    {item.value}
+                  </h2>
 
-                    {card.title}
-
+                  <p className="text-sm text-slate-500 mt-3">
+                    {item.change}
                   </p>
-
-                  <h1 className="text-4xl font-bold mt-3">
-
-                    {card.value}
-
-                  </h1>
-
                 </div>
 
                 <div
-                  className={`w-14 h-14 rounded-xl flex items-center justify-center ${card.color}`}
+                  className={`w-14 h-14 rounded-xl flex items-center justify-center ${item.color}`}
                 >
                   <Icon size={28} />
                 </div>
-
               </div>
-
             </div>
           );
         })}
-
       </div>
 
-      {/* Row */}
-
-      <div className="grid lg:grid-cols-3 gap-6">
-
-        {/* Chart */}
-
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-
-          <h2 className="font-semibold text-xl mb-4">
-
-            Student Statistics
-
+      {/* Workflow + Upcoming */}
+      <div className="grid xl:grid-cols-3 gap-6">
+        {/* Workflow */}
+        <div className="xl:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+          <h2 className="text-xl font-bold mb-8">
+            Viva Workflow
           </h2>
 
-          <div className="h-72 flex items-center justify-center text-gray-400">
+          <div className="flex flex-wrap justify-between gap-3">
+            {workflow.map((step, index) => (
+              <div
+                key={step}
+                className="flex flex-col items-center flex-1 min-w-[110px]"
+              >
+                <div className="w-14 h-14 rounded-full bg-[#53257F] text-white flex items-center justify-center font-bold">
+                  {index + 1}
+                </div>
 
-            Chart Coming Soon
+                <p className="text-sm mt-4 text-center">
+                  {step}
+                </p>
 
+                {index !== workflow.length - 1 && (
+                  <ArrowRight className="text-slate-300 mt-3 hidden xl:block" />
+                )}
+              </div>
+            ))}
           </div>
-
         </div>
 
         {/* Upcoming Viva */}
-
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-
-          <h2 className="font-semibold text-xl mb-5">
-
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+          <h2 className="text-xl font-bold mb-6">
             Upcoming Viva
-
           </h2>
 
           <div className="space-y-4">
+            {upcoming.map((item) => (
+              <div
+                key={item.student}
+                className="border rounded-xl p-4"
+              >
+                <h3 className="font-semibold">
+                  {item.student}
+                </h3>
 
-            <div className="border-l-4 border-purple-600 pl-4">
+                <p className="text-sm text-slate-500 mt-1">
+                  {item.date}
+                </p>
 
-              <p className="font-semibold">
-
-                No upcoming viva
-
-              </p>
-
-              <span className="text-sm text-gray-500">
-
-                Waiting for schedule
-
-              </span>
-
-            </div>
-
+                <p className="text-sm text-purple-700">
+                  {item.venue}
+                </p>
+              </div>
+            ))}
           </div>
-
         </div>
-
       </div>
 
       {/* Recent Students */}
-
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
-
-        <div className="flex justify-between items-center px-6 py-5 border-b">
-
-          <h2 className="font-semibold text-xl">
-
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm">
+        <div className="flex justify-between items-center p-6 border-b">
+          <h2 className="text-xl font-bold">
             Recent Students
-
           </h2>
 
           <button className="text-[#53257F] font-semibold">
-
             View All
-
           </button>
-
         </div>
 
-        <table className="w-full">
-
-          <thead className="bg-gray-50">
-
-            <tr>
-
-              <th className="text-left px-6 py-4">
-
-                Matric
-
-              </th>
-
-              <th className="text-left px-6 py-4">
-
-                Student
-
-              </th>
-
-              <th className="text-left px-6 py-4">
-
-                Programme
-
-              </th>
-
-              <th className="text-left px-6 py-4">
-
-                Status
-
-              </th>
-
-            </tr>
-
-          </thead>
-
-          <tbody>
-
-            {students.length === 0 ? (
-
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-slate-50">
               <tr>
-
-                <td
-                  colSpan="4"
-                  className="text-center py-8 text-gray-400"
-                >
-                  No data available.
-                </td>
-
+                <th className="text-left p-4">Matric</th>
+                <th className="text-left p-4">Student</th>
+                <th className="text-left p-4">Programme</th>
+                <th className="text-left p-4">Current Stage</th>
               </tr>
+            </thead>
 
-            ) : (
-
-              students.map((s) => (
-
+            <tbody>
+              {recent.map((student) => (
                 <tr
-                  key={s.StudentID}
-                  className="border-t hover:bg-gray-50"
+                  key={student.matric}
+                  className="border-t hover:bg-slate-50"
                 >
-
-                  <td className="px-6 py-4">
-
-                    {s.MatricNo}
-
+                  <td className="p-4">
+                    {student.matric}
                   </td>
 
-                  <td className="px-6 py-4">
-
-                    {s.StudentName}
-
+                  <td className="p-4 font-medium">
+                    {student.name}
                   </td>
 
-                  <td className="px-6 py-4">
-
-                    {s.Programme}
-
+                  <td className="p-4">
+                    {student.programme}
                   </td>
 
-                  <td className="px-6 py-4">
-
-                    <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm">
-
-                      {s.Status}
-
+                  <td className="p-4">
+                    <span className="px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-700">
+                      {student.status}
                     </span>
-
                   </td>
-
                 </tr>
-
-              ))
-
-            )}
-
-          </tbody>
-
-        </table>
-
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-
     </div>
   );
 }
