@@ -1,29 +1,27 @@
-import { Outlet } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
+import { Outlet } from "react-router-dom";
 
 export default function MainLayout() {
   return (
-    <div className="min-h-screen bg-[#F4F6FA]">
 
-      {/* Sidebar */}
+    <div className="bg-[#EEF2F7] min-h-screen">
+
       <Sidebar />
 
-      {/* Main Content */}
-      <div className="ml-64 min-h-screen">
+      <div className="ml-72">
 
-        {/* Fixed Topbar */}
-        <div className="sticky top-0 z-40 bg-[#F4F6FA] px-8 pt-6">
-          <Topbar />
-        </div>
+        <Topbar />
 
-        {/* Page Content */}
-        <div className="px-8 pb-8 pt-6">
+        <main className="p-8">
+
           <Outlet />
-        </div>
+
+        </main>
 
       </div>
 
     </div>
+
   );
 }
