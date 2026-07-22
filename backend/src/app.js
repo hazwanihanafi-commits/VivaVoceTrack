@@ -5,6 +5,7 @@ import morgan from "morgan";
 
 // Routes
 import studentRoutes from "./routes/studentRoutes.js";
+import dashboardRoutes from "./routes/dashboardRoutes.js";
 
 // Middleware
 import errorHandler from "./middleware/errorHandler.js";
@@ -65,6 +66,7 @@ app.get("/api/health", (req, res) => {
  * API Routes
  ************************************************/
 app.use("/api/students", studentRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 /************************************************
  * 404 Handler
