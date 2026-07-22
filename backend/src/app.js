@@ -4,15 +4,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 
 // Routes
-import dashboardRoutes from "./routes/dashboardRoutes.js";
 import studentRoutes from "./routes/studentRoutes.js";
-import vivaRoutes from "./routes/vivaRoutes.js";
-import workflowRoutes from "./routes/workflowRoutes.js";
-import examinerRoutes from "./routes/examinerRoutes.js";
-import reportRoutes from "./routes/reportRoutes.js";
-import correctionRoutes from "./routes/correctionRoutes.js";
-import authRoutes from "./routes/authRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
 
 // Middleware
 import errorHandler from "./middleware/errorHandler.js";
@@ -21,7 +13,7 @@ const app = express();
 
 /************************************************
  * Security
- ***********************************************/
+ ************************************************/
 app.use(
   helmet({
     crossOriginResourcePolicy: false,
@@ -30,28 +22,28 @@ app.use(
 
 /************************************************
  * CORS
- ***********************************************/
+ ************************************************/
 app.use(
   cors({
-    origin: "*", // Change to your frontend URL in production
+    origin: "*",
     credentials: true,
   })
 );
 
 /************************************************
  * Body Parser
- ***********************************************/
+ ************************************************/
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 /************************************************
  * Logger
- ***********************************************/
+ ************************************************/
 app.use(morgan("dev"));
 
 /************************************************
  * Health Check
- ***********************************************/
+ ************************************************/
 app.get("/", (req, res) => {
   res.json({
     success: true,
@@ -71,20 +63,12 @@ app.get("/api/health", (req, res) => {
 
 /************************************************
  * API Routes
- ***********************************************/
-app.use("/api/auth", authRoutes);
-app.use("/api/dashboard", dashboardRoutes);
+ ************************************************/
 app.use("/api/students", studentRoutes);
-app.use("/api/viva", vivaRoutes);
-app.use("/api/workflow", workflowRoutes);
-app.use("/api/examiners", examinerRoutes);
-app.use("/api/reports", reportRoutes);
-app.use("/api/corrections", correctionRoutes);
-app.use("/api/users", userRoutes);
 
 /************************************************
  * 404 Handler
- ***********************************************/
+ ************************************************/
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -94,7 +78,7 @@ app.use((req, res) => {
 
 /************************************************
  * Error Handler
- ***********************************************/
+ ************************************************/
 app.use(errorHandler);
 
 export default app;
