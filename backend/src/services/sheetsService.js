@@ -14,6 +14,10 @@ export async function getRows(sheetName) {
 
     const values = response.data.values || [];
 
+    console.log("===== RAW SHEET =====");
+console.log(JSON.stringify(values, null, 2));
+console.log("=====================");
+
     if (values.length === 0) return [];
 
     const headers = values[0];
