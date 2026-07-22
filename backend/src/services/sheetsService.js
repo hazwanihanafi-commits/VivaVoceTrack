@@ -189,3 +189,43 @@ export async function totalRows(sheetName) {
   const rows = await getRows(sheetName);
   return rows.length;
 }
+
+/**
+ * Generate next ID
+ * Example:
+ * STU0001
+ * EX0001
+ * VC0001
+ */
+export async function generateID(prefix, sheetName, idColumn) {
+
+  const rows = await getRows(sheetName);
+
+  if (rows.length === 0) {
+    return `${prefix}0001`;
+  }
+
+  let max = 0;
+
+  rows.forEach((row) => {
+
+    const id = row[idColumn] || "";
+
+    if (id.startsWith(prefix)) {
+
+      const num = parseInt(
+        id.replace(prefix, ""),
+        10
+      );
+
+      if (!isNaN(num) && num > max) {
+        max = num;
+      }
+
+    }
+
+  });
+
+  return `${prefix}${String(max + 1).padStart(4, "0")}`;
+
+}
