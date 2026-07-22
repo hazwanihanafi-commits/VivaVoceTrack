@@ -1,98 +1,70 @@
 import {
   Bell,
   Search,
-  Settings,
-  ChevronDown
 } from "lucide-react";
 
 export default function Topbar() {
   return (
-    <header className="bg-white rounded-2xl border border-slate-200 shadow-sm h-20 px-8 flex items-center justify-between">
+    <header className="h-28 bg-white border-b border-slate-200 flex items-center justify-between px-10">
 
       {/* Left */}
 
       <div>
 
-        <h1 className="text-3xl font-bold text-slate-800">
+        <h1 className="text-5xl font-bold text-slate-800">
           Dashboard Overview
         </h1>
 
-        <p className="text-slate-500 text-sm mt-1">
-          Viva Tracking Management System
+        <p className="text-slate-500 text-xl mt-2">
+          Welcome back! Here's what's happening with viva sessions.
         </p>
 
       </div>
 
       {/* Right */}
 
-      <div className="flex items-center gap-5">
-
-        {/* Search */}
-
-        <div className="hidden lg:flex items-center w-80 bg-slate-100 rounded-xl px-4 h-11">
-
-          <Search
-            size={18}
-            className="text-slate-500"
-          />
-
-          <input
-            className="flex-1 ml-3 bg-transparent outline-none text-sm"
-            placeholder="Search student..."
-          />
-
-        </div>
+      <div className="flex items-center gap-8">
 
         {/* Notification */}
 
-        <button className="relative w-11 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 transition">
+        <button className="relative">
 
-          <Bell className="m-auto mt-3 text-slate-700" />
+          <Bell
+            size={28}
+            className="text-slate-600"
+          />
 
-          <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-red-500"></span>
+          <span className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-purple-600 text-white text-sm flex items-center justify-center font-semibold">
+
+            3
+
+          </span>
 
         </button>
 
-        {/* Settings */}
+        {/* Avatar */}
 
-        <button className="w-11 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 transition">
+        <div className="flex items-center gap-5">
 
-          <Settings className="m-auto mt-3 text-slate-700" />
+          <div className="w-16 h-16 rounded-full bg-slate-300"></div>
 
-        </button>
+          <div>
 
-        {/* User */}
+            <h3 className="font-bold text-2xl">
 
-        <button className="flex items-center gap-3">
-
-          <div className="w-11 h-11 rounded-full bg-[#53257F] text-white flex items-center justify-center font-bold">
-
-            H
-
-          </div>
-
-          <div className="hidden lg:block text-left">
-
-            <h3 className="font-semibold">
-
-              Dr. Hazwani
+              Prof. Dr. Ahmad
 
             </h3>
 
-            <p className="text-xs text-slate-500">
+            <p className="text-slate-500">
 
-              Administrator
+              Postgraduate Office
 
             </p>
 
           </div>
 
-          <ChevronDown
-            size={18}
-            className="text-slate-500"
-          />
-
-        </button>
+        </div>
 
       </div>
 
