@@ -60,10 +60,10 @@ export const createVivaCase = async (req, res, next) => {
     const body = req.body;
 
     const caseID = await generateID(
-      SHEET,
-      "VC",
-      "CaseID"
-    );
+  "VC",
+  SHEET,
+  "CaseID"
+);
 
     const row = [
 
