@@ -1,8 +1,28 @@
 @import "tailwindcss";
 
+/* ===========================
+   VivaTrack Theme
+=========================== */
+
 :root{
-  --purple:#53257F;
-  --gold:#FDB913;
+  --primary:#53257F;
+  --primary-light:#6B3FA0;
+  --secondary:#FDB913;
+
+  --success:#16A34A;
+  --warning:#F59E0B;
+  --danger:#DC2626;
+  --info:#2563EB;
+
+  --background:#F4F6FA;
+
+  --card:#FFFFFF;
+
+  --text:#1F2937;
+
+  --muted:#6B7280;
+
+  --border:#E5E7EB;
 }
 
 *{
@@ -11,66 +31,127 @@
   box-sizing:border-box;
 }
 
+html{
+  scroll-behavior:smooth;
+}
+
 body{
 
-  font-family:Inter,Segoe UI,Arial,sans-serif;
+  font-family:
+  Inter,
+  "Segoe UI",
+  Arial,
+  sans-serif;
 
-  min-height:100vh;
+  background:var(--background);
 
-  background:
-  linear-gradient(
-  135deg,
-  #2e1065,
-  #53257F,
-  #2563eb
-  );
-
-  background-attachment:fixed;
-
-  overflow-x:hidden;
+  color:var(--text);
 
 }
 
-body::before{
+/* Scrollbar */
 
-content:"";
+::-webkit-scrollbar{
+  width:10px;
+}
 
-position:fixed;
+::-webkit-scrollbar-thumb{
+  background:#c9ced8;
+  border-radius:10px;
+}
 
-width:700px;
-height:700px;
+::-webkit-scrollbar-thumb:hover{
+  background:#a7adba;
+}
 
-left:-150px;
-top:-150px;
+/* Card */
 
-background:#ffffff20;
+.card{
 
-filter:blur(120px);
+  background:white;
 
-border-radius:50%;
+  border-radius:20px;
 
-pointer-events:none;
+  border:1px solid var(--border);
+
+  box-shadow:
+  0 2px 8px rgba(0,0,0,.05);
 
 }
 
-body::after{
+/* Hover */
 
-content:"";
+.card:hover{
 
-position:fixed;
+  box-shadow:
+  0 10px 25px rgba(0,0,0,.08);
 
-width:600px;
-height:600px;
+  transition:.25s;
 
-right:-100px;
-bottom:-150px;
+}
 
-background:#FDB91322;
+/* Buttons */
 
-filter:blur(120px);
+.btn-primary{
 
-border-radius:50%;
+  background:var(--primary);
 
-pointer-events:none;
+  color:white;
+
+  padding:12px 22px;
+
+  border-radius:12px;
+
+}
+
+.btn-primary:hover{
+
+  background:var(--primary-light);
+
+}
+
+.btn-outline{
+
+  border:1px solid var(--border);
+
+  background:white;
+
+  padding:12px 22px;
+
+  border-radius:12px;
+
+}
+
+/* Status */
+
+.status-success{
+
+background:#DCFCE7;
+
+color:#15803D;
+
+}
+
+.status-warning{
+
+background:#FEF3C7;
+
+color:#B45309;
+
+}
+
+.status-danger{
+
+background:#FEE2E2;
+
+color:#B91C1C;
+
+}
+
+.status-info{
+
+background:#DBEAFE;
+
+color:#1D4ED8;
 
 }
