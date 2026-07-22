@@ -1,114 +1,148 @@
 import {
-LayoutDashboard,
-GraduationCap,
-CalendarDays,
-Users,
-BarChart3,
-Settings
+  LayoutDashboard,
+  GraduationCap,
+  Users,
+  UserCheck,
+  CalendarDays,
+  FileText,
+  FolderOpen,
+  BarChart3,
+  Settings,
+  LogOut,
 } from "lucide-react";
 
-const menu=[
-{
-icon:LayoutDashboard,
-label:"Dashboard"
-},
-{
-icon:GraduationCap,
-label:"Students"
-},
-{
-icon:CalendarDays,
-label:"Viva"
-},
-{
-icon:Users,
-label:"Examiners"
-},
-{
-icon:BarChart3,
-label:"Reports"
-},
-{
-icon:Settings,
-label:"Settings"
-}
+import { NavLink } from "react-router-dom";
+
+const menu = [
+  {
+    title: "Dashboard",
+    icon: LayoutDashboard,
+    path: "/",
+  },
+  {
+    title: "Students",
+    icon: GraduationCap,
+    path: "/students",
+  },
+  {
+    title: "Supervisors",
+    icon: Users,
+    path: "/supervisors",
+  },
+  {
+    title: "Examiners",
+    icon: UserCheck,
+    path: "/examiners",
+  },
+  {
+    title: "Viva Schedule",
+    icon: CalendarDays,
+    path: "/viva",
+  },
+  {
+    title: "Thesis",
+    icon: FileText,
+    path: "/thesis",
+  },
+  {
+    title: "Documents",
+    icon: FolderOpen,
+    path: "/documents",
+  },
+  {
+    title: "Reports",
+    icon: BarChart3,
+    path: "/reports",
+  },
+  {
+    title: "Settings",
+    icon: Settings,
+    path: "/settings",
+  },
 ];
 
-export default function Sidebar(){
+export default function Sidebar() {
+  return (
+    <aside className="fixed left-0 top-0 h-screen w-72 bg-white/10 backdrop-blur-3xl border-r border-white/20 shadow-2xl flex flex-col">
 
-return(
+      {/* Logo */}
 
-<div
-className="
-w-72
-h-screen
-fixed
-left-0
-top-0
+      <div className="p-8 border-b border-white/10">
 
-bg-white/10
+        <h1 className="text-3xl font-bold text-white">
+          🎓 VivaTrack
+        </h1>
 
-backdrop-blur-2xl
+        <p className="text-white/60 mt-2 text-sm">
+          Universiti Sains Malaysia
+        </p>
 
-border-r
+      </div>
 
-border-white/20
+      {/* Menu */}
 
-text-white
+      <nav className="flex-1 px-4 py-6 space-y-2">
 
-shadow-2xl
-">
+        {menu.map((item) => {
+          const Icon = item.icon;
 
-<div className="text-4xl font-bold p-8">
+          return (
+            <NavLink
+              key={item.title}
+              to={item.path}
+              className={({ isActive }) =>
+                `flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300
+                 ${
+                   isActive
+                     ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg"
+                     : "text-white/80 hover:bg-white/10 hover:text-white"
+                 }`
+              }
+            >
+              <Icon size={22} />
 
-🎓 VivaTrack
+              <span className="font-medium">
+                {item.title}
+              </span>
+            </NavLink>
+          );
+        })}
+      </nav>
 
-</div>
+      {/* User */}
 
-<div className="px-4 space-y-3">
+      <div className="p-5 border-t border-white/10">
 
-{menu.map(({icon:Icon,label})=>(
+        <div className="flex items-center gap-3">
 
-<button
+          <div className="w-12 h-12 rounded-full bg-yellow-400 flex items-center justify-center font-bold">
+            H
+          </div>
 
-key={label}
+          <div>
 
-className="
+            <p className="text-white font-semibold">
+              Dr. Hazwani
+            </p>
 
-w-full
+            <p className="text-white/60 text-sm">
+              Administrator
+            </p>
 
-flex
+          </div>
 
-items-center
+        </div>
 
-gap-4
+        <button className="mt-5 flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-200 transition">
 
-px-5
+          <LogOut size={18} />
 
-py-4
+          Logout
 
-rounded-2xl
+        </button>
 
-hover:bg-white/15
+      </div>
 
-transition
-
-duration-300
-
-">
-
-<Icon size={22}/>
-
-{label}
-
-</button>
-
-))}
-
-</div>
-
-</div>
-
-);
-
+    </aside>
+  );
 }
