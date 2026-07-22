@@ -24,14 +24,14 @@ const menus = [
     path: "/students",
   },
   {
-    title: "Supervisors",
-    icon: UserCog,
-    path: "/supervisors",
-  },
-  {
     title: "Examiners",
     icon: GraduationCap,
     path: "/examiners",
+  },
+  {
+    title: "Viva Cases",
+    icon: FileText,
+    path: "/vivacases",
   },
   {
     title: "Viva Schedule",
@@ -40,13 +40,8 @@ const menus = [
   },
   {
     title: "Reports",
-    icon: FileText,
-    path: "/reports",
-  },
-  {
-    title: "Analytics",
     icon: BarChart3,
-    path: "/analytics",
+    path: "/reports",
   },
   {
     title: "Settings",
