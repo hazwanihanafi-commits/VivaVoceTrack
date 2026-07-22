@@ -4,15 +4,19 @@ import Topbar from "../components/Topbar";
 
 export default function MainLayout() {
   return (
-    <div className="bg-gray-100 min-h-screen">
+    <div className="bg-gray-100 min-h-screen flex">
 
-      <Sidebar />
+      {/* Sidebar hidden on mobile */}
+      <div className="hidden md:block">
+        <Sidebar />
+      </div>
 
-      <div className="ml-64">
+      {/* Main Content */}
+      <div className="flex-1 md:ml-64">
 
         <Topbar />
 
-        <main className="p-8">
+        <main className="p-4 md:p-8">
           <Outlet />
         </main>
 
