@@ -1,5 +1,12 @@
-import { getRows, addRow, findRow } from "../services/sheetsService.js";
-import { generateID } from "../utils/idGenerator.js";
+import {
+  getRows,
+  addRow,
+  findRow,
+  findRowNumber,
+  updateRow,
+  deleteRow,
+  generateID,
+} from "../services/sheetsService.js";
 
 const SHEET = "Students";
 
@@ -55,8 +62,8 @@ export const createStudent = async (req, res, next) => {
     const body = req.body;
 
     const studentID = await generateID(
-      SHEET,
       "ST",
+      SHEET,
       "StudentID"
     );
 
@@ -87,6 +94,76 @@ export const createStudent = async (req, res, next) => {
       success: true,
       message: "Student created successfully.",
       studentID,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * PUT /api/students/:id
+ */
+export const updateStudent = async (req, res, next) => {
+  try {
+    const rowNumber = await findRowNumber(
+      SHEET,
+      "StudentID",
+      req.params.id
+    );
+
+    if (rowNumber === -1) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found.",
+      });
+    }
+
+    const updatedStudent = {
+      StudentID: req.params.id,
+      ...req.body,
+    };
+
+    await updateRow(
+      SHEET,
+      rowNumber,
+      updatedStudent
+    );
+
+    res.json({
+      success: true,
+      message: "Student updated successfully.",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * DELETE /api/students/:id
+ */
+export const deleteStudent = async (req, res, next) => {
+  try {
+    const rowNumber = await findRowNumber(
+      SHEET,
+      "StudentID",
+      req.params.id
+    );
+
+    if (rowNumber === -1) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found.",
+      });
+    }
+
+    await deleteRow(
+      SHEET,
+      rowNumber
+    );
+
+    res.json({
+      success: true,
+      message: "Student deleted successfully.",
     });
   } catch (err) {
     next(err);
