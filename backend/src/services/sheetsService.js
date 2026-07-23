@@ -133,8 +133,12 @@ export async function findRowNumber(sheetName, columnName, value) {
 /**
  * Update an existing row
  */
-export async function updateRow(sheetName, rowNumber, values) {
+export async function updateRow(sheetName, rowNumber, data) {
   try {
+    const headers = await getHeaders(sheetName);
+
+    const values = headers.map((header) => data[header] ?? "");
+
     await sheets.spreadsheets.values.update({
       spreadsheetId: SPREADSHEET_ID,
       range: `${sheetName}!A${rowNumber}`,
@@ -146,17 +150,36 @@ export async function updateRow(sheetName, rowNumber, values) {
 
     return true;
   } catch (error) {
-    console.error(`❌ Error updating row:`, error.message);
+    console.error("❌ Error updating row:", error.message);
     throw error;
   }
 }
 
 /**
- * Delete a row
- * sheetId is the numeric Google Sheet ID (gid), not the sheet name.
+ * Get Google Sheet numeric sheetId from sheet name
  */
-export async function deleteRow(sheetId, rowIndex) {
+export async function getSheetId(sheetName) {
+  const response = await sheets.spreadsheets.get({
+    spreadsheetId: SPREADSHEET_ID,
+  });
+
+  const sheet = response.data.sheets.find(
+    (s) => s.properties.title === sheetName
+  );
+
+  if (!sheet) {
+    throw new Error(`Sheet '${sheetName}' not found.`);
+  }
+
+  return sheet.properties.sheetId;
+}
+/**
+ * Delete one row
+ */
+export async function deleteRow(sheetName, rowNumber) {
   try {
+    const sheetId = await getSheetId(sheetName);
+
     await sheets.spreadsheets.batchUpdate({
       spreadsheetId: SPREADSHEET_ID,
       requestBody: {
@@ -166,8 +189,8 @@ export async function deleteRow(sheetId, rowIndex) {
               range: {
                 sheetId,
                 dimension: "ROWS",
-                startIndex: rowIndex,
-                endIndex: rowIndex + 1,
+                startIndex: rowNumber - 1,
+                endIndex: rowNumber,
               },
             },
           },
@@ -177,7 +200,7 @@ export async function deleteRow(sheetId, rowIndex) {
 
     return true;
   } catch (error) {
-    console.error(`❌ Error deleting row:`, error.message);
+    console.error("❌ Error deleting row:", error.message);
     throw error;
   }
 }
