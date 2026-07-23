@@ -1,19 +1,18 @@
 import {
   getRows,
-  addRow,
   findRow,
   findRowNumber,
+  addRow,
   updateRow,
-  deleteRow,
   generateID,
 } from "../services/sheetsService.js";
 
 const SHEET = "Examiners";
 
 /**
- * GET ALL
+ * GET /api/examiners
  */
-export const getExaminers = async (req, res, next) => {
+export async function getExaminers(req, res, next) {
   try {
     const rows = await getRows(SHEET);
 
@@ -25,12 +24,12 @@ export const getExaminers = async (req, res, next) => {
   } catch (err) {
     next(err);
   }
-};
+}
 
 /**
- * GET ONE
+ * GET /api/examiners/:id
  */
-export const getExaminer = async (req, res, next) => {
+export async function getExaminer(req, res, next) {
   try {
     const examiner = await findRow(
       SHEET,
@@ -41,7 +40,7 @@ export const getExaminer = async (req, res, next) => {
     if (!examiner) {
       return res.status(404).json({
         success: false,
-        message: "Examiner not found",
+        message: "Examiner not found.",
       });
     }
 
@@ -52,12 +51,12 @@ export const getExaminer = async (req, res, next) => {
   } catch (err) {
     next(err);
   }
-};
+}
 
 /**
- * CREATE
+ * POST /api/examiners
  */
-export const createExaminer = async (req, res, next) => {
+export async function createExaminer(req, res, next) {
   try {
     const body = req.body;
 
@@ -69,15 +68,15 @@ export const createExaminer = async (req, res, next) => {
 
     await addRow(SHEET, [
       examinerID,
-      body.Name || "",
+      body.ExaminerName || "",
       body.Title || "",
-      body.Institution || "",
+      body.University || "",
       body.Faculty || "",
       body.Department || "",
       body.Email || "",
       body.Phone || "",
       body.Expertise || "",
-      body.Type || "External",
+      body.ExaminerType || "External",
       body.Status || "Active",
       body.Remarks || "",
       new Date().toISOString(),
@@ -85,18 +84,21 @@ export const createExaminer = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      examinerID,
+      message: "Examiner created successfully.",
+      ExaminerID: examinerID,
     });
+
   } catch (err) {
     next(err);
   }
-};
+}
 
 /**
- * UPDATE
+ * PUT /api/examiners/:id
  */
-export const updateExaminer = async (req, res, next) => {
+export async function updateExaminer(req, res, next) {
   try {
+
     const rowNumber = await findRowNumber(
       SHEET,
       "ExaminerID",
@@ -106,59 +108,73 @@ export const updateExaminer = async (req, res, next) => {
     if (rowNumber === -1) {
       return res.status(404).json({
         success: false,
-        message: "Examiner not found",
+        message: "Examiner not found.",
       });
     }
 
-    await updateRow(
-      SHEET,
-      rowNumber,
-      {
-        ExaminerID: req.params.id,
-        ...req.body,
-        LastUpdated: new Date().toISOString(),
-      }
-    );
+    await updateRow(SHEET, rowNumber, {
+      ExaminerID: req.params.id,
+      ExaminerName: req.body.ExaminerName || "",
+      Title: req.body.Title || "",
+      University: req.body.University || "",
+      Faculty: req.body.Faculty || "",
+      Department: req.body.Department || "",
+      Email: req.body.Email || "",
+      Phone: req.body.Phone || "",
+      Expertise: req.body.Expertise || "",
+      ExaminerType: req.body.ExaminerType || "External",
+      Status: req.body.Status || "Active",
+      Remarks: req.body.Remarks || "",
+      CreatedAt: req.body.CreatedAt || "",
+    });
 
     res.json({
       success: true,
-      message: "Updated successfully",
+      message: "Examiner updated successfully.",
     });
 
   } catch (err) {
     next(err);
   }
-};
+}
 
 /**
- * DELETE
+ * DELETE /api/examiners/:id
+ * Soft delete
  */
-export const deleteExaminer = async (req, res, next) => {
+export async function deleteExaminer(req, res, next) {
   try {
+
+    const examiner = await findRow(
+      SHEET,
+      "ExaminerID",
+      req.params.id
+    );
+
+    if (!examiner) {
+      return res.status(404).json({
+        success: false,
+        message: "Examiner not found.",
+      });
+    }
+
     const rowNumber = await findRowNumber(
       SHEET,
       "ExaminerID",
       req.params.id
     );
 
-    if (rowNumber === -1) {
-      return res.status(404).json({
-        success: false,
-        message: "Examiner not found",
-      });
-    }
-
-    await deleteRow(
-      SHEET,
-      rowNumber
-    );
+    await updateRow(SHEET, rowNumber, {
+      ...examiner,
+      Status: "Inactive",
+    });
 
     res.json({
       success: true,
-      message: "Deleted successfully",
+      message: "Examiner deactivated successfully.",
     });
 
   } catch (err) {
     next(err);
   }
-};
+}
