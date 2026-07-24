@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import StatusBadge from "./StatusBadge";
+import { Settings } from "lucide-react";
 
 export default function VivaCaseTable({
   cases,
@@ -168,12 +169,14 @@ function externalExaminers(item) {
                 </td>
 
                 <td className="p-3 text-center">
-                  <button
-                    className="rounded-lg bg-purple-100 px-4 py-2 text-sm font-medium text-purple-700 transition hover:bg-purple-200"
-                  >
-                    View
-                  </button>
-                </td>
+  <button
+    onClick={() => onManage(item)}
+    className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+  >
+    <Settings size={16} />
+    Manage
+  </button>
+</td>
               </tr>
             ))}
 
