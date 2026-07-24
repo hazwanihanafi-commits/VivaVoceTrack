@@ -33,13 +33,13 @@ export default function VivaCaseTable({
           .toLowerCase()
           .includes(keyword) ||
 
-        examinerName(item.InternalExaminerID)
-          .toLowerCase()
-          .includes(keyword) ||
+        internalExaminers(item)
+  .toLowerCase()
+  .includes(keyword) ||
 
-        examinerName(item.ExternalExaminerID)
-          .toLowerCase()
-          .includes(keyword) ||
+externalExaminers(item)
+  .toLowerCase()
+  .includes(keyword) ||
 
         (item.CurrentStatus || "")
           .toLowerCase()
@@ -47,6 +47,34 @@ export default function VivaCaseTable({
       );
     });
   }, [cases, search]);
+
+  function internalExaminers(item) {
+  return (
+    <>
+      {item.InternalExaminer1ID && (
+        <div>{examinerName(item.InternalExaminer1ID)}</div>
+      )}
+
+      {item.InternalExaminer2ID && (
+        <div>{examinerName(item.InternalExaminer2ID)}</div>
+      )}
+    </>
+  );
+}
+
+function externalExaminers(item) {
+  return (
+    <>
+      {item.ExternalExaminer1ID && (
+        <div>{examinerName(item.ExternalExaminer1ID)}</div>
+      )}
+
+      {item.ExternalExaminer2ID && (
+        <div>{examinerName(item.ExternalExaminer2ID)}</div>
+      )}
+    </>
+  );
+}
 
   return (
     <div className="rounded-2xl bg-white p-4 shadow md:p-8">
@@ -121,13 +149,13 @@ export default function VivaCaseTable({
                   {studentName(item.StudentID)}
                 </td>
 
-                <td className="whitespace-nowrap p-3">
-                  {examinerName(item.InternalExaminerID)}
-                </td>
+                <td className="p-3">
+  {internalExaminers(item) || "-"}
+</td>
 
-                <td className="whitespace-nowrap p-3">
-                  {examinerName(item.ExternalExaminerID)}
-                </td>
+                <td className="p-3">
+  {externalExaminers(item) || "-"}
+</td>
 
                 <td className="whitespace-nowrap p-3">
                   {item.ReportDueDate || "-"}
