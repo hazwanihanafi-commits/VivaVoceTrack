@@ -120,3 +120,132 @@ export const getDashboardSummary = async (req, res, next) => {
   }
 
 };
+
+/**
+ * ======================================================
+ * Upcoming Viva
+ * GET /api/dashboard/upcoming
+ * ======================================================
+ */
+export const getUpcomingVivas = async (req, res, next) => {
+
+  try {
+
+    const rows = await getRows(SHEET);
+
+    const today = new Date();
+
+    const upcoming = rows
+      .filter((row) => {
+
+        if (!row.ConfirmedVivaDate)
+          return false;
+
+        return new Date(
+          row.ConfirmedVivaDate
+        ) >= today;
+
+      })
+      .sort((a, b) =>
+        new Date(a.ConfirmedVivaDate) -
+        new Date(b.ConfirmedVivaDate)
+      );
+
+    res.json({
+
+      success: true,
+
+      total: upcoming.length,
+
+      data: upcoming,
+
+    });
+
+  } catch (err) {
+
+    next(err);
+
+  }
+
+};
+
+/**
+ * ======================================================
+ * Recent Viva
+ * GET /api/dashboard/recent
+ * ======================================================
+ */
+export const getRecentVivas = async (req, res, next) => {
+
+  try {
+
+    const rows = await getRows(SHEET);
+
+    const recent = rows
+      .filter(r => r.ConfirmedVivaDate)
+      .sort(
+        (a, b) =>
+          new Date(b.ConfirmedVivaDate) -
+          new Date(a.ConfirmedVivaDate)
+      )
+      .slice(0, 10);
+
+    res.json({
+
+      success: true,
+
+      total: recent.length,
+
+      data: recent,
+
+    });
+
+  } catch (err) {
+
+    next(err);
+
+  }
+
+};
+
+/**
+ * ======================================================
+ * Report Statistics
+ * GET /api/dashboard/reports
+ * ======================================================
+ */
+export const getReportStatistics = async (req, res, next) => {
+
+  try {
+
+    const rows = await getRows(SHEET);
+
+    let submitted = 0;
+    let pending = 0;
+
+    rows.forEach(row => {
+
+      if (row.ReportReceived === "Yes")
+        submitted++;
+      else
+        pending++;
+
+    });
+
+    res.json({
+
+      success: true,
+
+      submitted,
+
+      pending,
+
+    });
+
+  } catch (err) {
+
+    next(err);
+
+  }
+
+};
