@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 export default function VivaCaseForm({
+  selectedCase,
   students,
   examiners,
   selectedStudent,
@@ -22,9 +23,25 @@ export default function VivaCaseForm({
   return (
     <div className="rounded-2xl bg-white p-8 shadow">
 
-      <h2 className="mb-6 text-xl font-bold">
-        Create New Viva Case
-      </h2>
+      <div className="mb-6 flex items-center justify-between">
+
+  <div>
+
+    <h2 className="text-2xl font-bold">
+      {selectedCase
+        ? `Manage Viva Case (${selectedCase.CaseID})`
+        : "Create New Viva Case"}
+    </h2>
+
+    {selectedCase && (
+      <p className="mt-1 text-sm text-gray-500">
+        Edit case details, send emails, track reports and schedule the viva.
+      </p>
+    )}
+
+  </div>
+
+</div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
 
@@ -451,7 +468,7 @@ export default function VivaCaseForm({
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-gray-700 px-6 py-3 text-white transition hover:bg-gray-800 md:w-auto"
         >
           <Save size={18} />
-          Save Draft
+{selectedCase ? "Update Case" : "Save Draft"}
         </button>
 
         <button
@@ -460,7 +477,7 @@ export default function VivaCaseForm({
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 px-6 py-3 text-white transition hover:bg-purple-700 md:w-auto"
         >
           <Send size={18} />
-          Send to Examiners
+{selectedCase ? "Resend Email" : "Send to Examiners"}
         </button>
 
       </div>
