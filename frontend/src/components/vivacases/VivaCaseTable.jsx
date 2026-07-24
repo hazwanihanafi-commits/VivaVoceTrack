@@ -6,6 +6,7 @@ export default function VivaCaseTable({
   cases,
   students,
   examiners,
+  onManage,
 }) {
   const [search, setSearch] = useState("");
 
