@@ -5,6 +5,8 @@ import {
   Link,
   Save,
   Send,
+  Plus,
+  Trash2,
 } from "lucide-react";
 
 export default function VivaCaseForm({
@@ -114,67 +116,175 @@ export default function VivaCaseForm({
 
         </div>
 
-        {/* Internal Examiner */}
+        {/* Internal Examiners */}
 
-        <div>
+<div>
 
-          <label className="mb-2 block font-medium">
-            Internal Examiner
-          </label>
+  <div className="mb-2 flex items-center justify-between">
 
-          <select
-            name="internalExaminer"
-            value={form.internalExaminer}
-            onChange={updateField}
-            className="w-full rounded-xl border p-3"
+    <label className="font-medium">
+      Internal Examiners
+    </label>
+
+    <button
+      type="button"
+      onClick={() =>
+        updateField({
+          target: {
+            name: "addInternal",
+          },
+        })
+      }
+      className="flex items-center gap-1 rounded-lg bg-purple-600 px-3 py-1 text-sm text-white hover:bg-purple-700"
+    >
+      <Plus size={16} />
+      Add
+    </button>
+
+  </div>
+
+  {form.internalExaminers.map((examinerId, index) => (
+
+    <div
+      key={index}
+      className="mb-3 flex gap-2"
+    >
+
+      <select
+        value={examinerId}
+        onChange={(e) =>
+          updateField({
+            target: {
+              name: "internalExaminer",
+              value: e.target.value,
+              index,
+            },
+          })
+        }
+        className="flex-1 rounded-xl border p-3"
+      >
+        <option value="">
+          Select Internal Examiner
+        </option>
+
+        {examiners.map((examiner) => (
+          <option
+            key={examiner.ExaminerID}
+            value={examiner.ExaminerID}
           >
-            <option value="">
-              Select Internal Examiner
-            </option>
+            {examiner.ExaminerName}
+          </option>
+        ))}
 
-            {examiners.map((examiner) => (
-              <option
-                key={examiner.ExaminerID}
-                value={examiner.ExaminerID}
-              >
-                {examiner.ExaminerName}
-              </option>
-            ))}
+      </select>
 
-          </select>
+      {index > 0 && (
+        <button
+          type="button"
+          onClick={() =>
+            updateField({
+              target: {
+                name: "removeInternal",
+                index,
+              },
+            })
+          }
+          className="rounded-lg bg-red-500 p-3 text-white hover:bg-red-600"
+        >
+          <Trash2 size={18} />
+        </button>
+      )}
 
-        </div>
+    </div>
 
-        {/* External Examiner */}
+  ))}
 
-        <div>
+</div>
 
-          <label className="mb-2 block font-medium">
-            External Examiner
-          </label>
+        {/* External Examiners */}
 
-          <select
-            name="externalExaminer"
-            value={form.externalExaminer}
-            onChange={updateField}
-            className="w-full rounded-xl border p-3"
+<div>
+
+  <div className="mb-2 flex items-center justify-between">
+
+    <label className="font-medium">
+      External Examiners
+    </label>
+
+    <button
+      type="button"
+      onClick={() =>
+        updateField({
+          target: {
+            name: "addExternal",
+          },
+        })
+      }
+      className="flex items-center gap-1 rounded-lg bg-purple-600 px-3 py-1 text-sm text-white hover:bg-purple-700"
+    >
+      <Plus size={16} />
+      Add
+    </button>
+
+  </div>
+
+  {form.externalExaminers.map((examinerId, index) => (
+
+    <div
+      key={index}
+      className="mb-3 flex gap-2"
+    >
+
+      <select
+        value={examinerId}
+        onChange={(e) =>
+          updateField({
+            target: {
+              name: "externalExaminer",
+              value: e.target.value,
+              index,
+            },
+          })
+        }
+        className="flex-1 rounded-xl border p-3"
+      >
+        <option value="">
+          Select External Examiner
+        </option>
+
+        {examiners.map((examiner) => (
+          <option
+            key={examiner.ExaminerID}
+            value={examiner.ExaminerID}
           >
-            <option value="">
-              Select External Examiner
-            </option>
+            {examiner.ExaminerName}
+          </option>
+        ))}
 
-            {examiners.map((examiner) => (
-              <option
-                key={examiner.ExaminerID}
-                value={examiner.ExaminerID}
-              >
-                {examiner.ExaminerName}
-              </option>
-            ))}
+      </select>
 
-          </select>
+      {index > 0 && (
+        <button
+          type="button"
+          onClick={() =>
+            updateField({
+              target: {
+                name: "removeExternal",
+                index,
+              },
+            })
+          }
+          className="rounded-lg bg-red-500 p-3 text-white hover:bg-red-600"
+        >
+          <Trash2 size={18} />
+        </button>
+      )}
 
-        </div>
+    </div>
+
+  ))}
+
+</div>
 
         {/* Google Drive */}
 
