@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import SummaryCards from "../components/vivacases/SummaryCards";
 import VivaCaseForm from "../components/vivacases/VivaCaseForm";
 import VivaCaseTable from "../components/vivacases/VivaCaseTable";
+import CaseStatusCard from "../components/vivacases/CaseStatusCard";
 
 const API = "https://vivatrack-backend.onrender.com/api";
 
@@ -235,19 +236,31 @@ Universiti Sains Malaysia`,
 
       <SummaryCards cases={cases} />
 
-    <VivaCaseForm
-  selectedCase={selectedCase}
-  students={students}
-  examiners={examiners}
-  selectedStudent={selectedStudent}
-  form={form}
-  handleStudent={handleStudent}
-  updateField={updateField}
-  saveDraft={saveDraft}
-  sendToExaminer={sendToExaminer}
-/>
+    <SummaryCards cases={cases} />
 
-      <VivaCaseTable
+<div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+
+  <div className="lg:col-span-2">
+    <VivaCaseForm
+      selectedCase={selectedCase}
+      students={students}
+      examiners={examiners}
+      selectedStudent={selectedStudent}
+      form={form}
+      handleStudent={handleStudent}
+      updateField={updateField}
+      saveDraft={saveDraft}
+      sendToExaminer={sendToExaminer}
+    />
+  </div>
+
+  <CaseStatusCard
+    selectedCase={selectedCase}
+  />
+
+</div>
+
+<VivaCaseTable
   cases={cases}
   students={students}
   examiners={examiners}
