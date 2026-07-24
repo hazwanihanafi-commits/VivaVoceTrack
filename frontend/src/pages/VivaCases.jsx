@@ -71,18 +71,63 @@ export default function VivaCases() {
     setForm((prev) => ({
       ...prev,
       studentId: id,
-      emailSubject: `Invitation to Examine Thesis - ${student?.StudentName || ""}`,
-      emailBody: `Dear Examiner,
+      emailSubject: `Submission of Thesis for Examination – ${student?.StudentName || ""} (${student?.MatricNo || ""}), ${student?.Programme || ""}, PKTAAB, Universiti Sains Malaysia`,
 
-You have been appointed as an examiner for the thesis entitled:
+emailBody: `Assalamualaikum W.B.T. dan Salam Sejahtera Y.Brs. {{ExaminerTitle}} {{ExaminerName}},
 
-"${student?.ThesisTitle || ""}"
+Thank you for accepting our invitation to serve as an {{ExaminerType}} Examiner for the thesis examination of the following postgraduate candidate.
 
-Please submit your examination report before the due date.
+Student Name : ${student?.StudentName || ""}
+Matric No.   : ${student?.MatricNo || ""}
+Programme    : ${student?.Programme || ""}
+School/Centre: Pusat Kanser Tun Abdullah Ahmad Badawi (PKTAAB)
+University   : Universiti Sains Malaysia
+
+Thesis Title:
+${student?.ThesisTitle || ""}
+
+The candidate has now submitted the thesis for examination. The thesis and supporting documents are available for your review through the link below:
+
+📂 Thesis & Supporting Documents
+{{DriveLink}}
+
+Password to open the thesis PDF:
+${student?.IC_Passport || ""}
+
+(The password is the student's identification/passport number.)
+
+We would appreciate your attention to the following:
+
+1. The official Thesis Examiner's Report Form may be downloaded from the Institute of Postgraduate Studies (IPS), Universiti Sains Malaysia:
+https://ips.usm.my/index.php/download/viva-voce
+
+2. Please review the thesis and submit the completed Thesis Examiner's Report together with the annotated thesis (PDF), where applicable, on or before:
+
+Submission Due Date:
+{{DueDate}}
+
+3. Kindly submit your report securely via the VivaTrack platform using the link below:
+
+🔗 Submit Examination Report
+{{SubmissionLink}}
+
+4. Upon successful submission through VivaTrack, your report will be automatically forwarded to the Institute of Postgraduate Studies (IPS), Universiti Sains Malaysia. A copy will also be retained by the PKTAAB Viva Secretariat for record purposes. No separate email submission is required.
+
+5. To facilitate the candidate's thesis revision following the viva voce examination, you are kindly requested to provide a comprehensive and detailed evaluation in the official report and, where appropriate, include comments directly on the thesis PDF.
+
+6. As an appointed examiner, you are required to attend the viva voce examination on the scheduled date. Details of the viva session will be communicated to you separately. Participation via Microsoft Teams may be arranged where appropriate.
+
+Should you require any clarification or technical assistance regarding the thesis documents or VivaTrack platform, please do not hesitate to contact the PKTAAB Viva Secretariat.
+
+The University sincerely appreciates your time, expertise and valuable contribution towards maintaining the quality and standards of postgraduate education at Universiti Sains Malaysia.
 
 Thank you.
 
-PKTAAB
+Yours sincerely,
+
+Viva Secretariat
+Academic & International Division
+Pusat Kanser Tun Abdullah Ahmad Badawi (PKTAAB)
 Universiti Sains Malaysia`,
     }));
   }
