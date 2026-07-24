@@ -10,6 +10,7 @@ import examinerRoutes from "./routes/examinerRoutes.js";
 import vivaCaseRoutes from "./routes/vivaCaseRoutes.js";
 import reminderRoutes from "./routes/reminderRoutes.js";
 import activityRoutes from "./routes/activityRoutes.js";
+import emailRoutes from "./routes/emailRoutes.js";
 
 // Middleware
 import errorHandler from "./middleware/errorHandler.js";
