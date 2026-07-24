@@ -12,6 +12,7 @@ import reminderRoutes from "./routes/reminderRoutes.js";
 import activityRoutes from "./routes/activityRoutes.js";
 import emailRoutes from "./routes/emailRoutes.js";
 import scheduleRoutes from "./routes/scheduleRoutes.js";
+import reportRoutes from "./routes/reportRoutes.js";
 
 // Middleware
 import errorHandler from "./middleware/errorHandler.js";
@@ -44,6 +45,7 @@ app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use("/api/emails", emailRoutes);
 app.use("/api/schedule", scheduleRoutes);
+app.use("/api/reports", reportRoutes);
 
 /************************************************
  * Logger
