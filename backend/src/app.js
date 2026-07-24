@@ -11,6 +11,7 @@ import vivaCaseRoutes from "./routes/vivaCaseRoutes.js";
 import reminderRoutes from "./routes/reminderRoutes.js";
 import activityRoutes from "./routes/activityRoutes.js";
 import emailRoutes from "./routes/emailRoutes.js";
+import scheduleRoutes from "./routes/scheduleRoutes.js";
 
 // Middleware
 import errorHandler from "./middleware/errorHandler.js";
@@ -42,6 +43,7 @@ app.use(
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use("/api/emails", emailRoutes);
+app.use("/api/schedule", scheduleRoutes);
 
 /************************************************
  * Logger
