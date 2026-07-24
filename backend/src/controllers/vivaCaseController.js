@@ -75,9 +75,13 @@ export const createVivaCase = async (req, res, next) => {
 
       body.StudentID || "",
 
-      body.InternalExaminerID || "",
+      body.InternalExaminer1ID || "",
 
-      body.ExternalExaminerID || "",
+      body.InternalExaminer2ID || "",
+
+      body.ExternalExaminer1ID || "",
+
+      body.ExternalExaminer2ID || "",
 
       body.ThesisPDF || "",
 
