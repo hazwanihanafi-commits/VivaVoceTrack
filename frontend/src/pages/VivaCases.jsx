@@ -234,8 +234,6 @@ Universiti Sains Malaysia`,
   return (
     <div className="space-y-8">
 
-      <SummaryCards cases={cases} />
-
     <SummaryCards cases={cases} />
 
 <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
