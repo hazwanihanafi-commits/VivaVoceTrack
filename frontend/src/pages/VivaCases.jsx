@@ -11,6 +11,7 @@ export default function VivaCases() {
   const [examiners, setExaminers] = useState([]);
   const [cases, setCases] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedCase, setSelectedCase] = useState(null);
 
   const [form, setForm] = useState({
   studentId: "",
@@ -148,6 +149,43 @@ Universiti Sains Malaysia`,
   });
 }
 
+  function handleManage(item) {
+  setSelectedCase(item);
+
+  const student = students.find(
+    (s) => s.StudentID === item.StudentID
+  );
+
+  setSelectedStudent(student);
+
+  setForm({
+    studentId: item.StudentID,
+
+    internalExaminers: [
+      item.InternalExaminer1ID || "",
+      item.InternalExaminer2ID || "",
+    ].filter(Boolean),
+
+    externalExaminers: [
+      item.ExternalExaminer1ID || "",
+      item.ExternalExaminer2ID || "",
+    ].filter(Boolean),
+
+    driveLink: item.GoogleDriveLink || "",
+    thesisPDF: item.ThesisPDF || "",
+    receivedDate: item.DateReceivedFromIPS || "",
+    dueDate: item.ReportDueDate || "",
+    emailSubject: item.EmailSubject || "",
+    emailBody: item.EmailBody || "",
+    reminder: item.ReminderEnabled ?? true,
+  });
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
+}
+  
   async function saveDraft() {
     try {
       const res = await fetch(`${API}/vivacases`, {
@@ -197,22 +235,24 @@ Universiti Sains Malaysia`,
 
       <SummaryCards cases={cases} />
 
-      <VivaCaseForm
-        students={students}
-        examiners={examiners}
-        selectedStudent={selectedStudent}
-        form={form}
-        handleStudent={handleStudent}
-        updateField={updateField}
-        saveDraft={saveDraft}
-        sendToExaminer={sendToExaminer}
-      />
+    <VivaCaseForm
+  selectedCase={selectedCase}
+  students={students}
+  examiners={examiners}
+  selectedStudent={selectedStudent}
+  form={form}
+  handleStudent={handleStudent}
+  updateField={updateField}
+  saveDraft={saveDraft}
+  sendToExaminer={sendToExaminer}
+/>
 
       <VivaCaseTable
-        cases={cases}
-        students={students}
-        examiners={examiners}
-      />
+  cases={cases}
+  students={students}
+  examiners={examiners}
+  onManage={handleManage}
+/>
 
     </div>
   );
