@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
+import "./cron/reminderJob.js";
 
 // Routes
 import studentRoutes from "./routes/studentRoutes.js";
