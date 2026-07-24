@@ -13,17 +13,17 @@ export default function VivaCases() {
   const [selectedStudent, setSelectedStudent] = useState(null);
 
   const [form, setForm] = useState({
-    studentId: "",
-    internalExaminer: "",
-    externalExaminer: "",
-    driveLink: "",
-    thesisPDF: "",
-    receivedDate: "",
-    dueDate: "",
-    emailSubject: "",
-    emailBody: "",
-    reminder: true,
-  });
+  studentId: "",
+  internalExaminers: [""],
+  externalExaminers: [""],
+  driveLink: "",
+  thesisPDF: "",
+  receivedDate: "",
+  dueDate: "",
+  emailSubject: "",
+  emailBody: "",
+  reminder: true,
+});
 
   useEffect(() => {
     loadStudents();
@@ -86,13 +86,67 @@ Universiti Sains Malaysia`,
   }
 
   function updateField(e) {
-    const { name, value, type, checked } = e.target;
+  const { name, value, type, checked, index } = e.target;
 
-    setForm((prev) => ({
+  setForm((prev) => {
+    if (name === "addInternal") {
+      return {
+        ...prev,
+        internalExaminers: [...prev.internalExaminers, ""],
+      };
+    }
+
+    if (name === "removeInternal") {
+      return {
+        ...prev,
+        internalExaminers: prev.internalExaminers.filter(
+          (_, i) => i !== index
+        ),
+      };
+    }
+
+    if (name === "addExternal") {
+      return {
+        ...prev,
+        externalExaminers: [...prev.externalExaminers, ""],
+      };
+    }
+
+    if (name === "removeExternal") {
+      return {
+        ...prev,
+        externalExaminers: prev.externalExaminers.filter(
+          (_, i) => i !== index
+        ),
+      };
+    }
+
+    if (name === "internalExaminer") {
+      const list = [...prev.internalExaminers];
+      list[index] = value;
+
+      return {
+        ...prev,
+        internalExaminers: list,
+      };
+    }
+
+    if (name === "externalExaminer") {
+      const list = [...prev.externalExaminers];
+      list[index] = value;
+
+      return {
+        ...prev,
+        externalExaminers: list,
+      };
+    }
+
+    return {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
-    }));
-  }
+    };
+  });
+}
 
   async function saveDraft() {
     try {
@@ -103,8 +157,10 @@ Universiti Sains Malaysia`,
         },
         body: JSON.stringify({
           StudentID: form.studentId,
-          InternalExaminerID: form.internalExaminer,
-          ExternalExaminerID: form.externalExaminer,
+          InternalExaminer1ID: form.internalExaminers[0] || "",
+          InternalExaminer2ID: form.internalExaminers[1] || "",
+          ExternalExaminer1ID: form.externalExaminers[0] || "",
+          ExternalExaminer2ID: form.externalExaminers[1] || "",
           GoogleDriveLink: form.driveLink,
           DateReceivedFromIPS: form.receivedDate,
           ReportDueDate: form.dueDate,
