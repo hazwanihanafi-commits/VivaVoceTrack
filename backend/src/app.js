@@ -46,6 +46,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/emails", emailRoutes);
 app.use("/api/schedule", scheduleRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 /************************************************
  * Logger
