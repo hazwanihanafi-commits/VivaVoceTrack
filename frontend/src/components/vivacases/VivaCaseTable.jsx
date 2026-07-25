@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
 import StatusBadge from "./StatusBadge";
-import { Settings } from "lucide-react";
+import { Settings, Trash2 } from "lucide-react";
 
 export default function VivaCaseTable({
   cases,
   students,
   examiners,
   onManage,
+  onDelete,
 }) {
   const [search, setSearch] = useState("");
 
@@ -169,14 +170,26 @@ function externalExaminers(item) {
                   />
                 </td>
 
-                <td className="p-3 text-center">
-  <button
-    onClick={() => onManage(item)}
-    className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-  >
-    <Settings size={16} />
-    Manage
-  </button>
+                <td className="p-3">
+  <div className="flex justify-center gap-2">
+
+    <button
+      onClick={() => onManage(item)}
+      className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+    >
+      <Settings size={16} />
+      Manage
+    </button>
+
+    <button
+      onClick={() => onDelete(item.CaseID)}
+      className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
+    >
+      <Trash2 size={16} />
+      Delete
+    </button>
+
+  </div>
 </td>
               </tr>
             ))}
