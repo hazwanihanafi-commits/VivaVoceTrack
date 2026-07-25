@@ -52,31 +52,21 @@ externalExaminers(item)
   }, [cases, search]);
 
   function internalExaminers(item) {
-  return (
-    <>
-      {item.InternalExaminer1ID && (
-        <div>{examinerName(item.InternalExaminer1ID)}</div>
-      )}
-
-      {item.InternalExaminer2ID && (
-        <div>{examinerName(item.InternalExaminer2ID)}</div>
-      )}
-    </>
-  );
+  return [
+    examinerName(item.InternalExaminer1ID),
+    examinerName(item.InternalExaminer2ID),
+  ]
+    .filter((name) => name && name !== "-")
+    .join("\n");
 }
 
 function externalExaminers(item) {
-  return (
-    <>
-      {item.ExternalExaminer1ID && (
-        <div>{examinerName(item.ExternalExaminer1ID)}</div>
-      )}
-
-      {item.ExternalExaminer2ID && (
-        <div>{examinerName(item.ExternalExaminer2ID)}</div>
-      )}
-    </>
-  );
+  return [
+    examinerName(item.ExternalExaminer1ID),
+    examinerName(item.ExternalExaminer2ID),
+  ]
+    .filter((name) => name && name !== "-")
+    .join("\n");
 }
 
   return (
@@ -152,14 +142,13 @@ function externalExaminers(item) {
                   {studentName(item.StudentID)}
                 </td>
 
-                <td className="p-3">
+                <td className="p-3 whitespace-pre-line">
   {internalExaminers(item) || "-"}
 </td>
 
-                <td className="p-3">
+<td className="p-3 whitespace-pre-line">
   {externalExaminers(item) || "-"}
 </td>
-
                 <td className="whitespace-nowrap p-3">
                   {item.ReportDueDate || "-"}
                 </td>
