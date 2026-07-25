@@ -323,15 +323,187 @@ setPreviewEmail(preview);
 
       loadCases();
     } catch (err) {
-      console.error(err);
+      console.error(errr);
       alert("Unable to connect to server.");
     }
   }
 
-  async function sendToExaminer() {
-    await saveDraft();
-    alert("Email module will be connected next.");
+  async function sendAppointment() {
+
+  if (!selectedCase) {
+    alert("Please select a viva case.");
+    return;
   }
+
+  try {
+
+    const res = await fetch(
+      `${API}/email/${selectedCase.CaseID}/appointment`,
+      {
+        method: "POST",
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message);
+      return;
+    }
+
+    alert(data.message);
+    loadCases();
+
+  } catch (err) {
+
+    console.error(err);
+    alert("Unable to send appointment email.");
+
+  }
+
+}
+
+async function sendThesis() {
+
+  if (!selectedCase) {
+    alert("Please select a viva case.");
+    return;
+  }
+
+  try {
+
+    const res = await fetch(
+      `${API}/email/${selectedCase.CaseID}/thesis`,
+      {
+        method: "POST",
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message);
+      return;
+    }
+
+    alert(data.message);
+    loadCases();
+
+  } catch (err) {
+
+    console.error(err);
+    alert("Unable to send thesis email.");
+
+  }
+
+}
+
+async function sendReminder() {
+
+  if (!selectedCase) {
+    alert("Please select a viva case.");
+    return;
+  }
+
+  try {
+
+    const res = await fetch(
+      `${API}/email/${selectedCase.CaseID}/reminder`,
+      {
+        method: "POST",
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message);
+      return;
+    }
+
+    alert(data.message);
+    loadCases();
+
+  } catch (err) {
+
+    console.error(err);
+    alert("Unable to send reminder email.");
+
+  }
+
+}
+
+async function sendSchedule() {
+
+  if (!selectedCase) {
+    alert("Please select a viva case.");
+    return;
+  }
+
+  try {
+
+    const res = await fetch(
+      `${API}/email/${selectedCase.CaseID}/schedule`,
+      {
+        method: "POST",
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message);
+      return;
+    }
+
+    alert(data.message);
+    loadCases();
+
+  } catch (err) {
+
+    console.error(err);
+    alert("Unable to send schedule email.");
+
+  }
+
+}
+
+async function sendThankYou() {
+
+  if (!selectedCase) {
+    alert("Please select a viva case.");
+    return;
+  }
+
+  try {
+
+    const res = await fetch(
+      `${API}/email/${selectedCase.CaseID}/thankyou`,
+      {
+        method: "POST",
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message);
+      return;
+    }
+
+    alert(data.message);
+    loadCases();
+
+  } catch (err) {
+
+    console.error(err);
+    alert("Unable to send thank-you email.");
+
+  }
+
+}
+
+  
 
   return (
     <div className="space-y-8">
@@ -349,10 +521,14 @@ setPreviewEmail(preview);
       form={form}
       handleStudent={handleStudent}
       updateField={updateField}
-      saveDraft={saveDraft}
-      sendToExaminer={sendToExaminer}
-      previewEmailHandler={previewEmailHandler}
-    />
+     saveDraft={saveDraft}
+sendAppointment={sendAppointment}
+sendThesis={sendThesis}
+sendReminder={sendReminder}
+sendSchedule={sendSchedule}
+sendThankYou={sendThankYou}
+previewEmailHandler={previewEmailHandler}
+/>
   </div>
 
   <CaseStatusCard
