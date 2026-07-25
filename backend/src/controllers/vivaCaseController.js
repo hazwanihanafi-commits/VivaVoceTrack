@@ -1,7 +1,8 @@
 import {
   getRows,
   findRow,
-  addRow
+  addRow,
+  deleteRow
 } from "../services/sheetsService.js";
 
 import { generateID } from "../utils/idGenerator.js";
@@ -119,6 +120,41 @@ body.CurrentStatus || "Draft",
       success: true,
       message: "Viva Case created.",
       caseID
+    });
+
+  } catch (err) {
+
+    next(err);
+
+  }
+
+};
+
+
+// DELETE
+
+export const deleteVivaCase = async (req, res, next) => {
+
+  try {
+
+    const caseID = req.params.id;
+
+    await deleteRow(
+
+      SHEET,
+
+      "CaseID",
+
+      caseID
+
+    );
+
+    res.json({
+
+      success: true,
+
+      message: "Viva Case deleted successfully."
+
     });
 
   } catch (err) {
