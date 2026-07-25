@@ -323,7 +323,7 @@ setPreviewEmail(preview);
 
       loadCases();
     } catch (err) {
-      console.error(errr);
+      console.error(err);
       alert("Unable to connect to server.");
     }
   }
@@ -578,15 +578,15 @@ previewEmailHandler={previewEmailHandler}
           Close
         </button>
 
-        <button
-          onClick={() => {
-            setPreviewOpen(false);
-            sendToExaminer();
-          }}
-          className="rounded bg-purple-600 px-4 py-2 text-white"
-        >
-          📧 Send Email
-        </button>
+       <button
+  onClick={async () => {
+    setPreviewOpen(false);
+    await sendThesis();
+  }}
+  className="rounded bg-purple-600 px-4 py-2 text-white"
+>
+  📄 Send Thesis
+</button>
 
       </div>
 
