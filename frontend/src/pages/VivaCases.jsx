@@ -338,7 +338,7 @@ setPreviewEmail(preview);
   try {
 
     const res = await fetch(
-      `${API}/email/${selectedCase.CaseID}/appointment`,
+      `${API}/emails/${selectedCase.CaseID}/send-appointment`,
       {
         method: "POST",
       }
@@ -373,7 +373,7 @@ async function sendThesis() {
   try {
 
     const res = await fetch(
-      `${API}/email/${selectedCase.CaseID}/thesis`,
+      `${API}/emails/${selectedCase.CaseID}/send-thesis`,
       {
         method: "POST",
       }
@@ -408,7 +408,7 @@ async function sendReminder() {
   try {
 
     const res = await fetch(
-      `${API}/email/${selectedCase.CaseID}/reminder`,
+      `${API}/emails/${selectedCase.CaseID}/send-reminder`,
       {
         method: "POST",
       }
@@ -443,7 +443,7 @@ async function sendSchedule() {
   try {
 
     const res = await fetch(
-      `${API}/email/${selectedCase.CaseID}/schedule`,
+      ``${API}/emails/${selectedCase.CaseID}/send-schedule`,
       {
         method: "POST",
       }
@@ -478,7 +478,7 @@ async function sendThankYou() {
   try {
 
     const res = await fetch(
-      `${API}/email/${selectedCase.CaseID}/thankyou`,
+      `${API}/emails/${selectedCase.CaseID}/send-thankyou`,
       {
         method: "POST",
       }
