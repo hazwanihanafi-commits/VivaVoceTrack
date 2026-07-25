@@ -18,7 +18,11 @@ export default function VivaCaseForm({
   handleStudent,
   updateField,
   saveDraft,
-  sendToExaminer,
+  sendAppointment,
+  sendThesis,
+  sendReminder,
+  sendSchedule,
+  sendThankYou,
   previewEmailHandler,
 }) {
   return (
@@ -481,13 +485,44 @@ export default function VivaCaseForm({
   </button>
 
   <button
-    type="button"
-    onClick={sendToExaminer}
-    className="flex items-center gap-2 rounded-xl bg-purple-600 px-6 py-3 text-white hover:bg-purple-700"
-  >
-    <Send size={18} />
-    {selectedCase ? "Send Email" : "Send Examination Package"}
-  </button>
+  type="button"
+  onClick={sendAppointment}
+  className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-white hover:bg-indigo-700"
+>
+  📩 Appointment
+</button>
+
+<button
+  type="button"
+  onClick={sendThesis}
+  className="flex items-center gap-2 rounded-xl bg-purple-600 px-5 py-3 text-white hover:bg-purple-700"
+>
+  📄 Thesis
+</button>
+
+<button
+  type="button"
+  onClick={sendReminder}
+  className="flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-3 text-white hover:bg-orange-600"
+>
+  🔔 Reminder
+</button>
+
+<button
+  type="button"
+  onClick={sendSchedule}
+  className="flex items-center gap-2 rounded-xl bg-green-600 px-5 py-3 text-white hover:bg-green-700"
+>
+  📅 Schedule
+</button>
+
+<button
+  type="button"
+  onClick={sendThankYou}
+  className="flex items-center gap-2 rounded-xl bg-gray-700 px-5 py-3 text-white hover:bg-gray-800"
+>
+  🙏 Thank You
+</button>
 
 </div>
 
