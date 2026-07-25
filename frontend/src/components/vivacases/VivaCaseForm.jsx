@@ -19,6 +19,7 @@ export default function VivaCaseForm({
   updateField,
   saveDraft,
   sendToExaminer,
+  previewEmailHandler,
 }) {
   return (
     <div className="rounded-2xl bg-white p-8 shadow">
@@ -460,27 +461,35 @@ export default function VivaCaseForm({
 
       {/* Buttons */}
 
-      <div className="mt-8 flex flex-col gap-4 md:flex-row">
+      <div className="mt-8 flex flex-wrap gap-3">
 
-        <button
-          type="button"
-          onClick={saveDraft}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-gray-700 px-6 py-3 text-white transition hover:bg-gray-800 md:w-auto"
-        >
-          <Save size={18} />
-{selectedCase ? "Update Case" : "Save Draft"}
-        </button>
+  <button
+    type="button"
+    onClick={saveDraft}
+    className="flex items-center gap-2 rounded-xl bg-gray-700 px-6 py-3 text-white hover:bg-gray-800"
+  >
+    <Save size={18} />
+    {selectedCase ? "Update Case" : "Save Draft"}
+  </button>
 
-        <button
-          type="button"
-          onClick={sendToExaminer}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 px-6 py-3 text-white transition hover:bg-purple-700 md:w-auto"
-        >
-          <Send size={18} />
-{selectedCase ? "Resend Email" : "Send to Examiners"}
-        </button>
+  <button
+    type="button"
+    onClick={previewEmailHandler}
+    className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-white hover:bg-blue-700"
+  >
+    👁 Preview Email
+  </button>
 
-      </div>
+  <button
+    type="button"
+    onClick={sendToExaminer}
+    className="flex items-center gap-2 rounded-xl bg-purple-600 px-6 py-3 text-white hover:bg-purple-700"
+  >
+    <Send size={18} />
+    {selectedCase ? "Send Email" : "Send Examination Package"}
+  </button>
+
+</div>
 
     </div>
   );
