@@ -69,51 +69,85 @@ export const createVivaCase = async (req, res, next) => {
 
     const row = [
 
-      caseID,
+  caseID,
 
-      new Date().toISOString(),
+  new Date().toISOString(),
 
-      body.CreatedBy || "",
+  body.CreatedBy || "",
 
-      body.StudentID || "",
+  body.StudentID || "",
 
-      body.InternalExaminer1ID || "",
+  body.InternalExaminer1ID || "",
 
-      body.InternalExaminer2ID || "",
+  body.InternalExaminer2ID || "",
 
-      body.ExternalExaminer1ID || "",
+  body.ExternalExaminer1ID || "",
 
-      body.ExternalExaminer2ID || "",
+  body.ExternalExaminer2ID || "",
 
-      body.ThesisPDF || "",
+  body.ThesisPDF || "",
 
-      body.GoogleDriveLink || "",
+  body.GoogleDriveLink || "",
 
-      body.DateReceivedFromIPS || "",
+  body.DateReceivedFromIPS || "",
 
-      body.ReportDueDate || "",
+  body.ReportDueDate || "",
 
-      body.EmailSubject || "",
+  body.EmailSubject || "",
 
-      body.EmailBody || "",
+  body.EmailBody || "",
 
-      body.EmailStatus || "Draft",
+  body.EmailStatus || "Draft",
 
-"",
+  "", // SentDate
 
-body.ReminderEnabled ? "Yes" : "No",
+  body.ReminderEnabled ? "Yes" : "No",
 
-body.CurrentStatus || "Draft",
+  body.CurrentStatus || "Draft",
 
-      "",
+  body.TentativeVivaDate || "",
 
-      "",
+  body.ConfirmedVivaDate || "",
 
-      body.Remarks || "",
+  body.VivaTime || "",
 
-      new Date().toISOString()
+  body.Venue || "",
 
-    ];
+  body.ChairpersonID || "",
+
+  body.SecretaryID || "",
+
+  body.StudentConfirmed || "No",
+
+  "", // Internal1ReportReceived
+
+  "", // Internal1ReportDate
+
+  "", // Internal2ReportReceived
+
+  "", // Internal2ReportDate
+
+  "", // External1ReportReceived
+
+  "", // External1ReportDate
+
+  "", // External2ReportReceived
+
+  "", // External2ReportDate
+
+  "", // Reminder14
+
+  "", // Reminder7
+
+  "", // Reminder1
+
+  "", // CompletionDate
+
+  body.Remarks || "",
+
+  new Date().toISOString()
+
+];
 
     await addRow(SHEET, row);
 
