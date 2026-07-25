@@ -13,6 +13,9 @@ export default function VivaCases() {
   const [cases, setCases] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [selectedCase, setSelectedCase] = useState(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+const [previewEmail, setPreviewEmail] = useState("");
+  
 
   const [form, setForm] = useState({
   studentId: "",
@@ -231,6 +234,60 @@ Universiti Sains Malaysia`,
     behavior: "smooth",
   });
 }
+
+  function previewEmailHandler() {
+ const examinerId =
+  form.externalExaminers[0] ||
+  form.internalExaminers[0];
+
+const examiner = examiners.find(
+  e => e.ExaminerID === examinerId
+);
+let preview = form.emailBody;
+
+preview = preview
+  .replaceAll("{{ExaminerTitle}}", examiner?.Title || "")
+  .replaceAll("{{ExaminerName}}", examiner?.ExaminerName || "")
+  .replaceAll("{{ExaminerType}}", examiner?.ExaminerType || "")
+  .replaceAll("{{DriveLink}}", form.driveLink)
+  .replaceAll("{{DueDate}}", form.dueDate)
+  .replaceAll("{{SubmissionLink}}", "https://vivatrack.onrender.com/submit");
+
+setPreviewEmail(preview);
+  setPreviewOpen(true);
+}
+
+  async function deleteCase(caseID) {
+  const ok = window.confirm(
+    "Are you sure you want to delete this viva case?"
+  );
+
+  if (!ok) return;
+
+  try {
+    const res = await fetch(`${API}/vivacases/${caseID}`, {
+      method: "DELETE",
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message || "Unable to delete case.");
+      return;
+    }
+
+    alert("Viva case deleted successfully.");
+
+    loadCases();
+
+    setSelectedCase(null);
+    setSelectedStudent(null);
+
+  } catch (err) {
+    console.error(err);
+    alert("Server connection failed.");
+  }
+}
   
   async function saveDraft() {
     try {
@@ -294,6 +351,7 @@ Universiti Sains Malaysia`,
       updateField={updateField}
       saveDraft={saveDraft}
       sendToExaminer={sendToExaminer}
+      previewEmailHandler={previewEmailHandler}
     />
   </div>
 
@@ -308,7 +366,47 @@ Universiti Sains Malaysia`,
   students={students}
   examiners={examiners}
   onManage={handleManage}
+  onDelete={deleteCase}
 />
+
+      {previewOpen && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="w-full max-w-4xl rounded-lg bg-white p-6 shadow-xl">
+
+      <h2 className="mb-4 text-xl font-bold">
+        Email Preview
+      </h2>
+
+      <div className="mb-4 rounded border bg-gray-50 p-4">
+        <pre className="whitespace-pre-wrap text-sm">
+          {previewEmail}
+        </pre>
+      </div>
+
+      <div className="flex justify-end gap-3">
+
+        <button
+          onClick={() => setPreviewOpen(false)}
+          className="rounded bg-gray-500 px-4 py-2 text-white"
+        >
+          Close
+        </button>
+
+        <button
+          onClick={() => {
+            setPreviewOpen(false);
+            sendToExaminer();
+          }}
+          className="rounded bg-purple-600 px-4 py-2 text-white"
+        >
+          📧 Send Email
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+)}
 
     </div>
   );
