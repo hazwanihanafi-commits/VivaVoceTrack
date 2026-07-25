@@ -378,9 +378,19 @@ setPreviewEmail(preview);
       </h2>
 
       <div className="mb-4 rounded border bg-gray-50 p-4">
-        <pre className="whitespace-pre-wrap text-sm">
-          {previewEmail}
-        </pre>
+        <div className="mb-4">
+  <p className="font-semibold">Subject</p>
+  <div className="mb-4 rounded border bg-gray-100 p-3">
+    {form.emailSubject}
+  </div>
+
+  <p className="font-semibold">Body</p>
+  <div className="rounded border bg-gray-50 p-4">
+    <pre className="whitespace-pre-wrap text-sm">
+      {previewEmail}
+    </pre>
+  </div>
+</div>
       </div>
 
       <div className="flex justify-end gap-3">
