@@ -330,24 +330,21 @@ Regards,<br>
       );
 
     await updateRow(
-      VIVA_SHEET,
-      rowNumber,
-      {
+  VIVA_SHEET,
+  rowNumber,
+  {
+    ...viva,
 
-        ...viva,
+    CurrentStatus: "Waiting for Reports",
+    EmailStatus: "Waiting for Reports",
 
-        EmailStatus: "Waiting for Reports",
+    ThesisEmailSent: "Yes",
+    ThesisEmailDate: new Date().toISOString(),
+    SentDate: new Date().toISOString(),
 
-ThesisEmailSent: "Yes",
-
-ThesisEmailDate: new Date().toISOString(),
-
-SentDate: new Date().toISOString(),
-
-        LastUpdated: new Date().toISOString()
-
-      }
-    );
+    LastUpdated: new Date().toISOString()
+  }
+);
 
     return res.json({
 
@@ -746,11 +743,7 @@ await updateRow(
     CurrentStatus: "Waiting for Reports",
     EmailStatus: "Waiting for Reports",
 
-    ThesisEmailSent: "Yes",
-    ThesisEmailDate: new Date().toISOString(),
-    SentDate: new Date().toISOString(),
-
-    LastUpdated: new Date().toISOString()
+  
   }
 );
 
