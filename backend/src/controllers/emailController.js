@@ -86,6 +86,16 @@ async function getAssignedExaminers(viva) {
 
 }
 
+function formatDate(dateString) {
+  if (!dateString) return "";
+
+  return new Date(dateString).toLocaleDateString("en-MY", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
 /* ======================================================
    Replace email placeholders
 ====================================================== */
@@ -121,9 +131,9 @@ function replaceTemplate(
   .replaceAll("{{Intake}}", student.Intake || "")
   .replaceAll("{{ThesisTitle}}", student.ThesisTitle || "")
 
-  .replaceAll("{{ReportDueDate}}", viva.ReportDueDate || "")
-  .replaceAll("{{TentativeVivaDate}}", viva.TentativeVivaDate || "")
-  .replaceAll("{{ConfirmedVivaDate}}", viva.ConfirmedVivaDate || "")
+.replaceAll("{{ReportDueDate}}", formatDate(viva.ReportDueDate))
+.replaceAll("{{TentativeVivaDate}}", formatDate(viva.TentativeVivaDate))
+.replaceAll("{{ConfirmedVivaDate}}", formatDate(viva.ConfirmedVivaDate))
   .replaceAll("{{VivaTime}}", viva.VivaTime || "")
   .replaceAll("{{Venue}}", viva.Venue || "")
   .replaceAll("{{DriveLink}}", viva.GoogleDriveLink || "")
