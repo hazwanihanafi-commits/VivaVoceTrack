@@ -443,7 +443,7 @@ async function sendSchedule() {
   try {
 
     const res = await fetch(
-      ``${API}/emails/${selectedCase.CaseID}/send-schedule`,
+      `${API}/emails/${selectedCase.CaseID}/send-schedule`,
       {
         method: "POST",
       }
