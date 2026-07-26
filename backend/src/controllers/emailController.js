@@ -496,7 +496,8 @@ Regards,<br>
 
         ...viva,
 
-        EmailStatus: "Waiting for Reports",
+        CurrentStatus: "Waiting for Reports",
+EmailStatus: "Waiting for Reports",
 
 AppointmentEmailSent: "Yes",
 
@@ -736,20 +737,22 @@ Regards,<br>
         caseID
       );
 
-    await updateRow(
-      VIVA_SHEET,
-      rowNumber,
-      {
+await updateRow(
+  VIVA_SHEET,
+  rowNumber,
+  {
+    ...viva,
 
-        ...viva,
+    CurrentStatus: "Waiting for Reports",
+    EmailStatus: "Waiting for Reports",
 
-        EmailStatus: "Waiting for Reports",
+    ThesisEmailSent: "Yes",
+    ThesisEmailDate: new Date().toISOString(),
+    SentDate: new Date().toISOString(),
 
-        LastUpdated:
-          new Date().toISOString()
-
-      }
-    );
+    LastUpdated: new Date().toISOString()
+  }
+);
 
     return res.json({
 
@@ -894,7 +897,8 @@ Regards,<br>
 
         ...viva,
 
-        EmailStatus: "Viva Scheduled",
+        CurrentStatus: "Viva Scheduled",
+EmailStatus: "Viva Scheduled",
 
 ScheduleEmailSent: "Yes",
 
@@ -1038,7 +1042,8 @@ Regards,<br>
 
         ...viva,
 
-        EmailStatus: "Completed",
+        CurrentStatus: "Completed",
+EmailStatus: "Completed",
 
 ThankYouEmailSent: "Yes",
 
