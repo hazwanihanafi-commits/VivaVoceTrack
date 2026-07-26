@@ -140,6 +140,28 @@ function replaceTemplate(
 
   .replaceAll("{{Year}}", String(new Date().getFullYear()));
 }
+
+function getTemplate(type) {
+  switch (type) {
+    case "appointment":
+      return appointmentEmail();
+
+    case "thesis":
+      return thesisEmail();
+
+    case "reminder":
+      return reminderEmail();
+
+    case "schedule":
+      return scheduleEmail();
+
+    case "thankyou":
+      return thankYouEmail();
+
+    default:
+      return null;
+  }
+}
 /* ======================================================
    Send email to all assigned examiners
 ====================================================== */
@@ -220,6 +242,118 @@ try {
   return recipients;
 
 }
+
+/* ======================================================
+   Preview Email
+====================================================== */
+
+export const previewEmail = async (req, res, next) => {
+
+  try {
+
+    const { id, type } = req.params;
+
+    const viva = await findRow(
+      VIVA_SHEET,
+      "CaseID",
+      id
+    );
+
+    if (!viva) {
+      return res.status(404).json({
+        success: false,
+        message: "Viva case not found."
+      });
+    }
+
+    const student = await findRow(
+      STUDENT_SHEET,
+      "StudentID",
+      viva.StudentID
+    );
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found."
+      });
+    }
+
+    const examiners = await getAssignedExaminers(viva);
+
+    if (examiners.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No examiner assigned."
+      });
+    }
+
+    const examiner = examiners[0];
+
+    const template = getTemplate(type);
+
+    if (!template) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid email type."
+      });
+    }
+
+    const html = replaceTemplate(
+      template,
+      student,
+      examiner,
+      viva
+    );
+
+    let subject = "";
+
+    switch (type) {
+
+      case "appointment":
+        subject =
+          viva.EmailSubject ||
+          `Appointment as ${student.Programme} Thesis Examiner`;
+        break;
+
+      case "thesis":
+        subject =
+          viva.EmailSubject ||
+          `Thesis Examination - ${student.StudentName}`;
+        break;
+
+      case "reminder":
+        subject =
+          viva.EmailSubject ||
+          `Reminder: Thesis Examination Report - ${student.StudentName}`;
+        break;
+
+      case "schedule":
+        subject =
+          viva.EmailSubject ||
+          `Confirmed Viva Voce Schedule - ${student.StudentName}`;
+        break;
+
+      case "thankyou":
+        subject =
+          viva.EmailSubject ||
+          `Thank You for Serving as Examiner - ${student.StudentName}`;
+        break;
+    }
+
+    res.json({
+      success: true,
+      subject,
+      html
+    });
+
+  } catch (err) {
+
+    next(err);
+
+  }
+
+};
 
 /* ======================================================
    Send Thesis to Examiners
