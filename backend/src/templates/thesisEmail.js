@@ -179,7 +179,7 @@ letter-spacing:1px;
 margin:20px 0;
 ">
 
-{{ICPassport}}
+{{MatricNo}}
 
 </p>
 
