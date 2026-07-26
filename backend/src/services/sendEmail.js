@@ -9,6 +9,10 @@ const EMAIL_FROM =
 
 const TEST_MODE = process.env.EMAIL_TEST_MODE === "true";
 const TEST_EMAIL = process.env.TEST_EMAIL || "hazwanihanafi@gmail.com";
+const DEFAULT_CC = [
+  "norhisham_puteh@usm.my",
+  "anissyamimi@usm.my",
+];
 
 /**
  * Generic email sender
@@ -43,9 +47,12 @@ export default async function sendEmail({
     html,
   };
 
-  if (!TEST_MODE && cc) {
-    payload.cc = Array.isArray(cc) ? cc : [cc];
-  }
+  if (!TEST_MODE) {
+  payload.cc = [
+    ...DEFAULT_CC,
+    ...(cc ? (Array.isArray(cc) ? cc : [cc]) : []),
+  ];
+}
 
   if (!TEST_MODE && bcc) {
     payload.bcc = Array.isArray(bcc) ? bcc : [bcc];
