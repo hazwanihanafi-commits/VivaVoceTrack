@@ -98,56 +98,55 @@ export const createVivaCase = async (req, res, next) => {
   body.EmailBody || "",
 
   body.EmailStatus || "Draft",
+"", // SentDate
 
-  "", // SentDate
+"", // AppointmentEmailSent
+"", // AppointmentEmailDate
 
-  body.ReminderEnabled ? "Yes" : "No",
+"", // ThesisEmailSent
+"", // ThesisEmailDate
 
-  body.CurrentStatus || "Draft",
+"", // ScheduleEmailSent
+"", // ScheduleEmailDate
 
-  body.TentativeVivaDate || "",
+"", // ThankYouEmailSent
+"", // ThankYouEmailDate
 
-  body.ConfirmedVivaDate || "",
+body.ReminderEnabled ? "Yes" : "No",
 
-  body.VivaTime || "",
+body.CurrentStatus || "Draft",
 
-  body.Venue || "",
+body.TentativeVivaDate || "",
+body.ConfirmedVivaDate || "",
+body.VivaTime || "",
+body.Venue || "",
+body.ChairpersonID || "",
+body.SecretaryID || "",
+body.StudentConfirmed || "No",
 
-  body.ChairpersonID || "",
+"", // Internal1ReportReceived
+"", // Internal1ReportDate
 
-  body.SecretaryID || "",
+"", // Internal2ReportReceived
+"", // Internal2ReportDate
 
-  body.StudentConfirmed || "No",
+"", // External1ReportReceived
+"", // External1ReportDate
 
-  "", // Internal1ReportReceived
+"", // External2ReportReceived
+"", // External2ReportDate
 
-  "", // Internal1ReportDate
+"", // Reminder14
+"", // Reminder7
+"", // Reminder1
 
-  "", // Internal2ReportReceived
+"", // CompletionDate
 
-  "", // Internal2ReportDate
+body.Remarks || "",
 
-  "", // External1ReportReceived
+new Date().toISOString()
 
-  "", // External1ReportDate
-
-  "", // External2ReportReceived
-
-  "", // External2ReportDate
-
-  "", // Reminder14
-
-  "", // Reminder7
-
-  "", // Reminder1
-
-  "", // CompletionDate
-
-  body.Remarks || "",
-
-  new Date().toISOString()
-
-];
+      ];
 
     await addRow(SHEET, row);
 
