@@ -99,22 +99,26 @@ function replaceTemplate(
 
   return template
 
-    .replaceAll("{{ExaminerTitle}}", examiner.Title || "")
-    .replaceAll("{{ExaminerName}}", examiner.ExaminerName || "")
-    .replaceAll("{{ExaminerType}}", examiner.ExaminerType)
-    .replaceAll("{{StudentName}}", student.StudentName || "")
-    .replaceAll("{{Programme}}", student.Programme || "")
-    .replaceAll("{{ResearchArea}}", student.ResearchArea || "")
-    .replaceAll("{{School}}", student.School || "")
-    .replaceAll("{{ThesisTitle}}", student.ThesisTitle || "")
-    .replaceAll("{{ReportDueDate}}", viva.ReportDueDate || "")
-    .replaceAll("{{TentativeVivaDate}}", viva.TentativeVivaDate || "")
-    .replaceAll("{{ConfirmedVivaDate}}", viva.ConfirmedVivaDate || "")
-    .replaceAll("{{VivaTime}}", viva.VivaTime || "")
-    .replaceAll("{{Venue}}", viva.Venue || "")
-    .replaceAll("{{DriveLink}}", viva.GoogleDriveLink || "")
-    .replaceAll("{{Year}}", String(new Date().getFullYear()));
+  .replaceAll("{{ExaminerTitle}}", examiner.Title || "")
+  .replaceAll("{{ExaminerName}}", examiner.ExaminerName || "")
+  .replaceAll("{{ExaminerType}}", examiner.ExaminerType)
 
+  .replaceAll("{{StudentName}}", student.StudentName || "")
+  .replaceAll("{{MatricNo}}", student.StudentID || "")
+
+  .replaceAll("{{Programme}}", student.Programme || "")
+  .replaceAll("{{ResearchArea}}", student.ResearchArea || "")
+  .replaceAll("{{School}}", student.School || "")
+  .replaceAll("{{ThesisTitle}}", student.ThesisTitle || "")
+
+  .replaceAll("{{ReportDueDate}}", viva.ReportDueDate || "")
+  .replaceAll("{{TentativeVivaDate}}", viva.TentativeVivaDate || "")
+  .replaceAll("{{ConfirmedVivaDate}}", viva.ConfirmedVivaDate || "")
+  .replaceAll("{{VivaTime}}", viva.VivaTime || "")
+  .replaceAll("{{Venue}}", viva.Venue || "")
+  .replaceAll("{{DriveLink}}", viva.GoogleDriveLink || "")
+
+  .replaceAll("{{Year}}", String(new Date().getFullYear()));
 }
 /* ======================================================
    Send email to all assigned examiners
