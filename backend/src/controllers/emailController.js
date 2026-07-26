@@ -521,15 +521,14 @@ export const sendReminderEmail = async (req, res, next) => {
   try {
 
     await sendEmail({
-
-      to: examiner.Email,
-
-      subject,
-
-      html
-
-    });
-
+  to: examiner.Email,
+  cc: [
+    "norhisham_puteh@usm.my",
+    "anissyamimi@usm.my",
+  ],
+  subject,
+  html,
+});
     recipients.push({
 
       name: examiner.ExaminerName,
