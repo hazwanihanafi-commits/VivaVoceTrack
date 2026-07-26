@@ -1,6 +1,7 @@
 import express from "express";
 
 import {
+  previewEmail,
   sendAppointmentEmail,
   sendThesis,
   sendReminderEmail,
@@ -10,6 +11,7 @@ import {
 
 const router = express.Router();
 
+router.get("/:id/preview/:type", previewEmail);
 /**
  * ============================================
  * Appointment Email
