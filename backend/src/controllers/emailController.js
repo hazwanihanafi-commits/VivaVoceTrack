@@ -120,7 +120,12 @@ function replaceTemplate(
 
     .replaceAll("{{Venue}}", viva.Venue || "")
 
-    .replaceAll("{{DriveLink}}", viva.GoogleDriveLink || "");
+    .replaceAll("{{DriveLink}}", viva.GoogleDriveLink || "")
+
+  .replaceAll(
+  "{{Year}}",
+  new Date().getFullYear().toString();
+)
 
 }
 
@@ -249,64 +254,136 @@ export const sendThesis = async (req, res, next) => {
       viva.EmailSubject ||
       `Thesis Examination - ${student.StudentName}`;
 
-    const body =
-      viva.EmailBody ||
-`
-<p>Dear {{ExaminerTitle}} {{ExaminerName}},</p>
+ const body = `
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thesis Examination</title>
+</head>
+
+<body style="margin:0;padding:0;background:#f5f7fb;font-family:Arial,Helvetica,sans-serif;">
+
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f7fb;padding:30px 0;">
+<tr>
+<td align="center">
+
+<table width="100%" cellpadding="0" cellspacing="0"
+style="max-width:700px;background:#ffffff;border-radius:10px;overflow:hidden;">
+
+<tr>
+<td style="background:#5B2C90;color:#ffffff;padding:25px;text-align:center;">
+<h2 style="margin:0;">Universiti Sains Malaysia</h2>
+<p style="margin:10px 0 0;">
+Pusat Kanser Tun Abdullah Ahmad Badawi (PKTAAB)<br>
+Academic & International Division
+</p>
+</td>
+</tr>
+
+<tr>
+<td style="padding:30px;">
+
+<p>
+Assalamualaikum W.B.T. & Salam Sejahtera
+<strong>{{ExaminerTitle}} {{ExaminerName}}</strong>,
+</p>
 
 <p>
 You have been appointed as
-<b>{{ExaminerType}}</b>
-for the examination of the following postgraduate student.
+<strong>{{ExaminerType}}</strong>
+for the examination of the following postgraduate candidate.
 </p>
 
-<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
+<table width="100%" cellpadding="8" cellspacing="0"
+style="border-collapse:collapse;border:1px solid #dddddd;">
 
-<tr>
-<td><b>Student</b></td>
+<tr style="background:#f2f2f2;">
+<td width="35%"><strong>Student</strong></td>
 <td>{{StudentName}}</td>
 </tr>
 
 <tr>
-<td><b>Programme</b></td>
+<td><strong>Programme</strong></td>
 <td>{{Programme}}</td>
 </tr>
 
-<tr>
-<td><b>Research Area</b></td>
+<tr style="background:#f2f2f2;">
+<td><strong>Research Area</strong></td>
 <td>{{ResearchArea}}</td>
 </tr>
 
 <tr>
-<td><b>Thesis Title</b></td>
+<td><strong>Thesis Title</strong></td>
 <td>{{ThesisTitle}}</td>
 </tr>
 
-<tr>
-<td><b>Report Due Date</b></td>
+<tr style="background:#f2f2f2;">
+<td><strong>Report Due Date</strong></td>
 <td>{{ReportDueDate}}</td>
 </tr>
 
 </table>
 
-<p>
-Please download the thesis using the link below:
+<p style="margin-top:25px;">
+Please download the thesis using the button below.
 </p>
 
-<p>
-<a href="{{DriveLink}}">
-Download Thesis
+<p style="text-align:center;">
+
+<a href="{{DriveLink}}"
+style="
+display:inline-block;
+background:#5B2C90;
+color:#ffffff;
+text-decoration:none;
+padding:14px 28px;
+border-radius:6px;
+font-weight:bold;">
+📂 Download Thesis
 </a>
+
 </p>
 
 <p>
-Thank you for your willingness to serve as an examiner.
+Please submit your examiner report before the due date.
+</p>
+
+<hr style="margin:30px 0;">
+
+<p>
+Thank you for your valuable contribution towards maintaining the quality of postgraduate education at Universiti Sains Malaysia.
 </p>
 
 <p>
-Regards,<br>
-<b>VivaTrack Secretariat</b>
+Yours sincerely,
 </p>
+
+<p>
+<strong>VivaTrack Secretariat</strong><br>
+Academic & International Division<br>
+Pusat Kanser Tun Abdullah Ahmad Badawi (PKTAAB)<br>
+Universiti Sains Malaysia
+</p>
+
+</td>
+</tr>
+
+<tr>
+<td style="background:#eeeeee;padding:15px;text-align:center;font-size:12px;color:#666666;">
+© {{Year}} VivaTrack • Universiti Sains Malaysia
+</td>
+</tr>
+
+</table>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>
 `;
 
     const recipients =
