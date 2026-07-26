@@ -35,12 +35,22 @@ style="border-collapse:collapse;border:1px solid #d9d9d9;">
 </tr>
 
 <tr>
+<td><strong>Matric No.</strong></td>
+<td>{{MatricNo}}</td>
+</tr>
+
+<tr style="background:#f5f5f5;">
 <td><strong>Programme</strong></td>
 <td>{{Programme}}</td>
 </tr>
 
+<tr>
+<td><strong>Mode of Study</strong></td>
+<td>{{Mode}}</td>
+</tr>
+
 <tr style="background:#f5f5f5;">
-<td><strong>School/Centre</strong></td>
+<td><strong>School / Centre</strong></td>
 <td>{{School}}</td>
 </tr>
 
@@ -50,11 +60,16 @@ style="border-collapse:collapse;border:1px solid #d9d9d9;">
 </tr>
 
 <tr style="background:#f5f5f5;">
+<td><strong>Supervisor</strong></td>
+<td>{{Supervisor}}</td>
+</tr>
+
+<tr>
 <td><strong>Thesis Title</strong></td>
 <td>{{ThesisTitle}}</td>
 </tr>
 
-<tr>
+<tr style="background:#f5f5f5;">
 <td><strong>Report Due Date</strong></td>
 <td>{{ReportDueDate}}</td>
 </tr>
@@ -90,7 +105,7 @@ border-radius:6px;
 font-weight:bold;
 ">
 
-Download Thesis
+📄 Download Thesis & Supporting Documents
 
 </a>
 
@@ -108,8 +123,22 @@ border-left:5px solid #F39C12;
 <strong>Password to Open PDF</strong>
 
 <p>
-The password to open the thesis PDF is the student's Identification Card (MyKad) /
-Passport Number.
+The password to open the thesis PDF is:
+</p>
+
+<p style="
+font-size:18px;
+font-weight:bold;
+color:#5B2C90;
+text-align:center;
+">
+
+{{ICPassport}}
+
+</p>
+
+<p style="font-size:13px;color:#666;">
+Please treat this password as confidential and do not share it with others.
 </p>
 
 </div>
@@ -141,6 +170,10 @@ If you have already submitted your report, please disregard any reminder emails.
 
 <p style="margin-top:35px;">
 We sincerely appreciate your valuable contribution towards maintaining the quality of postgraduate education at Universiti Sains Malaysia.
+</p>
+
+<p>
+Should you require any assistance regarding the examination process, please contact the VivaTrack Secretariat.
 </p>
 
 <p>
