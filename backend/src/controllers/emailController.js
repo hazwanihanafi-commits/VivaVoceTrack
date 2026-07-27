@@ -137,6 +137,25 @@ function replaceTemplate(
   .replaceAll("{{VivaTime}}", viva.VivaTime || "")
   .replaceAll("{{Venue}}", viva.Venue || "")
   .replaceAll("{{DriveLink}}", viva.GoogleDriveLink || "")
+    .replaceAll(
+  "{{ExaminerReportLink}}",
+  process.env.EXAMINER_REPORT_LINK || ""
+)
+
+.replaceAll(
+  "{{AcknowledgementLink}}",
+  process.env.ACKNOWLEDGEMENT_LINK || ""
+)
+
+.replaceAll(
+  "{{ReportSubmissionLink}}",
+  process.env.REPORT_SUBMISSION_LINK || ""
+)
+
+.replaceAll(
+  "{{AnnotatedThesisUploadLink}}",
+  process.env.ANNOTATED_THESIS_UPLOAD_LINK || ""
+)
 
   .replaceAll("{{Year}}", String(new Date().getFullYear()));
 }
