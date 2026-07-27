@@ -1,13 +1,14 @@
 import {
   Search,
   Calendar,
-  Upload,
   Link,
   Save,
-  Send,
   Plus,
   Trash2,
+  ExternalLink,
+  Copy,
 } from "lucide-react";
+
 
 export default function VivaCaseForm({
   selectedCase,
@@ -308,57 +309,70 @@ export default function VivaCaseForm({
 
 </div>
 
-        {/* Google Drive */}
+        {/* Documents */}
 
-        <div>
+<div>
+  <label className="mb-2 block font-medium">
+    Thesis Documents
+  </label>
 
-          <label className="mb-2 block font-medium">
-            Google Drive Link
-          </label>
+  <p className="mt-1 text-xs text-gray-500">
+  Paste the Google Drive folder link shared with the examiners.
+</p>
 
-          <div className="relative">
+  <div className="relative">
+    <Link
+      size={18}
+      className="absolute left-3 top-3 text-gray-400"
+    />
 
-            <Link
-              size={18}
-              className="absolute left-3 top-3 text-gray-400"
-            />
+    <input
+  type="url"
+  name="driveLink"
+  value={form.driveLink}
+  onChange={updateField}
+  placeholder="https://drive.google.com/drive/folders/..."
+  required
+  className="w-full rounded-xl border p-3 pl-10"
+/>
+  </div>
 
-            <input
-              type="text"
-              name="driveLink"
-              value={form.driveLink}
-              onChange={updateField}
-              placeholder="Paste Google Drive link"
-              className="w-full rounded-xl border p-3 pl-10"
-            />
+  <div className="mt-3 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
+  <p className="font-medium mb-2">
+    The folder should contain:
+  </p>
 
-          </div>
+  <ul className="list-disc pl-5 space-y-1">
+    <li>Final Thesis (PDF)</li>
+    <li>Turnitin Similarity Report</li>
+    <li>Ethics Approval (if applicable)</li>
+    <li>Supplementary Documents</li>
+  </ul>
+</div>
 
-        </div>
+  {form.driveLink && (
+    <div className="mt-3 flex gap-2">
+      <a
+  href={form.driveLink}
+  target="_blank"
+  rel="noopener noreferrer"
+  className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+>
+  <ExternalLink size={16} />
+  Open Folder
+</a>
 
-        {/* Thesis PDF */}
-
-        <div>
-
-          <label className="mb-2 block font-medium">
-            Thesis PDF
-          </label>
-
-          <div className="relative">
-
-            <Upload
-              size={18}
-              className="absolute left-3 top-3 text-gray-400"
-            />
-
-            <input
-              type="file"
-              className="w-full rounded-xl border p-2 pl-10"
-            />
-
-          </div>
-
-        </div>
+<button
+  type="button"
+  onClick={() => navigator.clipboard.writeText(form.driveLink)}
+  className="flex items-center gap-2 rounded-lg border px-4 py-2 hover:bg-gray-100"
+>
+  <Copy size={16} />
+  Copy Link
+</button>
+    </div>
+  )}
+</div>
 
         {/* Date Received */}
 
