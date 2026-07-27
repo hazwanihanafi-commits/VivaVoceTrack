@@ -432,17 +432,6 @@ export default function VivaCaseForm({
           className="mb-5 w-full rounded-xl border p-3"
         />
 
-        <label className="mb-2 block font-medium">
-          Email Body
-        </label>
-
-        <textarea
-          rows={8}
-          name="emailBody"
-          value={form.emailBody}
-          onChange={updateField}
-          className="w-full rounded-xl border p-4"
-        />
 
       </div>
 
@@ -465,7 +454,9 @@ export default function VivaCaseForm({
 
       {/* Buttons */}
 
-      <div className="mt-8 flex flex-wrap gap-3">
+      {/* Buttons */}
+
+<div className="mt-8 flex flex-wrap gap-3">
 
   <button
     type="button"
@@ -476,56 +467,92 @@ export default function VivaCaseForm({
     {selectedCase ? "Update Case" : "Save Draft"}
   </button>
 
+  {/* Appointment */}
   <button
     type="button"
-    onClick={previewEmailHandler}
-    className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-white hover:bg-blue-700"
+    onClick={() => previewEmailHandler("appointment")}
+    className="rounded-xl bg-indigo-600 px-5 py-3 text-white hover:bg-indigo-700"
   >
-    👁 Preview Email
+    👁 Preview Appointment
   </button>
 
   <button
-  type="button"
-  onClick={sendAppointment}
-  className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-white hover:bg-indigo-700"
->
-  📩 Appointment
-</button>
+    type="button"
+    onClick={sendAppointment}
+    className="rounded-xl bg-indigo-700 px-5 py-3 text-white hover:bg-indigo-800"
+  >
+    📩 Send Appointment
+  </button>
 
-<button
-  type="button"
-  onClick={sendThesis}
-  className="flex items-center gap-2 rounded-xl bg-purple-600 px-5 py-3 text-white hover:bg-purple-700"
->
-  📄 Thesis
-</button>
+  {/* Thesis */}
+  <button
+    type="button"
+    onClick={() => previewEmailHandler("thesis")}
+    className="rounded-xl bg-purple-600 px-5 py-3 text-white hover:bg-purple-700"
+  >
+    👁 Preview Thesis
+  </button>
 
-<button
-  type="button"
-  onClick={sendReminder}
-  className="flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-3 text-white hover:bg-orange-600"
->
-  🔔 Reminder
-</button>
+  <button
+    type="button"
+    onClick={sendThesis}
+    className="rounded-xl bg-purple-700 px-5 py-3 text-white hover:bg-purple-800"
+  >
+    📄 Send Thesis
+  </button>
 
-<button
-  type="button"
-  onClick={sendSchedule}
-  className="flex items-center gap-2 rounded-xl bg-green-600 px-5 py-3 text-white hover:bg-green-700"
->
-  📅 Schedule
-</button>
+  {/* Reminder */}
+  <button
+    type="button"
+    onClick={() => previewEmailHandler("reminder")}
+    className="rounded-xl bg-orange-500 px-5 py-3 text-white hover:bg-orange-600"
+  >
+    👁 Preview Reminder
+  </button>
 
-<button
-  type="button"
-  onClick={sendThankYou}
-  className="flex items-center gap-2 rounded-xl bg-gray-700 px-5 py-3 text-white hover:bg-gray-800"
->
-  🙏 Thank You
-</button>
+  <button
+    type="button"
+    onClick={sendReminder}
+    className="rounded-xl bg-orange-600 px-5 py-3 text-white hover:bg-orange-700"
+  >
+    🔔 Send Reminder
+  </button>
+
+  {/* Schedule */}
+  <button
+    type="button"
+    onClick={() => previewEmailHandler("schedule")}
+    className="rounded-xl bg-green-600 px-5 py-3 text-white hover:bg-green-700"
+  >
+    👁 Preview Schedule
+  </button>
+
+  <button
+    type="button"
+    onClick={sendSchedule}
+    className="rounded-xl bg-green-700 px-5 py-3 text-white hover:bg-green-800"
+  >
+    📅 Send Schedule
+  </button>
+
+  {/* Thank You */}
+  <button
+    type="button"
+    onClick={() => previewEmailHandler("thankyou")}
+    className="rounded-xl bg-slate-600 px-5 py-3 text-white hover:bg-slate-700"
+  >
+    👁 Preview Thank You
+  </button>
+
+  <button
+    type="button"
+    onClick={sendThankYou}
+    className="rounded-xl bg-slate-700 px-5 py-3 text-white hover:bg-slate-800"
+  >
+    🙏 Send Thank You
+  </button>
 
 </div>
-
     </div>
   );
 }
