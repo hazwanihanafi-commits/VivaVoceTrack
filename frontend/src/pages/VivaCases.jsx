@@ -173,6 +173,11 @@ meetingLink: "",
     dueDate: item.ReportDueDate || "",
     emailSubject: item.EmailSubject || "",
     reminder: item.ReminderEnabled ?? true,
+    vivaDate: item.VivaDate || "",
+vivaTime: item.VivaTime || "",
+vivaVenue: item.VivaVenue || "",
+vivaMode: item.VivaMode || "Physical",
+meetingLink: item.MeetingLink || "",
   });
 
   window.scrollTo({
