@@ -14,7 +14,9 @@ export default function VivaCases() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [selectedCase, setSelectedCase] = useState(null);
   const [previewOpen, setPreviewOpen] = useState(false);
-const [previewEmail, setPreviewEmail] = useState("");
+const [previewHtml, setPreviewHtml] = useState("");
+const [previewSubject, setPreviewSubject] = useState("");
+const [previewType, setPreviewType] = useState("thesis");
   
 
   const [form, setForm] = useState({
@@ -26,10 +28,9 @@ const [previewEmail, setPreviewEmail] = useState("");
   receivedDate: "",
   dueDate: "",
   emailSubject: "",
-  emailBody: "",
   reminder: true,
 });
-
+  
   useEffect(() => {
     loadStudents();
     loadExaminers();
@@ -75,63 +76,6 @@ const [previewEmail, setPreviewEmail] = useState("");
       ...prev,
       studentId: id,
       emailSubject: `Submission of Thesis for Examination – ${student?.StudentName || ""} (${student?.MatricNo || ""}), ${student?.Programme || ""}, PKTAAB, Universiti Sains Malaysia`,
-
-emailBody: `Assalamualaikum W.B.T. dan Salam Sejahtera Y.Brs. {{ExaminerTitle}} {{ExaminerName}},
-
-Thank you for accepting our invitation to serve as an {{ExaminerType}} Examiner for the thesis examination of the following postgraduate candidate.
-
-Student Name : ${student?.StudentName || ""}
-Matric No.   : ${student?.MatricNo || ""}
-Programme    : ${student?.Programme || ""}
-School/Centre: Pusat Kanser Tun Abdullah Ahmad Badawi (PKTAAB)
-University   : Universiti Sains Malaysia
-
-Thesis Title:
-${student?.ThesisTitle || ""}
-
-The candidate has now submitted the thesis for examination. The thesis and supporting documents are available for your review through the link below:
-
-📂 Thesis & Supporting Documents
-{{DriveLink}}
-
-Password to open the thesis PDF:
-${student?.IC_Passport || ""}
-
-(The password is the student's identification/passport number.)
-
-We would appreciate your attention to the following:
-
-1. The official Thesis Examiner's Report Form may be downloaded from the Institute of Postgraduate Studies (IPS), Universiti Sains Malaysia:
-https://ips.usm.my/index.php/download/viva-voce
-
-2. Please review the thesis and submit the completed Thesis Examiner's Report together with the annotated thesis (PDF), where applicable, on or before:
-
-Submission Due Date:
-{{DueDate}}
-
-3. Kindly submit your report securely via the VivaTrack platform using the link below:
-
-🔗 Submit Examination Report
-{{SubmissionLink}}
-
-4. Upon successful submission through VivaTrack, your report will be automatically forwarded to the Institute of Postgraduate Studies (IPS), Universiti Sains Malaysia. A copy will also be retained by the PKTAAB Viva Secretariat for record purposes. No separate email submission is required.
-
-5. To facilitate the candidate's thesis revision following the viva voce examination, you are kindly requested to provide a comprehensive and detailed evaluation in the official report and, where appropriate, include comments directly on the thesis PDF.
-
-6. As an appointed examiner, you are required to attend the viva voce examination on the scheduled date. Details of the viva session will be communicated to you separately. Participation via Microsoft Teams may be arranged where appropriate.
-
-Should you require any clarification or technical assistance regarding the thesis documents or VivaTrack platform, please do not hesitate to contact the PKTAAB Viva Secretariat.
-
-The University sincerely appreciates your time, expertise and valuable contribution towards maintaining the quality and standards of postgraduate education at Universiti Sains Malaysia.
-
-Thank you.
-
-Yours sincerely,
-
-Viva Secretariat
-Academic & International Division
-Pusat Kanser Tun Abdullah Ahmad Badawi (PKTAAB)
-Universiti Sains Malaysia`,
     }));
   }
 
@@ -225,7 +169,6 @@ Universiti Sains Malaysia`,
     receivedDate: item.DateReceivedFromIPS || "",
     dueDate: item.ReportDueDate || "",
     emailSubject: item.EmailSubject || "",
-    emailBody: item.EmailBody || "",
     reminder: item.ReminderEnabled ?? true,
   });
 
@@ -235,28 +178,39 @@ Universiti Sains Malaysia`,
   });
 }
 
-  function previewEmailHandler() {
- const examinerId =
-  form.externalExaminers[0] ||
-  form.internalExaminers[0];
+  async function previewEmailHandler(type = "thesis") {
 
-const examiner = examiners.find(
-  e => e.ExaminerID === examinerId
-);
-let preview = form.emailBody;
+  if (!selectedCase) {
+    alert("Please select a viva case.");
+    return;
+  }
 
-preview = preview
-  .replaceAll("{{ExaminerTitle}}", examiner?.Title || "")
-  .replaceAll("{{ExaminerName}}", examiner?.ExaminerName || "")
-  .replaceAll("{{ExaminerType}}", examiner?.ExaminerType || "")
-  .replaceAll("{{DriveLink}}", form.driveLink)
-  .replaceAll("{{DueDate}}", form.dueDate)
-  .replaceAll("{{SubmissionLink}}", "https://vivatrack.onrender.com/submit");
+  try {
 
-setPreviewEmail(preview);
-  setPreviewOpen(true);
+    const res = await fetch(
+      `${API}/emails/${selectedCase.CaseID}/preview/${type}`
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message || "Unable to preview email.");
+      return;
+    }
+
+    setPreviewType(type);
+    setPreviewSubject(data.subject);
+    setPreviewHtml(data.html);
+    setPreviewOpen(true);
+
+  } catch (err) {
+
+    console.error(err);
+    alert("Unable to load email preview.");
+
+  }
+
 }
-
   async function deleteCase(caseID) {
   const ok = window.confirm(
     "Are you sure you want to delete this viva case?"
@@ -306,7 +260,6 @@ setPreviewEmail(preview);
           DateReceivedFromIPS: form.receivedDate,
           ReportDueDate: form.dueDate,
           EmailSubject: form.emailSubject,
-          EmailBody: form.emailBody,
           ReminderEnabled: form.reminder,
           CurrentStatus: "Draft",
         }),
@@ -556,15 +509,19 @@ previewEmailHandler={previewEmailHandler}
       <div className="mb-4 rounded border bg-gray-50 p-4">
         <div className="mb-4">
   <p className="font-semibold">Subject</p>
-  <div className="mb-4 rounded border bg-gray-100 p-3">
-    {form.emailSubject}
-  </div>
+
+<div className="mb-4 rounded border bg-gray-100 p-3">
+  {previewSubject}
+</div>
 
   <p className="font-semibold">Body</p>
   <div className="rounded border bg-gray-50 p-4">
-    <pre className="whitespace-pre-wrap text-sm">
-      {previewEmail}
-    </pre>
+    <div
+  className="prose max-w-none"
+  dangerouslySetInnerHTML={{
+    __html: previewHtml,
+  }}
+/>
   </div>
 </div>
       </div>
@@ -580,14 +537,41 @@ previewEmailHandler={previewEmailHandler}
 
        <button
   onClick={async () => {
+
     setPreviewOpen(false);
-    await sendThesis();
+
+    switch (previewType) {
+
+      case "appointment":
+        await sendAppointment();
+        break;
+
+      case "thesis":
+        await sendThesis();
+        break;
+
+      case "reminder":
+        await sendReminder();
+        break;
+
+      case "schedule":
+        await sendSchedule();
+        break;
+
+      case "thankyou":
+        await sendThankYou();
+        break;
+
+      default:
+        break;
+
+    }
+
   }}
   className="rounded bg-purple-600 px-4 py-2 text-white"
 >
-  📄 Send Thesis
+  Send Email
 </button>
-
       </div>
 
     </div>
