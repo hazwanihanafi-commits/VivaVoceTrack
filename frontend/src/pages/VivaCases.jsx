@@ -275,9 +275,10 @@ ConfirmedVivaDate: "",
 
 VivaTime: form.vivaTime,
 Venue: form.vivaVenue,
-
+VivaMode: form.vivaMode,
 MeetingLink: form.meetingLink,
-        EmailSubject: form.emailSubject,
+
+EmailSubject: form.emailSubject,
         ReminderEnabled: form.reminder,
         CurrentStatus: "Draft",
       }),
@@ -415,14 +416,43 @@ async function sendReminder() {
 async function sendSchedule() {
 
   if (!selectedCase) {
-  alert(
-    "Please save the draft first. A Viva Case Number will be generated automatically. After that, select the case from the Viva Case List below before previewing or sending emails."
-  );
-  return;
-}
+    alert(
+      "Please save the draft first. A Viva Case Number will be generated automatically. After that, select the case from the Viva Case List below before previewing or sending emails."
+    );
+    return;
+  }
 
   try {
 
+    // STEP 1 - Save latest schedule
+    const scheduleRes = await fetch(
+      `${API}/schedule/${selectedCase.CaseID}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+
+          TentativeVivaDate: form.vivaDate,
+          ConfirmedVivaDate: "",
+          VivaTime: form.vivaTime,
+          Venue: form.vivaVenue,
+          VivaMode: form.vivaMode,
+          MeetingLink: form.meetingLink,
+
+        }),
+      }
+    );
+
+    const scheduleData = await scheduleRes.json();
+
+    if (!scheduleRes.ok) {
+      alert(scheduleData.message || "Unable to save schedule.");
+      return;
+    }
+
+    // STEP 2 - Send email
     const res = await fetch(
       `${API}/emails/${selectedCase.CaseID}/send-schedule`,
       {
@@ -433,17 +463,18 @@ async function sendSchedule() {
     const data = await res.json();
 
     if (!res.ok) {
-      alert(data.message);
+      alert(data.message || "Unable to send schedule email.");
       return;
     }
 
     alert(data.message);
+
     loadCases();
 
   } catch (err) {
 
     console.error(err);
-    alert("Unable to send schedule email.");
+    alert("Unable to connect to server.");
 
   }
 
