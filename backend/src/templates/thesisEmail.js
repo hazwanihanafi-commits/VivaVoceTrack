@@ -196,20 +196,71 @@ Important Information
 <ol style="line-height:1.9;">
 
 <li>
-Please submit your examiner report on or before
+Please download the
+<strong>Thesis Examiner's Report</strong>
+using the following link:
+<br><br>
+
+<a href="{{ExaminerReportLink}}">
+{{ExaminerReportLink}}
+</a>
+
+</li>
+
+<li>
+
+Kindly acknowledge receipt of the thesis by completing the online acknowledgement form:
+
+<br><br>
+
+<a href="{{AcknowledgementLink}}">
+{{AcknowledgementLink}}
+</a>
+
+</li>
+
+<li>
+
+Please submit your completed examiner report
+on or before
 <strong>{{ReportDueDate}}</strong>.
+
+<br><br>
+
+Submission Link:
+
+<br>
+
+<a href="{{ReportSubmissionLink}}">
+{{ReportSubmissionLink}}
+</a>
+
 </li>
 
 <li>
+
+Please upload the annotated thesis (PDF with comments)
+using the following link:
+
+<br><br>
+
+<a href="{{AnnotatedThesisUploadLink}}">
+{{AnnotatedThesisUploadLink}}
+</a>
+
+</li>
+
+<li>
+
+You are kindly requested to attend the Viva Voce examination when scheduled.
+The session may be conducted either in person or via Microsoft Teams.
+
+</li>
+
+<li>
+
 All thesis documents are strictly confidential and should not be shared with any third party.
-</li>
 
-<li>
-Should you experience any difficulty accessing the thesis, kindly contact the VivaTrack Secretariat.
-</li>
-
-<li>
-If you have already submitted your report, please disregard any reminder emails.
 </li>
 
 </ol>
@@ -219,7 +270,7 @@ We sincerely appreciate your valuable contribution towards maintaining the quali
 </p>
 
 <p>
-Should you require any assistance regarding the examination process, please contact the VivaTrack Secretariat.
+Should you require any assistance regarding the examination process, please contact the Mrs Nur Anis Syamimi (anissyamimi@usm.my), Assistant Registrar, Academic & International Division, PKTAAB.
 </p>
 
 <p>
@@ -228,7 +279,7 @@ Yours sincerely,
 
 <p>
 
-<strong>VivaTrack Secretariat</strong><br>
+<strong>Academic & International Division</strong><br>
 
 Academic & International Division<br>
 
