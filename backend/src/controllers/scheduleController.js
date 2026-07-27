@@ -52,10 +52,16 @@ export const createSchedule = async (req, res, next) => {
         req.body.VivaTime || "",
 
       Venue:
-        req.body.Venue || "",
+  req.body.Venue || "",
 
-      Chairperson:
-        req.body.Chairperson || "",
+VivaMode:
+  req.body.VivaMode || "",
+
+MeetingLink:
+  req.body.MeetingLink || "",
+
+Chairperson:
+  req.body.Chairperson || "",
 
       Secretary:
         req.body.Secretary || "",
