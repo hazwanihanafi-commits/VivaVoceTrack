@@ -476,14 +476,6 @@ export default function VivaCaseForm({
     👁 Preview Appointment
   </button>
 
-  <button
-    type="button"
-    onClick={sendAppointment}
-    className="rounded-xl bg-indigo-700 px-5 py-3 text-white hover:bg-indigo-800"
-  >
-    📩 Send Appointment
-  </button>
-
   {/* Thesis */}
   <button
     type="button"
@@ -493,13 +485,6 @@ export default function VivaCaseForm({
     👁 Preview Thesis
   </button>
 
-  <button
-    type="button"
-    onClick={sendThesis}
-    className="rounded-xl bg-purple-700 px-5 py-3 text-white hover:bg-purple-800"
-  >
-    📄 Send Thesis
-  </button>
 
   {/* Reminder */}
   <button
@@ -510,13 +495,6 @@ export default function VivaCaseForm({
     👁 Preview Reminder
   </button>
 
-  <button
-    type="button"
-    onClick={sendReminder}
-    className="rounded-xl bg-orange-600 px-5 py-3 text-white hover:bg-orange-700"
-  >
-    🔔 Send Reminder
-  </button>
 
   {/* Schedule */}
   <button
@@ -527,13 +505,6 @@ export default function VivaCaseForm({
     👁 Preview Schedule
   </button>
 
-  <button
-    type="button"
-    onClick={sendSchedule}
-    className="rounded-xl bg-green-700 px-5 py-3 text-white hover:bg-green-800"
-  >
-    📅 Send Schedule
-  </button>
 
   {/* Thank You */}
   <button
@@ -542,14 +513,6 @@ export default function VivaCaseForm({
     className="rounded-xl bg-slate-600 px-5 py-3 text-white hover:bg-slate-700"
   >
     👁 Preview Thank You
-  </button>
-
-  <button
-    type="button"
-    onClick={sendThankYou}
-    className="rounded-xl bg-slate-700 px-5 py-3 text-white hover:bg-slate-800"
-  >
-    🙏 Send Thank You
   </button>
 
 </div>
