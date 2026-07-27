@@ -181,9 +181,9 @@ const [previewType, setPreviewType] = useState("thesis");
   async function previewEmailHandler(type = "thesis") {
 
   if (!selectedCase) {
-    alert("Please select a viva case.");
-    return;
-  }
+    alert(
+  "Please save the draft first. A Viva Case Number will be generated automatically. After that, select the case from the table below before previewing or sending emails."
+);
 
   try {
 
@@ -272,7 +272,12 @@ const [previewType, setPreviewType] = useState("thesis");
         return;
       }
 
-      alert("Draft saved successfully.");
+      alert(
+  "Draft saved successfully.\n\nA Viva Case Number has been generated. Please select the case from the Viva Case List below to preview or send emails."
+);
+      return;
+}
+    
 
       loadCases();
     } catch (err) {
@@ -284,10 +289,12 @@ const [previewType, setPreviewType] = useState("thesis");
   async function sendAppointment() {
 
   if (!selectedCase) {
-    alert("Please select a viva case.");
+    alert(
+  "Please save the draft first. A Viva Case Number will be generated automatically. After that, select the case from the table below before previewing or sending emails."
+  );
     return;
-  }
-
+}
+    
   try {
 
     const res = await fetch(
@@ -319,10 +326,11 @@ const [previewType, setPreviewType] = useState("thesis");
 async function sendThesis() {
 
   if (!selectedCase) {
-    alert("Please select a viva case.");
-    return;
-  }
-
+  alert(
+    "Please save the draft first. A Viva Case Number will be generated automatically. After that, select the case from the Viva Case List below before previewing or sending emails."
+  );
+  return;
+}
   try {
 
     const res = await fetch(
@@ -354,9 +362,11 @@ async function sendThesis() {
 async function sendReminder() {
 
   if (!selectedCase) {
-    alert("Please select a viva case.");
-    return;
-  }
+  alert(
+    "Please save the draft first. A Viva Case Number will be generated automatically. After that, select the case from the Viva Case List below before previewing or sending emails."
+  );
+  return;
+}
 
   try {
 
@@ -389,9 +399,11 @@ async function sendReminder() {
 async function sendSchedule() {
 
   if (!selectedCase) {
-    alert("Please select a viva case.");
-    return;
-  }
+  alert(
+    "Please save the draft first. A Viva Case Number will be generated automatically. After that, select the case from the Viva Case List below before previewing or sending emails."
+  );
+  return;
+}
 
   try {
 
