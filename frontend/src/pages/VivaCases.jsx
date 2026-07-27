@@ -259,6 +259,15 @@ const [previewType, setPreviewType] = useState("thesis");
         GoogleDriveLink: form.driveLink,
         DateReceivedFromIPS: form.receivedDate,
         ReportDueDate: form.dueDate,
+        ReportDueDate: form.dueDate,
+
+VivaDate: form.vivaDate,
+VivaTime: form.vivaTime,
+VivaVenue: form.vivaVenue,
+VivaMode: form.vivaMode,
+MeetingLink: form.meetingLink,
+
+EmailSubject: form.emailSubject,
         EmailSubject: form.emailSubject,
         ReminderEnabled: form.reminder,
         CurrentStatus: "Draft",
