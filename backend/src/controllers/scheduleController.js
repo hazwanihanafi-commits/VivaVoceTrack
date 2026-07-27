@@ -66,9 +66,6 @@ Chairperson:
       Secretary:
         req.body.Secretary || "",
 
-      MeetingLink:
-        req.body.MeetingLink || "",
-
       CurrentStatus: "Scheduled",
 
       LastUpdated:
@@ -256,26 +253,34 @@ export const confirmSchedule = async (req, res, next) => {
 
     const updated = {
 
-      ...viva,
+  ...viva,
 
-      CurrentStatus: "Confirmed",
+  CurrentStatus: "Confirmed",
 
-      ConfirmedVivaDate:
-        req.body.ConfirmedVivaDate ||
-        viva.ConfirmedVivaDate,
+  ConfirmedVivaDate:
+    req.body.ConfirmedVivaDate ||
+    viva.ConfirmedVivaDate,
 
-      VivaTime:
-        req.body.VivaTime ||
-        viva.VivaTime,
+  VivaTime:
+    req.body.VivaTime ||
+    viva.VivaTime,
 
-      Venue:
-        req.body.Venue ||
-        viva.Venue,
+  Venue:
+    req.body.Venue ||
+    viva.Venue,
 
-      LastUpdated:
-        new Date().toISOString(),
+  VivaMode:
+    req.body.VivaMode ||
+    viva.VivaMode,
 
-    };
+  MeetingLink:
+    req.body.MeetingLink ||
+    viva.MeetingLink,
+
+  LastUpdated:
+    new Date().toISOString(),
+
+};
 
     await updateRow(
       SHEET,
