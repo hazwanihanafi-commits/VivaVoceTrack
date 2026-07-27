@@ -428,6 +428,93 @@ export default function VivaCaseForm({
 
         </div>
 
+        {/* ============================= */}
+{/* Viva Schedule */}
+{/* ============================= */}
+
+<div className="md:col-span-2 mt-2">
+  <h3 className="border-b pb-2 text-lg font-semibold">
+    Viva Schedule
+  </h3>
+</div>
+
+<div>
+  <label className="mb-2 block font-medium">
+    Viva Date
+  </label>
+
+  <input
+    type="date"
+    name="vivaDate"
+    value={form.vivaDate}
+    onChange={updateField}
+    className="w-full rounded-xl border p-3"
+  />
+</div>
+
+<div>
+  <label className="mb-2 block font-medium">
+    Viva Time
+  </label>
+
+  <input
+    type="time"
+    name="vivaTime"
+    value={form.vivaTime}
+    onChange={updateField}
+    className="w-full rounded-xl border p-3"
+  />
+</div>
+
+<div>
+  <label className="mb-2 block font-medium">
+    Venue
+  </label>
+
+  <input
+    type="text"
+    name="vivaVenue"
+    value={form.vivaVenue}
+    onChange={updateField}
+    placeholder="Meeting Room / Auditorium"
+    className="w-full rounded-xl border p-3"
+  />
+</div>
+
+<div>
+  <label className="mb-2 block font-medium">
+    Mode
+  </label>
+
+  <select
+    name="vivaMode"
+    value={form.vivaMode}
+    onChange={updateField}
+    className="w-full rounded-xl border p-3"
+  >
+    <option value="Physical">Physical</option>
+    <option value="Online">Online</option>
+    <option value="Hybrid">Hybrid</option>
+  </select>
+</div>
+
+{form.vivaMode !== "Physical" && (
+  <div className="md:col-span-2">
+    <label className="mb-2 block font-medium">
+      Meeting Link
+    </label>
+
+    <input
+      type="url"
+      name="meetingLink"
+      value={form.meetingLink}
+      onChange={updateField}
+      placeholder="https://teams.microsoft.com/..."
+      className="w-full rounded-xl border p-3"
+    />
+  </div>
+)}
+
                 {/* Email */}
 
       </div>
