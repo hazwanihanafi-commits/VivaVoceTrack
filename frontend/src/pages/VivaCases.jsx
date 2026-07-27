@@ -24,7 +24,6 @@ const [previewType, setPreviewType] = useState("thesis");
   internalExaminers: [""],
   externalExaminers: [""],
   driveLink: "",
-  thesisPDF: "",
   receivedDate: "",
   dueDate: "",
   emailSubject: "",
@@ -165,7 +164,6 @@ const [previewType, setPreviewType] = useState("thesis");
     ].filter(Boolean),
 
     driveLink: item.GoogleDriveLink || "",
-    thesisPDF: item.ThesisPDF || "",
     receivedDate: item.DateReceivedFromIPS || "",
     dueDate: item.ReportDueDate || "",
     emailSubject: item.EmailSubject || "",
@@ -181,10 +179,12 @@ const [previewType, setPreviewType] = useState("thesis");
   async function previewEmailHandler(type = "thesis") {
 
   if (!selectedCase) {
-    alert(
-  "Please save the draft first. A Viva Case Number will be generated automatically. After that, select the case from the table below before previewing or sending emails."
-);
-
+  alert(
+    "Please save the draft first. A Viva Case Number will be generated automatically. After that, select the case from the table below before previewing or sending emails."
+  );
+  return;
+}
+    
   try {
 
     const res = await fetch(
@@ -244,47 +244,45 @@ const [previewType, setPreviewType] = useState("thesis");
 }
   
   async function saveDraft() {
-    try {
-      const res = await fetch(`${API}/vivacases`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          StudentID: form.studentId,
-          InternalExaminer1ID: form.internalExaminers[0] || "",
-          InternalExaminer2ID: form.internalExaminers[1] || "",
-          ExternalExaminer1ID: form.externalExaminers[0] || "",
-          ExternalExaminer2ID: form.externalExaminers[1] || "",
-          GoogleDriveLink: form.driveLink,
-          DateReceivedFromIPS: form.receivedDate,
-          ReportDueDate: form.dueDate,
-          EmailSubject: form.emailSubject,
-          ReminderEnabled: form.reminder,
-          CurrentStatus: "Draft",
-        }),
-      });
+  try {
+    const res = await fetch(`${API}/vivacases`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        StudentID: form.studentId,
+        InternalExaminer1ID: form.internalExaminers[0] || "",
+        InternalExaminer2ID: form.internalExaminers[1] || "",
+        ExternalExaminer1ID: form.externalExaminers[0] || "",
+        ExternalExaminer2ID: form.externalExaminers[1] || "",
+        GoogleDriveLink: form.driveLink,
+        DateReceivedFromIPS: form.receivedDate,
+        ReportDueDate: form.dueDate,
+        EmailSubject: form.emailSubject,
+        ReminderEnabled: form.reminder,
+        CurrentStatus: "Draft",
+      }),
+    });
 
-      const data = await res.json();
+    const data = await res.json();
 
-      if (!res.ok) {
-        alert(data.message || "Failed to save draft");
-        return;
-      }
-
-      alert(
-  "Draft saved successfully.\n\nA Viva Case Number has been generated. Please select the case from the Viva Case List below to preview or send emails."
-);
+    if (!res.ok) {
+      alert(data.message || "Failed to save draft");
       return;
-}
-    
-
-      loadCases();
-    } catch (err) {
-      console.error(err);
-      alert("Unable to connect to server.");
     }
+
+    alert(
+      "Draft saved successfully.\n\nA Viva Case Number has been generated. Please select the case from the Viva Case List below to preview or send emails."
+    );
+
+    loadCases();
+
+  } catch (err) {
+    console.error(err);
+    alert("Unable to connect to server.");
   }
+}
 
   async function sendAppointment() {
 
@@ -435,10 +433,12 @@ async function sendSchedule() {
 
 async function sendThankYou() {
 
-  if (!selectedCase) {
-    alert("Please select a viva case.");
-    return;
-  }
+ if (!selectedCase) {
+  alert(
+    "Please save the draft first. A Viva Case Number will be generated automatically. After that, select the case from the table below before previewing or sending emails."
+  );
+  return;
+}
 
   try {
 
