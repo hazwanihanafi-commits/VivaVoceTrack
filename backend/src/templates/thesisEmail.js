@@ -29,86 +29,86 @@ cellspacing="0"
 style="
 border-collapse:collapse;
 border:1px solid #d9d9d9;
-font-size:15px;
+font-size:14px;
 ">
 
 <tr style="background:#f7f7f7;">
-<td style="padding:10px;border:1px solid #d9d9d9;width:35%;font-weight:bold;">
+<td style="padding:8px 10px;border:1px solid #d9d9d9;width:35%;font-weight:bold;">
 Student Name
 </td>
-<td style="padding:10px;border:1px solid #d9d9d9;">
+<td style="padding:8px 10px;border:1px solid #d9d9d9;">
 {{StudentName}}
 </td>
 </tr>
 
 <tr>
-<td style="padding:10px;border:1px solid #d9d9d9;font-weight:bold;">
+<td style="padding:8px 10px;border:1px solid #d9d9d9;font-weight:bold;">
 Matric No.
 </td>
-<td style="padding:10px;border:1px solid #d9d9d9;">
+<td style="padding:8px 10px;border:1px solid #d9d9d9;">
 {{MatricNo}}
 </td>
 </tr>
 
 <tr style="background:#f7f7f7;">
-<td style="padding:10px;border:1px solid #d9d9d9;font-weight:bold;">
+<td style="padding:8px 10px;border:1px solid #d9d9d9;font-weight:bold;">
 Programme
 </td>
-<td style="padding:10px;border:1px solid #d9d9d9;">
+<td style="padding:8px 10px;border:1px solid #d9d9d9;">
 {{Programme}}
 </td>
 </tr>
 
 <tr>
-<td style="padding:10px;border:1px solid #d9d9d9;font-weight:bold;">
+<td style="padding:8px 10px;border:1px solid #d9d9d9;font-weight:bold;">
 Mode of Study
 </td>
-<td style="padding:10px;border:1px solid #d9d9d9;">
+<td style="padding:8px 10px;border:1px solid #d9d9d9;">
 {{Mode}}
 </td>
 </tr>
 
 <tr style="background:#f7f7f7;">
-<td style="padding:10px;border:1px solid #d9d9d9;font-weight:bold;">
+<td style="padding:8px 10px;border:1px solid #d9d9d9;font-weight:bold;">
 School / Centre
 </td>
-<td style="padding:10px;border:1px solid #d9d9d9;">
+<td style="padding:8px 10px;border:1px solid #d9d9d9;">
 {{School}}
 </td>
 </tr>
 
 <tr>
-<td style="padding:10px;border:1px solid #d9d9d9;font-weight:bold;">
+<td style="padding:8px 10px;border:1px solid #d9d9d9;font-weight:bold;">
 Research Area
 </td>
-<td style="padding:10px;border:1px solid #d9d9d9;">
+<td style="padding:8px 10px;border:1px solid #d9d9d9;">
 {{ResearchArea}}
 </td>
 </tr>
 
 <tr style="background:#f7f7f7;">
-<td style="padding:10px;border:1px solid #d9d9d9;font-weight:bold;">
+<td style="padding:8px 10px;border:1px solid #d9d9d9;font-weight:bold;">
 Supervisor
 </td>
-<td style="padding:10px;border:1px solid #d9d9d9;">
+<td style="padding:8px 10px;border:1px solid #d9d9d9;">
 {{Supervisor}}
 </td>
 </tr>
 
 <tr>
-<td style="padding:10px;border:1px solid #d9d9d9;font-weight:bold;">
+<td style="padding:8px 10px;border:1px solid #d9d9d9;font-weight:bold;">
 Thesis Title
 </td>
-<td style="padding:10px;border:1px solid #d9d9d9;">
+<td style="padding:8px 10px;border:1px solid #d9d9d9;">
 {{ThesisTitle}}
 </td>
 </tr>
 
 <tr style="background:#f7f7f7;">
-<td style="padding:10px;border:1px solid #d9d9d9;font-weight:bold;">
+<td style="padding:8px 10px;border:1px solid #d9d9d9;font-weight:bold;">
 Report Due Date
 </td>
-<td style="padding:10px;border:1px solid #d9d9d9;">
+<td style="padding:8px 10px;border:1px solid #d9d9d9;">
 {{ReportDueDate}}
 </td>
 </tr>
@@ -140,11 +140,11 @@ style="
 display:inline-block;
 background:#5B2C90;
 color:#ffffff;
-padding:15px 32px;
+padding:12px 24px;
 border-radius:8px;
 font-weight:bold;
 text-decoration:none;
-font-size:16px;
+font-size:15px;
 ">
 
 📄 View Thesis & Supporting Documents
@@ -171,7 +171,7 @@ The password to open the thesis PDF is:
 </p>
 
 <p style="
-font-size:24px;
+font-size:20px;
 font-weight:bold;
 color:#5B2C90;
 text-align:center;
