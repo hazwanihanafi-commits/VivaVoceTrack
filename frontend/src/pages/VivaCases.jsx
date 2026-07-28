@@ -255,51 +255,114 @@ meetingLink: item.MeetingLink || "",
   
   async function saveDraft() {
   try {
-    const res = await fetch(`${API}/vivacases`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        StudentID: form.studentId,
-        InternalExaminer1ID: form.internalExaminers[0] || "",
-        InternalExaminer2ID: form.internalExaminers[1] || "",
-        ExternalExaminer1ID: form.externalExaminers[0] || "",
-        ExternalExaminer2ID: form.externalExaminers[1] || "",
-        GoogleDriveLink: form.driveLink,
-        DateReceivedFromIPS: form.receivedDate,
-        ReportDueDate: form.dueDate,
 
-TentativeVivaDate: form.vivaDate,
-ConfirmedVivaDate: "",
+    const payload = {
+      StudentID: form.studentId,
+      InternalExaminer1ID: form.internalExaminers[0] || "",
+      InternalExaminer2ID: form.internalExaminers[1] || "",
+      ExternalExaminer1ID: form.externalExaminers[0] || "",
+      ExternalExaminer2ID: form.externalExaminers[1] || "",
+      GoogleDriveLink: form.driveLink,
+      DateReceivedFromIPS: form.receivedDate,
+      ReportDueDate: form.dueDate,
 
-VivaTime: form.vivaTime,
-Venue: form.vivaVenue,
-VivaMode: form.vivaMode,
-MeetingLink: form.meetingLink,
+      TentativeVivaDate: form.vivaDate,
+      ConfirmedVivaDate: "",
 
-EmailSubject: form.emailSubject,
-        ReminderEnabled: form.reminder,
-        CurrentStatus: "Draft",
-      }),
-    });
+      VivaTime: form.vivaTime,
+      Venue: form.vivaVenue,
+      VivaMode: form.vivaMode,
+      MeetingLink: form.meetingLink,
+
+      EmailSubject: form.emailSubject,
+      ReminderEnabled: form.reminder,
+      CurrentStatus: "Draft"
+    };
+
+    let res;
+
+    // ==========================
+    // UPDATE EXISTING CASE
+    // ==========================
+
+    if (selectedCase?.CaseID) {
+
+      res = await fetch(
+        `${API}/vivacases/${selectedCase.CaseID}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        }
+      );
+
+    }
+
+    // ==========================
+    // CREATE NEW CASE
+    // ==========================
+
+    else {
+
+      res = await fetch(
+        `${API}/vivacases`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        }
+      );
+
+    }
 
     const data = await res.json();
 
     if (!res.ok) {
-      alert(data.message || "Failed to save draft");
+      alert(data.message || "Unable to save draft.");
       return;
     }
 
-    alert(
-      "Draft saved successfully.\n\nA Viva Case Number has been generated. Please select the case from the Viva Case List below to preview or send emails."
-    );
+    // If backend returns existing case
+    if (data.existing) {
 
-    loadCases();
+      setSelectedCase(data.data);
+
+      alert(
+        `Existing Viva Case found.\n\nCase ID: ${data.caseID}\n\nThe existing case has been opened instead of creating a duplicate.`
+      );
+
+    }
+
+    // Newly created case
+    else if (data.caseID) {
+
+      alert(`Draft saved successfully.\n\nCase ID: ${data.caseID}`);
+
+    }
+
+    await loadCases();
+
+const refreshed = await fetch(`${API}/vivacases`);
+const json = await refreshed.json();
+
+const latest =
+  json.data.find(c => c.CaseID === data.caseID) ||
+  json.data.find(c => c.CaseID === data.data?.CaseID);
+
+if (latest) {
+  handleManage(latest);
+}
 
   } catch (err) {
+
     console.error(err);
+
     alert("Unable to connect to server.");
+
   }
 }
 
