@@ -28,7 +28,7 @@ width="100%"
 cellpadding="0"
 cellspacing="0"
 style="
-max-width:760px;
+max-width:600px;
 background:#ffffff;
 border-radius:12px;
 overflow:hidden;
@@ -40,14 +40,14 @@ box-shadow:0 4px 15px rgba(0,0,0,.08);
 <td
 style="
 background:#5B2C90;
-padding:35px;
+padding:24px 20px;
 text-align:center;
 color:#ffffff;
 ">
 
 <h1 style="
 margin:0;
-font-size:34px;
+font-size:28px;
 font-weight:bold;
 ">
 Universiti Sains Malaysia
@@ -55,7 +55,7 @@ Universiti Sains Malaysia
 
 <p style="
 margin:12px 0 0;
-font-size:18px;
+font-size:13px;
 ">
 Pusat Kanser Tun Abdullah Ahmad Badawi (PKTAAB)
 </p>
@@ -75,13 +75,14 @@ Academic & International Division
 <tr>
 <td
 style="
-padding:35px 40px 20px;
+padding:24px 24px 12px;
 text-align:center;
 ">
 
 <h2 style="
 margin:0;
-font-size:34px;
+font-size:22px;
+font-weight:600;
 color:#5B2C90;
 ">
 ${title}
@@ -94,9 +95,9 @@ ${title}
 <tr>
 <td
 style="
-padding:0 40px 35px;
-font-size:17px;
-line-height:1.9;
+padding:0 24px 24px;
+font-size:15px;
+line-height:1.65;
 ">
 
 ${content}
@@ -110,7 +111,7 @@ ${content}
 style="
 background:#f7f7f7;
 border-top:1px solid #ddd;
-padding:30px;
+padding:18px;
 text-align:center;
 ">
 
@@ -127,7 +128,7 @@ This is an automatically generated email from
 
 <p style="
 margin:12px 0;
-font-size:15px;
+font-size:13px;
 line-height:1.8;
 color:#2E7D32;
 ">
