@@ -82,24 +82,54 @@ export default function Schedule() {
   }
 
   async function loadAll() {
-    try {
-      setLoading(true);
-      setError("");
-      const [caseData, studentData, examinerData] = await Promise.all([
-        getJson(`${API}/vivacases`),
-        getJson(`${API}/students`),
-        getJson(`${API}/examiners`),
-      ]);
-      setCases(Array.isArray(caseData.data) ? caseData.data : []);
-      setStudents(Array.isArray(studentData.data) ? studentData.data : []);
-      setExaminers(Array.isArray(examinerData.data) ? examinerData.data : []);
-    } catch (err) {
-      console.error(err);
-      setError(err.message || "Unable to load viva schedules.");
-    } finally {
-      setLoading(false);
+  try {
+    setLoading(true);
+    setError("");
+
+    const [caseData, studentData, examinerData] = await Promise.all([
+      getJson(`${API}/vivacases`),
+      getJson(`${API}/students`),
+      getJson(`${API}/examiners`),
+    ]);
+
+    const loadedCases = Array.isArray(caseData.data)
+      ? caseData.data
+      : [];
+
+    setCases(loadedCases);
+
+    setStudents(
+      Array.isArray(studentData.data)
+        ? studentData.data
+        : []
+    );
+
+    setExaminers(
+      Array.isArray(examinerData.data)
+        ? examinerData.data
+        : []
+    );
+
+    // If Schedule was opened from Viva Cases
+    if (requestedCaseID) {
+      const selected = loadedCases.find(
+        (item) => item.CaseID === requestedCaseID
+      );
+
+      if (selected) {
+        openCreate(selected);
+      }
     }
+
+  } catch (err) {
+    console.error(err);
+    setError(
+      err.message || "Unable to load Viva schedules."
+    );
+  } finally {
+    setLoading(false);
   }
+}
 
   const studentMap = useMemo(
     () => Object.fromEntries(students.map((s) => [s.StudentID, s])),
@@ -121,23 +151,46 @@ export default function Schedule() {
   }
 
   function openCreate(item = null) {
-    setForm(
-      item
-        ? {
-            caseID: item.CaseID,
-            TentativeVivaDate: dateInput(item.TentativeVivaDate),
-            ConfirmedVivaDate: dateInput(item.ConfirmedVivaDate),
-            VivaTime: item.VivaTime || "",
-            Venue: item.Venue || "",
-            VivaMode: item.VivaMode || "Physical",
-            MeetingLink: item.MeetingLink || "",
-            Chairperson: item.Chairperson || item.ChairpersonID || "",
-            Secretary: item.Secretary || item.SecretaryID || "",
-          }
-        : { ...emptyForm }
-    );
+  if (!item) {
+    setForm({ ...emptyForm });
     setModalOpen(true);
+    return;
   }
+
+  setForm({
+    caseID: item.CaseID || "",
+
+    TentativeVivaDate:
+      dateInput(item.TentativeVivaDate),
+
+    ConfirmedVivaDate:
+      dateInput(item.ConfirmedVivaDate),
+
+    VivaTime:
+      item.VivaTime || "",
+
+    Venue:
+      item.Venue || "",
+
+    VivaMode:
+      item.VivaMode || "Physical",
+
+    MeetingLink:
+      item.MeetingLink || "",
+
+    Chairperson:
+      item.Chairperson ||
+      item.ChairpersonID ||
+      "",
+
+    Secretary:
+      item.Secretary ||
+      item.SecretaryID ||
+      "",
+  });
+
+  setModalOpen(true);
+}
 
   function updateField(event) {
     const { name, value } = event.target;
@@ -145,43 +198,90 @@ export default function Schedule() {
   }
 
   async function saveSchedule(event) {
-    event.preventDefault();
-    if (!form.caseID) return;
-    if (!form.TentativeVivaDate && !form.ConfirmedVivaDate) {
-      alert("Please select a Viva date.");
-      return;
-    }
+  event.preventDefault();
 
-    try {
-      setSaving(true);
-      const existing = cases.find((item) => item.CaseID === form.caseID);
-      const method = existing?.TentativeVivaDate || existing?.ConfirmedVivaDate ? "PUT" : "POST";
-      const payload = {
-        TentativeVivaDate: form.TentativeVivaDate,
-        ConfirmedVivaDate: form.ConfirmedVivaDate || form.TentativeVivaDate,
-        VivaTime: form.VivaTime,
-        Venue: form.Venue,
-        VivaMode: form.VivaMode,
-        MeetingLink: form.MeetingLink,
-        Chairperson: form.Chairperson,
-        Secretary: form.Secretary,
-      };
-
-      await getJson(`${API}/schedule/${form.caseID}`, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      setModalOpen(false);
-      await loadAll();
-    } catch (err) {
-      console.error(err);
-      alert(err.message || "Unable to save Viva schedule.");
-    } finally {
-      setSaving(false);
-    }
+  if (!form.caseID) {
+    alert("Please select a Viva Case.");
+    return;
   }
+
+  if (!form.TentativeVivaDate && !form.ConfirmedVivaDate) {
+    alert("Please select a Viva date.");
+    return;
+  }
+
+  try {
+    setSaving(true);
+
+    const existing = cases.find(
+      (item) => item.CaseID === form.caseID
+    );
+
+    const hasExistingSchedule =
+      existing?.TentativeVivaDate ||
+      existing?.ConfirmedVivaDate;
+
+    const method = hasExistingSchedule
+      ? "PUT"
+      : "POST";
+
+    const payload = {
+      TentativeVivaDate:
+        form.TentativeVivaDate || "",
+
+      ConfirmedVivaDate:
+        form.ConfirmedVivaDate || "",
+
+      VivaTime:
+        form.VivaTime || "",
+
+      Venue:
+        form.Venue || "",
+
+      VivaMode:
+        form.VivaMode || "Physical",
+
+      MeetingLink:
+        form.MeetingLink || "",
+
+      Chairperson:
+        form.Chairperson || "",
+
+      Secretary:
+        form.Secretary || "",
+    };
+
+    const result = await getJson(
+      `${API}/schedule/${form.caseID}`,
+      {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    console.log("Schedule saved:", result);
+
+    setModalOpen(false);
+
+    await loadAll();
+
+    alert("Viva schedule saved successfully.");
+
+  } catch (err) {
+    console.error(err);
+
+    alert(
+      err.message ||
+      "Unable to save Viva schedule."
+    );
+
+  } finally {
+    setSaving(false);
+  }
+}
 
   async function action(caseID, type) {
     const labels = {
