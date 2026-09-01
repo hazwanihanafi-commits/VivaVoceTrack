@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Search, Plus, Eye, Pencil, Trash2 } from "lucide-react";
 import StudentModal from "../components/students/StudentModal";
 
-const API = import.meta.env.VITE_API_URL || "https://vivatrack-backend.onrender.com/api";
+const API = import.meta.env.VITE_API_URL || "https://vivatrack-backend.onrender.com";
 
 export default function Students() {
   const [search, setSearch] = useState("");
