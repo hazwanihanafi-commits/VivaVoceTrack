@@ -2,14 +2,17 @@ import {
   getRows,
   addRow,
   generateID,
+  findRow,
 } from "./sheetsService.js";
+
 
 /**
  * ======================================================
- * FIND STAFF ID BY NAME
+ * FIND STAFF ID BY STAFF NAME
  * ======================================================
  */
 async function getStaffIDByName(name) {
+
   if (!name) return "";
 
   const staffRows = await getRows("Staff");
@@ -36,33 +39,89 @@ async function getStaffIDByName(name) {
  * ======================================================
  * CREATE VIVA PANEL
  * ======================================================
+ *
+ * Automatically creates:
+ *
+ * 1. Student
+ * 2. Chairperson
+ * 3. Secretary
+ * 4. Main Supervisor
+ * 5. Co-Supervisor(s)
+ * 6. Internal Examiner 1
+ * 7. Internal Examiner 2
+ * 8. External Examiner 1 (optional)
+ * 9. External Examiner 2 (optional)
+ *
+ * Supervisor information is automatically obtained from:
+ *
+ * Students sheet
+ *      ↓
+ * Supervisor / CoSupervisor
+ *      ↓
+ * Staff sheet
+ *      ↓
+ * StaffID
+ *
+ * ======================================================
  */
 export async function createVivaPanel(caseData) {
 
   const members = [];
 
+
+  /**
+   * ====================================================
+   * ADD MEMBER
+   * ====================================================
+   */
   function add(
     PersonID,
     PersonType,
     Role,
     Required = "Yes"
   ) {
+
     if (!PersonID) return;
 
     members.push({
+
       VivaID: caseData.CaseID,
+
       PersonID,
+
       PersonType,
+
       Role,
+
       Required,
+
     });
   }
 
 
-  // ====================================================
-  // STUDENT
-  // ====================================================
+  /**
+   * ====================================================
+   * LOAD STUDENT
+   * ====================================================
+   */
+  let student = null;
 
+  if (caseData.StudentID) {
+
+    student = await findRow(
+      "Students",
+      "StudentID",
+      caseData.StudentID
+    );
+
+  }
+
+
+  /**
+   * ====================================================
+   * STUDENT
+   * ====================================================
+   */
   add(
     caseData.StudentID,
     "Student",
@@ -71,10 +130,11 @@ export async function createVivaPanel(caseData) {
   );
 
 
-  // ====================================================
-  // CHAIRPERSON
-  // ====================================================
-
+  /**
+   * ====================================================
+   * CHAIRPERSON
+   * ====================================================
+   */
   add(
     caseData.ChairpersonID,
     "Staff",
@@ -83,10 +143,11 @@ export async function createVivaPanel(caseData) {
   );
 
 
-  // ====================================================
-  // SECRETARY
-  // ====================================================
-
+  /**
+   * ====================================================
+   * SECRETARY
+   * ====================================================
+   */
   add(
     caseData.SecretaryID,
     "Staff",
@@ -95,57 +156,83 @@ export async function createVivaPanel(caseData) {
   );
 
 
-  // ====================================================
-  // MAIN SUPERVISOR
-  // ====================================================
+  /**
+   * ====================================================
+   * MAIN SUPERVISOR
+   * ====================================================
+   *
+   * Automatically obtain Supervisor name from Students.
+   */
+  if (student) {
 
-  let mainSupervisorID =
-    caseData.MainSupervisorID || "";
+    const supervisorName =
+      student.Supervisor;
 
-  if (!mainSupervisorID && caseData.MainSupervisorName) {
+    if (supervisorName) {
 
-    mainSupervisorID =
-      await getStaffIDByName(
-        caseData.MainSupervisorName
-      );
+      const mainSupervisorID =
+        await getStaffIDByName(
+          supervisorName
+        );
+
+      if (mainSupervisorID) {
+
+        add(
+          mainSupervisorID,
+          "Staff",
+          "Main Supervisor",
+          "Yes"
+        );
+
+      } else {
+
+        console.warn(
+          `Main supervisor not found in Staff sheet: ${supervisorName}`
+        );
+
+      }
+
+    }
+
   }
 
-  if (!mainSupervisorID && caseData.MainSupervisorName) {
 
-    console.warn(
-      `Main supervisor not found in Staff sheet: ${caseData.MainSupervisorName}`
-    );
+  /**
+   * ====================================================
+   * CO-SUPERVISORS
+   * ====================================================
+   *
+   * Supports:
+   *
+   * Supervisor A
+   *
+   * or
+   *
+   * Supervisor A, Supervisor B
+   *
+   */
+  if (
+    student &&
+    student.CoSupervisor
+  ) {
 
-  } else {
+    const names =
+      String(student.CoSupervisor)
+        .split(",")
+        .map(
+          (name) => name.trim()
+        )
+        .filter(Boolean);
 
-    add(
-      mainSupervisorID,
-      "Staff",
-      "Main Supervisor",
-      "Yes"
-    );
-  }
-
-
-  // ====================================================
-  // CO-SUPERVISORS
-  // ====================================================
-
-  if (caseData.CoSupervisorNames) {
-
-    const names = String(
-      caseData.CoSupervisorNames
-    )
-      .split(",")
-      .map((name) => name.trim())
-      .filter(Boolean);
 
     let index = 1;
+
 
     for (const name of names) {
 
       const staffID =
         await getStaffIDByName(name);
+
 
       if (!staffID) {
 
@@ -154,7 +241,9 @@ export async function createVivaPanel(caseData) {
         );
 
         continue;
+
       }
+
 
       add(
         staffID,
@@ -163,15 +252,19 @@ export async function createVivaPanel(caseData) {
         "Yes"
       );
 
+
       index++;
+
     }
+
   }
 
 
-  // ====================================================
-  // INTERNAL EXAMINERS
-  // ====================================================
-
+  /**
+   * ====================================================
+   * INTERNAL EXAMINER 1
+   * ====================================================
+   */
   add(
     caseData.InternalExaminer1ID,
     "Examiner",
@@ -179,6 +272,12 @@ export async function createVivaPanel(caseData) {
     "Yes"
   );
 
+
+  /**
+   * ====================================================
+   * INTERNAL EXAMINER 2
+   * ====================================================
+   */
   add(
     caseData.InternalExaminer2ID,
     "Examiner",
@@ -187,11 +286,12 @@ export async function createVivaPanel(caseData) {
   );
 
 
-  // ====================================================
-  // EXTERNAL EXAMINERS
-  // OPTIONAL
-  // ====================================================
-
+  /**
+   * ====================================================
+   * EXTERNAL EXAMINER 1
+   * OPTIONAL
+   * ====================================================
+   */
   add(
     caseData.ExternalExaminer1ID,
     "Examiner",
@@ -199,6 +299,13 @@ export async function createVivaPanel(caseData) {
     "No"
   );
 
+
+  /**
+   * ====================================================
+   * EXTERNAL EXAMINER 2
+   * OPTIONAL
+   * ====================================================
+   */
   add(
     caseData.ExternalExaminer2ID,
     "Examiner",
@@ -207,30 +314,46 @@ export async function createVivaPanel(caseData) {
   );
 
 
-  // ====================================================
-  // EXISTING PANEL RECORDS
-  // ====================================================
-
+  /**
+   * ====================================================
+   * GET EXISTING PANEL RECORDS
+   * ====================================================
+   */
   const existing =
     await getRows("Panel");
 
 
-  // ====================================================
-  // CREATE PANEL RECORDS
-  // ====================================================
-
+  /**
+   * ====================================================
+   * CREATE PANEL RECORDS
+   * ====================================================
+   */
   for (const member of members) {
 
     const alreadyExists =
       existing.find(
         (x) =>
-          x.VivaID === member.VivaID &&
-          x.PersonID === member.PersonID
+          String(x.VivaID).trim() ===
+            String(member.VivaID).trim() &&
+
+          String(x.PersonID).trim() ===
+            String(member.PersonID).trim() &&
+
+          String(x.Role).trim() ===
+            String(member.Role).trim()
       );
 
-    if (alreadyExists) continue;
+
+    if (alreadyExists) {
+
+      continue;
+
+    }
 
 
+    /**
+     * Generate Panel ID
+     */
     const PanelID =
       await generateID(
         "VP",
@@ -239,21 +362,50 @@ export async function createVivaPanel(caseData) {
       );
 
 
+    /**
+     * Add row to Panel sheet
+     *
+     * Panel columns:
+     *
+     * 1  PanelID
+     * 2  VivaID
+     * 3  PersonID
+     * 4  PersonType
+     * 5  Role
+     * 6  Required
+     * 7  InvitationSent
+     * 8  InvitationDate
+     * 9  Accepted
+     * 10 ResponseDate
+     * 11 Remarks
+     */
     await addRow(
       "Panel",
       [
         PanelID,
+
         member.VivaID,
+
         member.PersonID,
+
         member.PersonType,
+
         member.Role,
+
         member.Required,
+
         "No",
+
         "",
+
         "Pending",
+
         "",
+
         "",
       ]
     );
+
   }
+
 }
