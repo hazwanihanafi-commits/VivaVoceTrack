@@ -90,7 +90,7 @@ function externalExaminers(item) {
 
       <div className="overflow-x-auto">
 
-        <table className="min-w-[950px] w-full">
+       <table className="min-w-[1100px] w-full">
 
           <thead>
 
@@ -155,15 +155,11 @@ function externalExaminers(item) {
                 </td>
 
                 <td className="p-3">
-                  <StatusBadge
-                    status={item.CurrentStatus}
-                  />
-                </td>
-
-                <td className="p-3">
   <div className="flex justify-center gap-2">
 
+    {/* Manage Viva Case */}
     <button
+      type="button"
       onClick={() => onManage(item)}
       className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700"
     >
@@ -171,7 +167,18 @@ function externalExaminers(item) {
       Manage
     </button>
 
+    {/* Schedule Viva */}
     <button
+      type="button"
+      onClick={() => onSchedule(item)}
+      className="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-3 py-2 text-sm font-medium text-white hover:bg-purple-700"
+    >
+      Schedule
+    </button>
+
+    {/* Delete Viva Case */}
+    <button
+      type="button"
       onClick={() => onDelete(item.CaseID)}
       className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
     >
@@ -180,8 +187,8 @@ function externalExaminers(item) {
     </button>
 
   </div>
-</td>
-              </tr>
+</td>              
+                    </tr>
             ))}
 
             {filteredCases.length === 0 && (
