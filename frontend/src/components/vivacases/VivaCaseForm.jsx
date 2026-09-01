@@ -9,11 +9,11 @@ import {
   Copy,
 } from "lucide-react";
 
-
 export default function VivaCaseForm({
   selectedCase,
   students,
   examiners,
+  staff,
   selectedStudent,
   form,
   handleStudent,
@@ -29,29 +29,42 @@ export default function VivaCaseForm({
   return (
     <div className="rounded-2xl bg-white p-8 shadow">
 
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
+
       <div className="mb-6 flex items-center justify-between">
 
-  <div>
+        <div>
 
-    <h2 className="text-2xl font-bold">
-      {selectedCase
-        ? `Manage Viva Case (${selectedCase.CaseID})`
-        : "Create New Viva Case"}
-    </h2>
+          <h2 className="text-2xl font-bold">
+            {selectedCase
+              ? `Manage Viva Case (${selectedCase.CaseID})`
+              : "Create New Viva Case"}
+          </h2>
 
-    {selectedCase && (
-      <p className="mt-1 text-sm text-gray-500">
-        Edit case details, send emails, track reports and schedule the viva.
-      </p>
-    )}
+          {selectedCase && (
+            <p className="mt-1 text-sm text-gray-500">
+              Edit case details, send emails, track reports and
+              manage the Viva panel.
+            </p>
+          )}
 
-  </div>
+        </div>
 
-</div>
+      </div>
+
+
+      {/* =====================================================
+          MAIN FORM
+      ===================================================== */}
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
 
-        {/* Student */}
+
+        {/* ===================================================
+            STUDENT
+        =================================================== */}
 
         <div>
 
@@ -68,20 +81,25 @@ export default function VivaCaseForm({
 
             <select
               value={form.studentId}
-              onChange={(e) => handleStudent(e.target.value)}
+              onChange={(e) =>
+                handleStudent(e.target.value)
+              }
               className="w-full rounded-xl border p-3 pl-10"
             >
+
               <option value="">
                 Select Student
               </option>
 
               {students.map((student) => (
+
                 <option
                   key={student.StudentID}
                   value={student.StudentID}
                 >
                   {student.StudentName}
                 </option>
+
               ))}
 
             </select>
@@ -90,7 +108,10 @@ export default function VivaCaseForm({
 
         </div>
 
-        {/* Programme */}
+
+        {/* ===================================================
+            PROGRAMME
+        =================================================== */}
 
         <div>
 
@@ -100,13 +121,18 @@ export default function VivaCaseForm({
 
           <input
             readOnly
-            value={selectedStudent?.Programme || ""}
+            value={
+              selectedStudent?.Programme || ""
+            }
             className="w-full rounded-xl border bg-gray-50 p-3"
           />
 
         </div>
 
-        {/* Supervisor */}
+
+        {/* ===================================================
+            SUPERVISOR
+        =================================================== */}
 
         <div>
 
@@ -116,15 +142,49 @@ export default function VivaCaseForm({
 
           <input
             readOnly
-            value={selectedStudent?.Supervisor || ""}
+            value={
+              selectedStudent?.Supervisor || ""
+            }
             className="w-full rounded-xl border bg-gray-50 p-3"
           />
 
+          <p className="mt-1 text-xs text-gray-500">
+            Automatically obtained from the Students sheet.
+          </p>
+
         </div>
 
-        {/* Thesis */}
+
+        {/* ===================================================
+            CO-SUPERVISOR
+        =================================================== */}
 
         <div>
+
+          <label className="mb-2 block font-medium">
+            Co-Supervisor
+          </label>
+
+          <input
+            readOnly
+            value={
+              selectedStudent?.CoSupervisor || ""
+            }
+            className="w-full rounded-xl border bg-gray-50 p-3"
+          />
+
+          <p className="mt-1 text-xs text-gray-500">
+            Automatically obtained from the Students sheet.
+          </p>
+
+        </div>
+
+
+        {/* ===================================================
+            THESIS TITLE
+        =================================================== */}
+
+        <div className="md:col-span-2">
 
           <label className="mb-2 block font-medium">
             Thesis Title
@@ -133,248 +193,435 @@ export default function VivaCaseForm({
           <textarea
             readOnly
             rows={3}
-            value={selectedStudent?.ThesisTitle || ""}
+            value={
+              selectedStudent?.ThesisTitle || ""
+            }
             className="w-full rounded-xl border bg-gray-50 p-3"
           />
 
         </div>
 
-        {/* Internal Examiners */}
 
-<div>
+        {/* ===================================================
+            CHAIRPERSON
+        =================================================== */}
 
-  <div className="mb-2 flex items-center justify-between">
+        <div>
 
-    <label className="font-medium">
-      Internal Examiners
-    </label>
+          <label className="mb-2 block font-medium">
+            Chairperson
+          </label>
 
-    <button
-      type="button"
-      onClick={() =>
-        updateField({
-          target: {
-            name: "addInternal",
-          },
-        })
-      }
-      className="flex items-center gap-1 rounded-lg bg-purple-600 px-3 py-1 text-sm text-white hover:bg-purple-700"
-    >
-      <Plus size={16} />
-      Add
-    </button>
-
-  </div>
-
-  {form.internalExaminers.map((examinerId, index) => (
-
-    <div
-      key={index}
-      className="mb-3 flex gap-2"
-    >
-
-      <select
-        value={examinerId}
-        onChange={(e) =>
-          updateField({
-            target: {
-              name: "internalExaminer",
-              value: e.target.value,
-              index,
-            },
-          })
-        }
-        className="flex-1 rounded-xl border p-3"
-      >
-        <option value="">
-          Select Internal Examiner
-        </option>
-
-        {examiners.map((examiner) => (
-          <option
-            key={examiner.ExaminerID}
-            value={examiner.ExaminerID}
+          <select
+            name="chairpersonId"
+            value={
+              form.chairpersonId || ""
+            }
+            onChange={updateField}
+            className="w-full rounded-xl border p-3"
           >
-            {examiner.ExaminerName}
-          </option>
-        ))}
 
-      </select>
+            <option value="">
+              Select Chairperson
+            </option>
 
-      {index > 0 && (
-        <button
-          type="button"
-          onClick={() =>
-            updateField({
-              target: {
-                name: "removeInternal",
-                index,
-              },
-            })
-          }
-          className="rounded-lg bg-red-500 p-3 text-white hover:bg-red-600"
-        >
-          <Trash2 size={18} />
-        </button>
-      )}
+            {(staff || [])
+              .filter(
+                (person) =>
+                  String(person.Active || "")
+                    .trim()
+                    .toLowerCase() === "yes"
+              )
+              .map((person) => (
 
-    </div>
+                <option
+                  key={person.StaffID}
+                  value={person.StaffID}
+                >
+                  {person.StaffName}
+                </option>
 
-  ))}
+              ))}
 
-</div>
+          </select>
 
-        {/* External Examiners */}
+        </div>
 
-<div>
 
-  <div className="mb-2 flex items-center justify-between">
+        {/* ===================================================
+            SECRETARY
+        =================================================== */}
 
-    <label className="font-medium">
-      External Examiners
-    </label>
+        <div>
 
-    <button
-      type="button"
-      onClick={() =>
-        updateField({
-          target: {
-            name: "addExternal",
-          },
-        })
-      }
-      className="flex items-center gap-1 rounded-lg bg-purple-600 px-3 py-1 text-sm text-white hover:bg-purple-700"
-    >
-      <Plus size={16} />
-      Add
-    </button>
+          <label className="mb-2 block font-medium">
+            Secretary
+          </label>
 
-  </div>
-
-  {form.externalExaminers.map((examinerId, index) => (
-
-    <div
-      key={index}
-      className="mb-3 flex gap-2"
-    >
-
-      <select
-        value={examinerId}
-        onChange={(e) =>
-          updateField({
-            target: {
-              name: "externalExaminer",
-              value: e.target.value,
-              index,
-            },
-          })
-        }
-        className="flex-1 rounded-xl border p-3"
-      >
-        <option value="">
-          Select External Examiner
-        </option>
-
-        {examiners.map((examiner) => (
-          <option
-            key={examiner.ExaminerID}
-            value={examiner.ExaminerID}
+          <select
+            name="secretaryId"
+            value={
+              form.secretaryId || ""
+            }
+            onChange={updateField}
+            className="w-full rounded-xl border p-3"
           >
-            {examiner.ExaminerName}
-          </option>
-        ))}
 
-      </select>
+            <option value="">
+              Select Secretary
+            </option>
 
-      {index > 0 && (
-        <button
-          type="button"
-          onClick={() =>
-            updateField({
-              target: {
-                name: "removeExternal",
-                index,
-              },
-            })
-          }
-          className="rounded-lg bg-red-500 p-3 text-white hover:bg-red-600"
-        >
-          <Trash2 size={18} />
-        </button>
-      )}
+            {(staff || [])
+              .filter(
+                (person) =>
+                  String(person.Active || "")
+                    .trim()
+                    .toLowerCase() === "yes"
+              )
+              .map((person) => (
 
-    </div>
+                <option
+                  key={person.StaffID}
+                  value={person.StaffID}
+                >
+                  {person.StaffName}
+                </option>
 
-  ))}
+              ))}
 
-</div>
+          </select>
 
-        {/* Documents */}
+        </div>
 
-<div>
-  <label className="mb-2 block font-medium">
-    Thesis Documents
-  </label>
 
-  <p className="mt-1 text-xs text-gray-500">
-  Paste the Google Drive folder link shared with the examiners.
-</p>
+        {/* ===================================================
+            INTERNAL EXAMINERS
+        =================================================== */}
 
-  <div className="relative">
-    <Link
-      size={18}
-      className="absolute left-3 top-3 text-gray-400"
-    />
+        <div>
 
-    <input
-  type="url"
-  name="driveLink"
-  value={form.driveLink}
-  onChange={updateField}
-  placeholder="https://drive.google.com/drive/folders/..."
-  required
-  className="w-full rounded-xl border p-3 pl-10"
-/>
-  </div>
+          <div className="mb-2 flex items-center justify-between">
 
-  <div className="mt-3 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
-  <p className="font-medium mb-2">
-    The folder should contain:
-  </p>
+            <label className="font-medium">
+              Internal Examiners
+            </label>
 
-  <ul className="list-disc pl-5 space-y-1">
-    <li>Final Thesis (PDF)</li>
-    <li>Turnitin Similarity Report</li>
-    <li>Ethics Approval (if applicable)</li>
-    <li>Supplementary Documents</li>
-  </ul>
-</div>
+            <button
+              type="button"
+              onClick={() =>
+                updateField({
+                  target: {
+                    name: "addInternal",
+                  },
+                })
+              }
+              className="flex items-center gap-1 rounded-lg bg-purple-600 px-3 py-1 text-sm text-white hover:bg-purple-700"
+            >
 
-  {form.driveLink && (
-    <div className="mt-3 flex gap-2">
-      <a
-  href={form.driveLink}
-  target="_blank"
-  rel="noopener noreferrer"
-  className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
->
-  <ExternalLink size={16} />
-  Open Folder
-</a>
+              <Plus size={16} />
 
-<button
-  type="button"
-  onClick={() => navigator.clipboard.writeText(form.driveLink)}
-  className="flex items-center gap-2 rounded-lg border px-4 py-2 hover:bg-gray-100"
->
-  <Copy size={16} />
-  Copy Link
-</button>
-    </div>
-  )}
-</div>
+              Add
 
-        {/* Date Received */}
+            </button>
+
+          </div>
+
+
+          {form.internalExaminers.map(
+            (examinerId, index) => (
+
+              <div
+                key={index}
+                className="mb-3 flex gap-2"
+              >
+
+                <select
+                  value={examinerId}
+                  onChange={(e) =>
+                    updateField({
+                      target: {
+                        name: "internalExaminer",
+                        value: e.target.value,
+                        index,
+                      },
+                    })
+                  }
+                  className="flex-1 rounded-xl border p-3"
+                >
+
+                  <option value="">
+                    Select Internal Examiner
+                  </option>
+
+                  {examiners.map(
+                    (examiner) => (
+
+                      <option
+                        key={
+                          examiner.ExaminerID
+                        }
+                        value={
+                          examiner.ExaminerID
+                        }
+                      >
+                        {
+                          examiner.ExaminerName
+                        }
+                      </option>
+
+                    )
+                  )}
+
+                </select>
+
+
+                {index > 0 && (
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateField({
+                        target: {
+                          name: "removeInternal",
+                          index,
+                        },
+                      })
+                    }
+                    className="rounded-lg bg-red-500 p-3 text-white hover:bg-red-600"
+                  >
+
+                    <Trash2 size={18} />
+
+                  </button>
+
+                )}
+
+              </div>
+
+            )
+          )}
+
+        </div>
+
+
+        {/* ===================================================
+            EXTERNAL EXAMINERS
+        =================================================== */}
+
+        <div>
+
+          <div className="mb-2 flex items-center justify-between">
+
+            <label className="font-medium">
+              External Examiners
+            </label>
+
+            <button
+              type="button"
+              onClick={() =>
+                updateField({
+                  target: {
+                    name: "addExternal",
+                  },
+                })
+              }
+              className="flex items-center gap-1 rounded-lg bg-purple-600 px-3 py-1 text-sm text-white hover:bg-purple-700"
+            >
+
+              <Plus size={16} />
+
+              Add
+
+            </button>
+
+          </div>
+
+
+          {form.externalExaminers.map(
+            (examinerId, index) => (
+
+              <div
+                key={index}
+                className="mb-3 flex gap-2"
+              >
+
+                <select
+                  value={examinerId}
+                  onChange={(e) =>
+                    updateField({
+                      target: {
+                        name: "externalExaminer",
+                        value: e.target.value,
+                        index,
+                      },
+                    })
+                  }
+                  className="flex-1 rounded-xl border p-3"
+                >
+
+                  <option value="">
+                    Select External Examiner
+                  </option>
+
+                  {examiners.map(
+                    (examiner) => (
+
+                      <option
+                        key={
+                          examiner.ExaminerID
+                        }
+                        value={
+                          examiner.ExaminerID
+                        }
+                      >
+                        {
+                          examiner.ExaminerName
+                        }
+                      </option>
+
+                    )
+                  )}
+
+                </select>
+
+
+                {index > 0 && (
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateField({
+                        target: {
+                          name: "removeExternal",
+                          index,
+                        },
+                      })
+                    }
+                    className="rounded-lg bg-red-500 p-3 text-white hover:bg-red-600"
+                  >
+
+                    <Trash2 size={18} />
+
+                  </button>
+
+                )}
+
+              </div>
+
+            )
+          )}
+
+        </div>
+
+
+        {/* ===================================================
+            DOCUMENTS
+        =================================================== */}
+
+        <div>
+
+          <label className="mb-2 block font-medium">
+            Thesis Documents
+          </label>
+
+          <p className="mt-1 text-xs text-gray-500">
+            Paste the Google Drive folder link shared with
+            the examiners.
+          </p>
+
+          <div className="relative mt-2">
+
+            <Link
+              size={18}
+              className="absolute left-3 top-3 text-gray-400"
+            />
+
+            <input
+              type="url"
+              name="driveLink"
+              value={form.driveLink}
+              onChange={updateField}
+              placeholder="https://drive.google.com/drive/folders/..."
+              required
+              className="w-full rounded-xl border p-3 pl-10"
+            />
+
+          </div>
+
+
+          <div className="mt-3 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
+
+            <p className="mb-2 font-medium">
+              The folder should contain:
+            </p>
+
+            <ul className="list-disc space-y-1 pl-5">
+
+              <li>
+                Final Thesis (PDF)
+              </li>
+
+              <li>
+                Turnitin Similarity Report
+              </li>
+
+              <li>
+                Ethics Approval (if applicable)
+              </li>
+
+              <li>
+                Supplementary Documents
+              </li>
+
+            </ul>
+
+          </div>
+
+
+          {form.driveLink && (
+
+            <div className="mt-3 flex gap-2">
+
+              <a
+                href={form.driveLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+              >
+
+                <ExternalLink size={16} />
+
+                Open Folder
+
+              </a>
+
+
+              <button
+                type="button"
+                onClick={() =>
+                  navigator.clipboard.writeText(
+                    form.driveLink
+                  )
+                }
+                className="flex items-center gap-2 rounded-lg border px-4 py-2 hover:bg-gray-100"
+              >
+
+                <Copy size={16} />
+
+                Copy Link
+
+              </button>
+
+            </div>
+
+          )}
+
+        </div>
+
+
+        {/* ===================================================
+            DATE RECEIVED
+        =================================================== */}
 
         <div>
 
@@ -401,7 +648,10 @@ export default function VivaCaseForm({
 
         </div>
 
-        {/* Due Date */}
+
+        {/* ===================================================
+            REPORT DUE DATE
+        =================================================== */}
 
         <div>
 
@@ -428,96 +678,12 @@ export default function VivaCaseForm({
 
         </div>
 
-        {/* ============================= */}
-{/* Viva Schedule */}
-{/* ============================= */}
-
-<div className="md:col-span-2 mt-2">
-  <h3 className="border-b pb-2 text-lg font-semibold">
-    Viva Schedule
-  </h3>
-</div>
-
-<div>
-  <label className="mb-2 block font-medium">
-    Viva Date
-  </label>
-
-  <input
-    type="date"
-    name="vivaDate"
-    value={form.vivaDate}
-    onChange={updateField}
-    className="w-full rounded-xl border p-3"
-  />
-</div>
-
-<div>
-  <label className="mb-2 block font-medium">
-    Viva Time
-  </label>
-
-  <input
-    type="time"
-    name="vivaTime"
-    value={form.vivaTime}
-    onChange={updateField}
-    className="w-full rounded-xl border p-3"
-  />
-</div>
-
-<div>
-  <label className="mb-2 block font-medium">
-    Venue
-  </label>
-
-  <input
-    type="text"
-    name="vivaVenue"
-    value={form.vivaVenue}
-    onChange={updateField}
-    placeholder="Meeting Room / Auditorium"
-    className="w-full rounded-xl border p-3"
-  />
-</div>
-
-<div>
-  <label className="mb-2 block font-medium">
-    Mode
-  </label>
-
-  <select
-    name="vivaMode"
-    value={form.vivaMode}
-    onChange={updateField}
-    className="w-full rounded-xl border p-3"
-  >
-    <option value="Physical">Physical</option>
-    <option value="Online">Online</option>
-    <option value="Hybrid">Hybrid</option>
-  </select>
-</div>
-
-{form.vivaMode !== "Physical" && (
-  <div className="md:col-span-2">
-    <label className="mb-2 block font-medium">
-      Meeting Link
-    </label>
-
-    <input
-      type="url"
-      name="meetingLink"
-      value={form.meetingLink}
-      onChange={updateField}
-      placeholder="https://teams.microsoft.com/..."
-      className="w-full rounded-xl border p-3"
-    />
-  </div>
-)}
-
-                {/* Email */}
-
       </div>
+
+
+      {/* =====================================================
+          EMAIL
+      ===================================================== */}
 
       <div className="mt-8">
 
@@ -533,10 +699,12 @@ export default function VivaCaseForm({
           className="mb-5 w-full rounded-xl border p-3"
         />
 
-
       </div>
 
-      {/* Reminder */}
+
+      {/* =====================================================
+          REMINDER
+      ===================================================== */}
 
       <div className="mt-6 flex items-center gap-3">
 
@@ -553,70 +721,106 @@ export default function VivaCaseForm({
 
       </div>
 
-      {/* Buttons */}
 
-      {/* Buttons */}
+      {/* =====================================================
+          BUTTONS
+      ===================================================== */}
 
-<div className="mt-8 flex flex-wrap gap-3">
+      <div className="mt-8 flex flex-wrap gap-3">
 
-  <button
-    type="button"
-    onClick={saveDraft}
-    className="flex items-center gap-2 rounded-xl bg-gray-700 px-6 py-3 text-white hover:bg-gray-800"
-  >
-    <Save size={18} />
-    {selectedCase ? "Update Case" : "Save Draft"}
-  </button>
+        {/* SAVE */}
 
-  {/* Appointment */}
-  <button
-    type="button"
-    onClick={() => previewEmailHandler("appointment")}
-    className="rounded-xl bg-indigo-600 px-5 py-3 text-white hover:bg-indigo-700"
-  >
-    👁 Preview Appointment
-  </button>
+        <button
+          type="button"
+          onClick={saveDraft}
+          className="flex items-center gap-2 rounded-xl bg-gray-700 px-6 py-3 text-white hover:bg-gray-800"
+        >
 
-  {/* Thesis */}
-  <button
-    type="button"
-    onClick={() => previewEmailHandler("thesis")}
-    className="rounded-xl bg-purple-600 px-5 py-3 text-white hover:bg-purple-700"
-  >
-    👁 Preview Thesis
-  </button>
+          <Save size={18} />
+
+          {selectedCase
+            ? "Update Case"
+            : "Save Draft"}
+
+        </button>
 
 
-  {/* Reminder */}
-  <button
-    type="button"
-    onClick={() => previewEmailHandler("reminder")}
-    className="rounded-xl bg-orange-500 px-5 py-3 text-white hover:bg-orange-600"
-  >
-    👁 Preview Reminder
-  </button>
+        {/* APPOINTMENT */}
+
+        <button
+          type="button"
+          onClick={() =>
+            previewEmailHandler(
+              "appointment"
+            )
+          }
+          className="rounded-xl bg-indigo-600 px-5 py-3 text-white hover:bg-indigo-700"
+        >
+          👁 Preview Appointment
+        </button>
 
 
-  {/* Schedule */}
-  <button
-    type="button"
-    onClick={() => previewEmailHandler("schedule")}
-    className="rounded-xl bg-green-600 px-5 py-3 text-white hover:bg-green-700"
-  >
-    👁 Preview Schedule
-  </button>
+        {/* THESIS */}
+
+        <button
+          type="button"
+          onClick={() =>
+            previewEmailHandler(
+              "thesis"
+            )
+          }
+          className="rounded-xl bg-purple-600 px-5 py-3 text-white hover:bg-purple-700"
+        >
+          👁 Preview Thesis
+        </button>
 
 
-  {/* Thank You */}
-  <button
-    type="button"
-    onClick={() => previewEmailHandler("thankyou")}
-    className="rounded-xl bg-slate-600 px-5 py-3 text-white hover:bg-slate-700"
-  >
-    👁 Preview Thank You
-  </button>
+        {/* REMINDER */}
 
-</div>
+        <button
+          type="button"
+          onClick={() =>
+            previewEmailHandler(
+              "reminder"
+            )
+          }
+          className="rounded-xl bg-orange-500 px-5 py-3 text-white hover:bg-orange-600"
+        >
+          👁 Preview Reminder
+        </button>
+
+
+        {/* SCHEDULE */}
+
+        <button
+          type="button"
+          onClick={() =>
+            previewEmailHandler(
+              "schedule"
+            )
+          }
+          className="rounded-xl bg-green-600 px-5 py-3 text-white hover:bg-green-700"
+        >
+          👁 Preview Schedule
+        </button>
+
+
+        {/* THANK YOU */}
+
+        <button
+          type="button"
+          onClick={() =>
+            previewEmailHandler(
+              "thankyou"
+            )
+          }
+          className="rounded-xl bg-slate-600 px-5 py-3 text-white hover:bg-slate-700"
+        >
+          👁 Preview Thank You
+        </button>
+
+      </div>
+
     </div>
   );
 }
