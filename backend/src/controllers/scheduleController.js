@@ -7,6 +7,130 @@ import {
 
 const SHEET = "VivaCases";
 
+async function createVivaPanel(caseData) {
+  const members = [];
+
+  function add(
+    PersonID,
+    PersonType,
+    Role,
+    Required = "Yes"
+  ) {
+    if (!PersonID) return;
+
+    members.push({
+      VivaID: caseData.CaseID,
+      PersonID,
+      PersonType,
+      Role,
+      Required,
+    });
+  }
+
+  // Student
+  add(
+    caseData.StudentID,
+    "Student",
+    "Student",
+    "Yes"
+  );
+
+  // Chairperson
+  add(
+    caseData.ChairpersonID,
+    "Staff",
+    "Chairperson",
+    "Yes"
+  );
+
+  // Secretary
+  add(
+    caseData.SecretaryID,
+    "Staff",
+    "Secretary",
+    "Yes"
+  );
+
+  // Main supervisor
+  add(
+    caseData.MainSupervisorID,
+    "Staff",
+    "Main Supervisor",
+    "Yes"
+  );
+
+  // Co-supervisor
+  add(
+    caseData.CoSupervisorID,
+    "Staff",
+    "Co-Supervisor",
+    "Yes"
+  );
+
+  // Internal examiners
+  add(
+    caseData.InternalExaminer1ID,
+    "Examiner",
+    "Internal Examiner 1",
+    "Yes"
+  );
+
+  add(
+    caseData.InternalExaminer2ID,
+    "Examiner",
+    "Internal Examiner 2",
+    "Yes"
+  );
+
+  // External examiners
+  add(
+    caseData.ExternalExaminer1ID,
+    "Examiner",
+    "External Examiner 1",
+    "No"
+  );
+
+  add(
+    caseData.ExternalExaminer2ID,
+    "Examiner",
+    "External Examiner 2",
+    "No"
+  );
+
+  const existing = await getRows("Panel");
+
+  for (const member of members) {
+    const alreadyExists = existing.find(
+      (x) =>
+        x.VivaID === member.VivaID &&
+        x.PersonID === member.PersonID &&
+        x.Role === member.Role
+    );
+
+    if (alreadyExists) continue;
+
+    const PanelID = await generateID(
+      "VP",
+      "Panel",
+      "PanelID"
+    );
+
+    await addRow("Panel", [
+      PanelID,
+      member.VivaID,
+      member.PersonID,
+      member.PersonType,
+      member.Role,
+      member.Required,
+      "No",
+      "",
+      "Pending",
+      "",
+      "",
+    ]);
+  }
+}
+
 /**
  * ======================================================
  * Create Viva Schedule
