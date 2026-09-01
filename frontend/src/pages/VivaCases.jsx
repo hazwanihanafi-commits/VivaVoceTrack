@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import SummaryCards from "../components/vivacases/SummaryCards";
 import VivaCaseForm from "../components/vivacases/VivaCaseForm";
@@ -8,6 +9,7 @@ import CaseStatusCard from "../components/vivacases/CaseStatusCard";
 const API = "https://vivatrack-backend.onrender.com/api";
 
 export default function VivaCases() {
+  const navigate = useNavigate();
   const [students, setStudents] = useState([]);
   const [examiners, setExaminers] = useState([]);
   const [cases, setCases] = useState([]);
@@ -17,6 +19,7 @@ export default function VivaCases() {
 const [previewHtml, setPreviewHtml] = useState("");
 const [previewSubject, setPreviewSubject] = useState("");
 const [previewType, setPreviewType] = useState("thesis");
+  
   
 
   const [form, setForm] = useState({
@@ -144,6 +147,15 @@ meetingLink: "",
       [name]: type === "checkbox" ? checked : value,
     };
   });
+}
+
+  function handleSchedule(item) {
+  if (!item?.CaseID) {
+    alert("Viva Case ID is required.");
+    return;
+  }
+
+  navigate(`/schedule?caseID=${encodeURIComponent(item.CaseID)}`);
 }
 
   function handleManage(item) {
@@ -619,6 +631,7 @@ previewEmailHandler={previewEmailHandler}
   students={students}
   examiners={examiners}
   onManage={handleManage}
+  onSchedule={handleSchedule}
   onDelete={deleteCase}
 />
 
