@@ -58,14 +58,14 @@ export const createSchedule = async (req, res, next) => {
         req.body.MeetingLink || "",
 
       ChairpersonID:
-        req.body.ChairpersonID ||
-        req.body.Chairperson ||
-        "",
+  req.body.ChairpersonID ||
+  req.body.Chairperson ||
+  "",
 
-      SecretaryID:
-        req.body.SecretaryID ||
-        req.body.Secretary ||
-        "",
+SecretaryID:
+  req.body.SecretaryID ||
+  req.body.Secretary ||
+  "",
 
       CurrentStatus:
         "Scheduled",
