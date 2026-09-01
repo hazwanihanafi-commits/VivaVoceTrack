@@ -12,19 +12,17 @@ export default function App() {
   return (
     <Routes>
 
-      {/* ==================================================
-          PUBLIC / EXTERNAL PANEL RESPONSE PAGE
-          Example:
-          /panel-response?panelID=VP001
-      ================================================== */}
+      {/* =========================================
+          PUBLIC PANEL RESPONSE PAGE
+          ========================================= */}
       <Route
         path="/panel-response"
         element={<PanelResponse />}
       />
 
-      {/* ==================================================
+      {/* =========================================
           MAIN SYSTEM
-      ================================================== */}
+          ========================================= */}
       <Route element={<MainLayout />}>
 
         <Route
