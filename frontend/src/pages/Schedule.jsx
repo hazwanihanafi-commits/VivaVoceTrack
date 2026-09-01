@@ -93,10 +93,10 @@ export default function Schedule() {
 
     const [scheduleData, studentData, examinerData, staffData] =
   await Promise.all([
-    getJson(`${API}/api/schedule`),
-    getJson(`${API}/api/students`),
-    getJson(`${API}/api/examiners`),
-    getJson(`${API}/api/staff`),
+    getJson(`${API}/schedule`),
+    getJson(`${API}/students`),
+    getJson(`${API}/examiners`),
+    getJson(`${API}/staff`),
   ]);
 
     const loadedSchedules = Array.isArray(scheduleData.data)
