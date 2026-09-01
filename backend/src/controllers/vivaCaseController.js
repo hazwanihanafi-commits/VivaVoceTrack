@@ -116,15 +116,7 @@ if (!student) {
   });
 }
 
-    // ============================================
-// AUTO-RESOLVE SUPERVISOR IDS
-// ============================================
-
-const mainSupervisorID =
-  await getStaffIDByName(student.Supervisor);
-
-const coSupervisorID =
-  await getStaffIDByName(student.CoSupervisor);
+  
 
     // ============================================
     // CHECK IF STUDENT ALREADY HAS ACTIVE CASE
