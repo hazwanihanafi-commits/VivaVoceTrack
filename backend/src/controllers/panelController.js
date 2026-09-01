@@ -110,6 +110,29 @@ export const respondToPanelInvitation = async (
       });
     }
 
+    /**
+ * ======================================================
+ * GET ALL PANEL RESPONSES
+ *
+ * GET /api/panel
+ * ======================================================
+ */
+export const getAllPanelResponses = async (req, res, next) => {
+  try {
+    const rows = await getRows(SHEET);
+
+    return res.json({
+      success: true,
+      total: rows.length,
+      data: rows,
+    });
+
+  } catch (err) {
+    console.error("GET ALL PANEL RESPONSES ERROR:", err);
+    next(err);
+  }
+};
+
     // ======================================================
 // CHECK RESPONSE DEADLINE
 // ======================================================
