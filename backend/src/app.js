@@ -83,7 +83,6 @@ app.get("/api/health", (req, res) => {
 /************************************************
  * API Routes
  ************************************************/
-app.use("/api/dashboard", dashboardRoutes);
 
 app.use("/api/students", studentRoutes);
 
