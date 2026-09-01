@@ -1,17 +1,26 @@
 import { getRows } from "../services/sheetsService.js";
 
-const SHEET = "Staff";
-
-export const getStaff = async (req, res, next) => {
+export async function getStaff(req, res) {
   try {
-    const rows = await getRows(SHEET);
+    const rows = await getRows("Staff");
+
+    const active = rows.filter(
+      (row) =>
+        String(row.Active || "")
+          .trim()
+          .toLowerCase() !== "no"
+    );
 
     res.json({
       success: true,
-      total: rows.length,
-      data: rows,
+      data: active,
     });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    console.error("GET STAFF ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Unable to load staff.",
+    });
   }
-};
+}
