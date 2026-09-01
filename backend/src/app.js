@@ -14,6 +14,8 @@ import activityRoutes from "./routes/activityRoutes.js";
 import emailRoutes from "./routes/emailRoutes.js";
 import scheduleRoutes from "./routes/scheduleRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
+import staffRoutes from "./routes/staffRoutes.js";
+
 
 // Middleware
 import errorHandler from "./middleware/errorHandler.js";
@@ -48,6 +50,7 @@ app.use("/api/emails", emailRoutes);
 app.use("/api/schedule", scheduleRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/staff", staffRoutes);
 
 /************************************************
  * Logger
