@@ -15,7 +15,7 @@ import {
 
 const API =
   import.meta.env.VITE_API_URL ||
-  "https://vivatrack-backend.onrender.com/api";
+  "https://vivatrack-backend.onrender.com";
 
 const emptyForm = {
   caseID: "",
