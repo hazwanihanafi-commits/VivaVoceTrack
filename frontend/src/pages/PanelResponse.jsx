@@ -1,119 +1,187 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
-const API =
-  "https://vivatrack-backend.onrender.com/api";
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function PanelResponse() {
-
   const [searchParams] = useSearchParams();
 
-  const panelID =
-    searchParams.get("panelID");
+  const panelID = searchParams.get("panelID");
 
   const [panel, setPanel] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [response, setResponse] = useState("");
+  const [suggestedDate, setSuggestedDate] = useState("");
+  const [suggestedTime, setSuggestedTime] = useState("");
+  const [remarks, setRemarks] = useState("");
 
-  const [submitting, setSubmitting] =
-    useState(false);
-
-  const [response, setResponse] =
-    useState("");
-
-  const [suggestedDate, setSuggestedDate] =
-    useState("");
-
-  const [suggestedTime, setSuggestedTime] =
-    useState("");
-
-  const [remarks, setRemarks] =
-    useState("");
-
-  const [message, setMessage] =
-    useState("");
-
-  const [error, setError] =
-    useState("");
-
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
   /**
-   * ================================================
+   * ======================================================
    * LOAD PANEL INVITATION
-   * ================================================
+   * GET /api/panel/:panelID
+   * ======================================================
    */
 
   useEffect(() => {
-
     if (!panelID) {
-      setError(
-        "Invalid panel invitation."
-      );
-
+      setError("Invalid panel invitation link.");
       setLoading(false);
-
       return;
     }
 
     loadPanel();
-
   }, [panelID]);
 
-
-  async function loadPanel() {
-
+  const loadPanel = async () => {
     try {
+      setLoading(true);
+      setError("");
 
-      const res = await fetch(
-        `${API}/panel/${encodeURIComponent(panelID)}`
+      const response = await fetch(
+        `${API_BASE_URL}/api/panel/${encodeURIComponent(panelID)}`
       );
 
-      const data = await res.json();
+      const data = await response.json();
 
-      if (!res.ok) {
-
-        setError(
-          data.message ||
-          "Unable to load invitation."
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message || "Unable to load panel invitation."
         );
-
-        return;
       }
 
       setPanel(data.data);
 
-    } catch (err) {
+      // Load existing response
+      setResponse(data.data.Accepted || "");
 
-      console.error(err);
-
-      setError(
-        "Unable to connect to VivaTrack."
+      setSuggestedDate(
+        data.data.SuggestedDate || ""
       );
 
-    } finally {
+      setSuggestedTime(
+        data.data.SuggestedTime || ""
+      );
 
-      setLoading(false);
+      setRemarks(
+        data.data.Remarks || ""
+      );
 
-    }
-  }
-
-
-  /**
-   * ================================================
-   * SUBMIT RESPONSE
-   * ================================================
-   */
-
-  async function submitResponse() {
-
-    setError("");
-    setMessage("");
-
-    if (!response) {
+    } catch (err) {
+      console.error("LOAD PANEL ERROR:", err);
 
       setError(
+        err.message ||
+          "Unable to load panel invitation."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * ======================================================
+   * CHECK DEADLINE
+   * ======================================================
+   */
+
+  const getDeadline = () => {
+    if (!panel?.ResponseDeadline) {
+      return null;
+    }
+
+    const deadline = new Date(
+      panel.ResponseDeadline
+    );
+
+    if (isNaN(deadline.getTime())) {
+      return null;
+    }
+
+    return deadline;
+  };
+
+  const deadline = getDeadline();
+
+  const isExpired =
+    deadline &&
+    new Date() > deadline;
+
+  /**
+   * ======================================================
+   * FORMAT DATE
+   * ======================================================
+   */
+
+  const formatDate = (date) => {
+    if (!date) return "-";
+
+    const parsed = new Date(date);
+
+    if (isNaN(parsed.getTime())) {
+      return date;
+    }
+
+    return parsed.toLocaleDateString("en-MY", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  };
+
+  /**
+   * ======================================================
+   * FORMAT DATETIME
+   * ======================================================
+   */
+
+  const formatDateTime = (date) => {
+    if (!date) return "-";
+
+    const parsed = new Date(date);
+
+    if (isNaN(parsed.getTime())) {
+      return date;
+    }
+
+    return parsed.toLocaleString("en-MY", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  /**
+   * ======================================================
+   * SUBMIT RESPONSE
+   * POST /api/panel/:panelID/respond
+   * ======================================================
+   */
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    setMessage("");
+    setError("");
+
+    if (!response) {
+      setError(
         "Please select your response."
+      );
+
+      return;
+    }
+
+    if (isExpired) {
+      setError(
+        "The response deadline has passed. Please contact the VivaTrack Secretariat."
       );
 
       return;
@@ -123,7 +191,6 @@ export default function PanelResponse() {
       response === "Suggest" &&
       (!suggestedDate || !suggestedTime)
     ) {
-
       setError(
         "Please provide your suggested date and time."
       );
@@ -132,11 +199,12 @@ export default function PanelResponse() {
     }
 
     try {
-
       setSubmitting(true);
 
-      const res = await fetch(
-        `${API}/panel/${encodeURIComponent(panelID)}/respond`,
+      const result = await fetch(
+        `${API_BASE_URL}/api/panel/${encodeURIComponent(
+          panelID
+        )}/respond`,
         {
           method: "POST",
 
@@ -146,7 +214,6 @@ export default function PanelResponse() {
           },
 
           body: JSON.stringify({
-
             response,
 
             suggestedDate:
@@ -160,456 +227,752 @@ export default function PanelResponse() {
                 : "",
 
             remarks,
-
           }),
         }
       );
 
-      const data = await res.json();
+      const data = await result.json();
 
-      if (!res.ok) {
-
-        setError(
+      if (!result.ok || !data.success) {
+        throw new Error(
           data.message ||
-          "Unable to submit response."
+            "Unable to submit your response."
         );
-
-        return;
       }
-
-      setMessage(
-        data.message ||
-        "Response submitted successfully."
-      );
 
       setPanel(data.data);
 
-    } catch (err) {
-
-      console.error(err);
-
-      setError(
-        "Unable to connect to VivaTrack."
+      setMessage(
+        data.message ||
+          "Your response has been recorded successfully."
       );
 
+    } catch (err) {
+      console.error(
+        "SUBMIT PANEL RESPONSE ERROR:",
+        err
+      );
+
+      setError(
+        err.message ||
+          "Unable to submit your response."
+      );
     } finally {
-
       setSubmitting(false);
-
     }
-  }
-
+  };
 
   /**
-   * ================================================
+   * ======================================================
    * LOADING
-   * ================================================
+   * ======================================================
    */
 
   if (loading) {
-
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-
-        <div className="rounded-2xl bg-white p-8 shadow">
-
-          <p className="text-gray-600">
+      <div style={styles.page}>
+        <div style={styles.card}>
+          <div style={styles.loading}>
             Loading Viva Voce invitation...
-          </p>
-
+          </div>
         </div>
-
       </div>
     );
   }
 
-
   /**
-   * ================================================
+   * ======================================================
    * ERROR
-   * ================================================
+   * ======================================================
    */
 
   if (error && !panel) {
-
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+      <div style={styles.page}>
+        <div style={styles.card}>
+          <h2 style={styles.title}>
+            Viva Voce Invitation
+          </h2>
 
-        <div className="w-full max-w-xl rounded-2xl bg-white p-8 shadow">
-
-          <h1 className="mb-4 text-2xl font-bold text-red-600">
-            VivaTrack
-          </h1>
-
-          <p className="text-gray-700">
+          <div style={styles.error}>
             {error}
-          </p>
-
+          </div>
         </div>
-
       </div>
     );
   }
 
+  /**
+   * ======================================================
+   * MAIN PAGE
+   * ======================================================
+   */
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-10">
-
-      <div className="mx-auto max-w-2xl">
+    <div style={styles.page}>
+      <div style={styles.container}>
 
         {/* HEADER */}
 
-        <div className="mb-6 text-center">
-
-          <h1 className="text-2xl font-bold">
+        <div style={styles.header}>
+          <div style={styles.university}>
             Universiti Sains Malaysia
-          </h1>
+          </div>
 
-          <p className="text-gray-600">
+          <div style={styles.department}>
             Pusat Kanser Tun Abdullah Ahmad Badawi
-            (PKTAAB)
-          </p>
-
-          <p className="text-gray-600">
+            <br />
             Academic & International Division
-          </p>
-
+          </div>
         </div>
-
 
         {/* CARD */}
 
-        <div className="rounded-2xl bg-white p-8 shadow">
+        <div style={styles.card}>
 
-          <h2 className="mb-2 text-2xl font-bold">
-            Viva Voce Schedule Invitation
-          </h2>
+          <h1 style={styles.title}>
+            Viva Voce Schedule Confirmation
+          </h1>
 
-          <p className="mb-6 text-gray-600">
-            Dear Panel Member,
+          <p style={styles.subtitle}>
+            Panel Member Response
           </p>
-
-
-          {/* ROLE */}
-
-          <div className="mb-6 rounded-xl bg-gray-50 p-5">
-
-            <p className="text-sm text-gray-500">
-              Your Role
-            </p>
-
-            <p className="text-lg font-semibold">
-              {panel?.Role}
-            </p>
-
-          </div>
-
-
-          {/* DETAILS */}
-
-          <div className="mb-6 space-y-3">
-
-            <div className="flex justify-between border-b pb-2">
-
-              <span className="font-medium">
-                Viva Case
-              </span>
-
-              <span>
-                {panel?.VivaID}
-              </span>
-
-            </div>
-
-            <div className="flex justify-between border-b pb-2">
-
-              <span className="font-medium">
-                Proposed Date
-              </span>
-
-              <span>
-                {panel?.ProposedDate ||
-                  panel?.TentativeVivaDate ||
-                  "Please refer to invitation"}
-              </span>
-
-            </div>
-
-            <div className="flex justify-between border-b pb-2">
-
-              <span className="font-medium">
-                Proposed Time
-              </span>
-
-              <span>
-                {panel?.ProposedTime ||
-                  panel?.SuggestedTime ||
-                  "-"}
-              </span>
-
-            </div>
-
-          </div>
-
-
-          {/* CURRENT RESPONSE */}
-
-          {panel?.Accepted &&
-            panel.Accepted !== "Pending" && (
-
-            <div className="mb-6 rounded-xl bg-gray-50 p-5">
-
-              <p className="text-sm text-gray-500">
-                Your Current Response
-              </p>
-
-              <p className="font-semibold">
-                {panel.Accepted}
-              </p>
-
-              {panel.SuggestedDate && (
-                <p className="mt-2 text-sm">
-                  Suggested Date:{" "}
-                  {panel.SuggestedDate}
-                </p>
-              )}
-
-              {panel.SuggestedTime && (
-                <p className="text-sm">
-                  Suggested Time:{" "}
-                  {panel.SuggestedTime}
-                </p>
-              )}
-
-            </div>
-
-          )}
-
 
           {/* SUCCESS */}
 
           {message && (
-
-            <div className="mb-6 rounded-xl bg-green-50 p-4 text-green-700">
-
+            <div style={styles.success}>
               {message}
-
             </div>
-
           )}
-
 
           {/* ERROR */}
 
           {error && (
-
-            <div className="mb-6 rounded-xl bg-red-50 p-4 text-red-700">
-
+            <div style={styles.error}>
               {error}
+            </div>
+          )}
+
+          {/* PANEL INFORMATION */}
+
+          <div style={styles.section}>
+
+            <h3 style={styles.sectionTitle}>
+              Panel Information
+            </h3>
+
+            <div style={styles.infoGrid}>
+
+              <InfoRow
+                label="Panel ID"
+                value={panel?.PanelID}
+              />
+
+              <InfoRow
+                label="Role"
+                value={panel?.Role}
+              />
+
+              <InfoRow
+                label="Person Type"
+                value={panel?.PersonType}
+              />
+
+              <InfoRow
+                label="Required"
+                value={panel?.Required}
+              />
 
             </div>
 
-          )}
+          </div>
 
+          {/* VIVA INFORMATION */}
+
+          <div style={styles.section}>
+
+            <h3 style={styles.sectionTitle}>
+              Viva Voce Schedule
+            </h3>
+
+            <div style={styles.infoGrid}>
+
+              <InfoRow
+                label="Viva ID"
+                value={panel?.VivaID}
+              />
+
+              <InfoRow
+                label="Proposed Date"
+                value={
+                  panel?.TentativeVivaDate
+                    ? formatDate(
+                        panel.TentativeVivaDate
+                      )
+                    : "-"
+                }
+              />
+
+              <InfoRow
+                label="Time"
+                value={
+                  panel?.VivaTime || "-"
+                }
+              />
+
+              <InfoRow
+                label="Venue"
+                value={
+                  panel?.Venue || "-"
+                }
+              />
+
+            </div>
+
+          </div>
+
+          {/* DEADLINE */}
+
+          <div
+            style={{
+              ...styles.deadlineBox,
+              ...(isExpired
+                ? styles.deadlineExpired
+                : {}),
+            }}
+          >
+
+            <strong>
+              Response Deadline
+            </strong>
+
+            <div style={styles.deadlineDate}>
+              {deadline
+                ? formatDateTime(deadline)
+                : "Not specified"}
+            </div>
+
+            {isExpired && (
+              <div style={styles.expiredText}>
+                The response deadline has passed.
+              </div>
+            )}
+
+          </div>
 
           {/* RESPONSE */}
 
-          <div className="space-y-5">
+          {!isExpired && (
+            <form onSubmit={handleSubmit}>
 
-            <h3 className="text-lg font-semibold">
-              Please indicate your availability
-            </h3>
+              <div style={styles.section}>
 
+                <h3 style={styles.sectionTitle}>
+                  Your Response
+                </h3>
 
-            {/* ACCEPT */}
+                {/* ACCEPT */}
 
-            <label className="flex cursor-pointer items-start gap-3 rounded-xl border p-4 hover:bg-gray-50">
-
-              <input
-                type="radio"
-                name="response"
-                value="Yes"
-                checked={response === "Yes"}
-                onChange={(e) =>
-                  setResponse(e.target.value)
-                }
-                className="mt-1"
-              />
-
-              <div>
-
-                <p className="font-semibold">
-                  I Agree
-                </p>
-
-                <p className="text-sm text-gray-500">
-                  I am available for the proposed Viva Voce schedule.
-                </p>
-
-              </div>
-
-            </label>
-
-
-            {/* UNABLE */}
-
-            <label className="flex cursor-pointer items-start gap-3 rounded-xl border p-4 hover:bg-gray-50">
-
-              <input
-                type="radio"
-                name="response"
-                value="No"
-                checked={response === "No"}
-                onChange={(e) =>
-                  setResponse(e.target.value)
-                }
-                className="mt-1"
-              />
-
-              <div>
-
-                <p className="font-semibold">
-                  I Am Unable to Attend
-                </p>
-
-                <p className="text-sm text-gray-500">
-                  I cannot attend the proposed Viva Voce schedule.
-                </p>
-
-              </div>
-
-            </label>
-
-
-            {/* SUGGEST */}
-
-            <label className="flex cursor-pointer items-start gap-3 rounded-xl border p-4 hover:bg-gray-50">
-
-              <input
-                type="radio"
-                name="response"
-                value="Suggest"
-                checked={response === "Suggest"}
-                onChange={(e) =>
-                  setResponse(e.target.value)
-                }
-                className="mt-1"
-              />
-
-              <div>
-
-                <p className="font-semibold">
-                  Suggest Another Date / Time
-                </p>
-
-                <p className="text-sm text-gray-500">
-                  I cannot attend this proposed schedule but would like to suggest an alternative.
-                </p>
-
-              </div>
-
-            </label>
-
-
-            {/* SUGGESTED DATE */}
-
-            {response === "Suggest" && (
-
-              <div className="rounded-xl bg-gray-50 p-5 space-y-4">
-
-                <div>
-
-                  <label className="mb-2 block font-medium">
-                    Suggested Date
-                  </label>
+                <label style={styles.option}>
 
                   <input
-                    type="date"
-                    value={suggestedDate}
+                    type="radio"
+                    name="response"
+                    value="Yes"
+                    checked={
+                      response === "Yes"
+                    }
                     onChange={(e) =>
-                      setSuggestedDate(
+                      setResponse(
                         e.target.value
                       )
                     }
-                    className="w-full rounded-xl border p-3"
                   />
 
-                </div>
+                  <span>
+                    <strong>
+                      I agree
+                    </strong>
 
+                    <small>
+                      I am available for the
+                      proposed Viva Voce
+                      schedule.
+                    </small>
+                  </span>
 
-                <div>
+                </label>
 
-                  <label className="mb-2 block font-medium">
-                    Suggested Time
-                  </label>
+                {/* NO */}
+
+                <label style={styles.option}>
 
                   <input
-                    type="time"
-                    value={suggestedTime}
+                    type="radio"
+                    name="response"
+                    value="No"
+                    checked={
+                      response === "No"
+                    }
                     onChange={(e) =>
-                      setSuggestedTime(
+                      setResponse(
                         e.target.value
                       )
                     }
-                    className="w-full rounded-xl border p-3"
                   />
 
-                </div>
+                  <span>
+                    <strong>
+                      I am unable to attend
+                    </strong>
+
+                    <small>
+                      I am not available for
+                      the proposed schedule.
+                    </small>
+                  </span>
+
+                </label>
+
+                {/* SUGGEST */}
+
+                <label style={styles.option}>
+
+                  <input
+                    type="radio"
+                    name="response"
+                    value="Suggest"
+                    checked={
+                      response ===
+                      "Suggest"
+                    }
+                    onChange={(e) =>
+                      setResponse(
+                        e.target.value
+                      )
+                    }
+                  />
+
+                  <span>
+                    <strong>
+                      Suggest another date/time
+                    </strong>
+
+                    <small>
+                      I would like to suggest
+                      an alternative schedule.
+                    </small>
+                  </span>
+
+                </label>
 
               </div>
 
-            )}
+              {/* SUGGESTED DATE */}
 
+              {response ===
+                "Suggest" && (
+                <div
+                  style={styles.suggestionBox}
+                >
 
-            {/* REMARKS */}
+                  <h3
+                    style={
+                      styles.sectionTitle
+                    }
+                  >
+                    Suggested Schedule
+                  </h3>
 
-            <div>
+                  <div
+                    style={styles.formGroup}
+                  >
+                    <label>
+                      Suggested Date
+                    </label>
 
-              <label className="mb-2 block font-medium">
-                Remarks
-              </label>
+                    <input
+                      type="date"
+                      value={
+                        suggestedDate
+                      }
+                      onChange={(e) =>
+                        setSuggestedDate(
+                          e.target.value
+                        )
+                      }
+                      style={
+                        styles.input
+                      }
+                    />
+                  </div>
 
-              <textarea
-                rows={4}
-                value={remarks}
-                onChange={(e) =>
-                  setRemarks(e.target.value)
-                }
-                placeholder="Optional remarks..."
-                className="w-full rounded-xl border p-3"
-              />
+                  <div
+                    style={styles.formGroup}
+                  >
+                    <label>
+                      Suggested Time
+                    </label>
 
-            </div>
+                    <input
+                      type="time"
+                      value={
+                        suggestedTime
+                      }
+                      onChange={(e) =>
+                        setSuggestedTime(
+                          e.target.value
+                        )
+                      }
+                      style={
+                        styles.input
+                      }
+                    />
+                  </div>
 
+                </div>
+              )}
 
-            {/* SUBMIT */}
+              {/* REMARKS */}
 
-            <button
-              type="button"
-              disabled={submitting}
-              onClick={submitResponse}
-              className="w-full rounded-xl bg-purple-600 px-6 py-3 font-semibold text-white hover:bg-purple-700 disabled:opacity-50"
+              <div style={styles.formGroup}>
+
+                <label>
+                  Remarks
+                </label>
+
+                <textarea
+                  value={remarks}
+                  onChange={(e) =>
+                    setRemarks(
+                      e.target.value
+                    )
+                  }
+                  placeholder="Enter any additional remarks..."
+                  rows={4}
+                  style={
+                    styles.textarea
+                  }
+                />
+
+              </div>
+
+              {/* SUBMIT */}
+
+              <button
+                type="submit"
+                disabled={submitting}
+                style={{
+                  ...styles.submitButton,
+                  ...(submitting
+                    ? styles.disabledButton
+                    : {}),
+                }}
+              >
+                {submitting
+                  ? "Submitting..."
+                  : "Submit Response"}
+              </button>
+
+            </form>
+          )}
+
+          {/* ALREADY RESPONDED */}
+
+          {panel?.ResponseDate && (
+            <div
+              style={styles.responseInfo}
             >
+              <strong>
+                Response submitted:
+              </strong>
 
-              {submitting
-                ? "Submitting..."
-                : "Submit Response"}
+              <br />
 
-            </button>
+              {formatDateTime(
+                panel.ResponseDate
+              )}
 
-          </div>
+              <br />
 
+              <strong>
+                Response:
+              </strong>{" "}
+              {panel.Accepted || "-"}
+            </div>
+          )}
 
-          <div className="mt-8 border-t pt-5 text-center text-sm text-gray-500">
+          {/* FOOTER */}
 
+          <div style={styles.footer}>
             VivaTrack Secretariat
-
+            <br />
+            Universiti Sains Malaysia
           </div>
 
         </div>
-
       </div>
-
     </div>
   );
 }
+
+
+/**
+ * ======================================================
+ * INFO ROW
+ * ======================================================
+ */
+
+function InfoRow({ label, value }) {
+  return (
+    <div style={styles.infoRow}>
+      <div style={styles.infoLabel}>
+        {label}
+      </div>
+
+      <div style={styles.infoValue}>
+        {value || "-"}
+      </div>
+    </div>
+  );
+}
+
+
+/**
+ * ======================================================
+ * STYLES
+ * ======================================================
+ */
+
+const styles = {
+
+  page: {
+    minHeight: "100vh",
+    background: "#f4f6f8",
+    padding: "40px 20px",
+    fontFamily:
+      "Arial, Helvetica, sans-serif",
+  },
+
+  container: {
+    maxWidth: "850px",
+    margin: "0 auto",
+  },
+
+  header: {
+    textAlign: "center",
+    marginBottom: "20px",
+  },
+
+  university: {
+    fontSize: "24px",
+    fontWeight: "700",
+    color: "#123c69",
+  },
+
+  department: {
+    marginTop: "8px",
+    fontSize: "14px",
+    lineHeight: "1.6",
+    color: "#555",
+  },
+
+  card: {
+    background: "#fff",
+    borderRadius: "12px",
+    padding: "35px",
+    boxShadow:
+      "0 4px 20px rgba(0,0,0,0.08)",
+  },
+
+  title: {
+    margin: 0,
+    textAlign: "center",
+    fontSize: "26px",
+    color: "#222",
+  },
+
+  subtitle: {
+    textAlign: "center",
+    color: "#666",
+    marginBottom: "30px",
+  },
+
+  section: {
+    marginTop: "25px",
+  },
+
+  sectionTitle: {
+    fontSize: "18px",
+    marginBottom: "15px",
+    color: "#333",
+  },
+
+  infoGrid: {
+    display: "grid",
+    gridTemplateColumns:
+      "repeat(auto-fit, minmax(250px, 1fr))",
+    gap: "12px",
+  },
+
+  infoRow: {
+    padding: "12px",
+    background: "#f7f8fa",
+    borderRadius: "6px",
+  },
+
+  infoLabel: {
+    fontSize: "12px",
+    color: "#777",
+    marginBottom: "4px",
+  },
+
+  infoValue: {
+    fontSize: "15px",
+    fontWeight: "600",
+    color: "#222",
+  },
+
+  deadlineBox: {
+    marginTop: "25px",
+    padding: "18px",
+    borderRadius: "8px",
+    background: "#fff8e1",
+    border: "1px solid #f0d98c",
+    textAlign: "center",
+  },
+
+  deadlineExpired: {
+    background: "#fff0f0",
+    border:
+      "1px solid #e0a0a0",
+  },
+
+  deadlineDate: {
+    marginTop: "6px",
+    fontSize: "17px",
+    fontWeight: "700",
+  },
+
+  expiredText: {
+    marginTop: "8px",
+    color: "#b00020",
+    fontWeight: "600",
+  },
+
+  option: {
+    display: "flex",
+    gap: "12px",
+    alignItems: "flex-start",
+    padding: "15px",
+    marginBottom: "10px",
+    border:
+      "1px solid #ddd",
+    borderRadius: "8px",
+    cursor: "pointer",
+  },
+
+  optionSmall: {
+    display: "block",
+  },
+
+  suggestionBox: {
+    padding: "20px",
+    marginTop: "15px",
+    background: "#f7f9fc",
+    borderRadius: "8px",
+  },
+
+  formGroup: {
+    marginTop: "20px",
+  },
+
+  input: {
+    display: "block",
+    width: "100%",
+    boxSizing: "border-box",
+    padding: "11px",
+    marginTop: "7px",
+    border:
+      "1px solid #ccc",
+    borderRadius: "6px",
+    fontSize: "15px",
+  },
+
+  textarea: {
+    display: "block",
+    width: "100%",
+    boxSizing: "border-box",
+    padding: "11px",
+    marginTop: "7px",
+    border:
+      "1px solid #ccc",
+    borderRadius: "6px",
+    fontSize: "15px",
+    resize: "vertical",
+  },
+
+  submitButton: {
+    width: "100%",
+    marginTop: "25px",
+    padding: "14px",
+    border: "none",
+    borderRadius: "7px",
+    background: "#123c69",
+    color: "#fff",
+    fontSize: "16px",
+    fontWeight: "700",
+    cursor: "pointer",
+  },
+
+  disabledButton: {
+    opacity: 0.6,
+    cursor: "not-allowed",
+  },
+
+  success: {
+    padding: "14px",
+    marginBottom: "20px",
+    borderRadius: "7px",
+    background: "#e8f5e9",
+    color: "#1b5e20",
+    border:
+      "1px solid #a5d6a7",
+  },
+
+  error: {
+    padding: "14px",
+    marginBottom: "20px",
+    borderRadius: "7px",
+    background: "#ffebee",
+    color: "#b71c1c",
+    border:
+      "1px solid #ef9a9a",
+  },
+
+  responseInfo: {
+    marginTop: "25px",
+    padding: "15px",
+    background: "#f1f5f9",
+    borderRadius: "7px",
+    lineHeight: "1.8",
+  },
+
+  loading: {
+    textAlign: "center",
+    padding: "40px",
+    color: "#555",
+  },
+
+  footer: {
+    marginTop: "35px",
+    paddingTop: "20px",
+    borderTop:
+      "1px solid #eee",
+    textAlign: "center",
+    color: "#777",
+    fontSize: "13px",
+    lineHeight: "1.6",
+  },
+};
