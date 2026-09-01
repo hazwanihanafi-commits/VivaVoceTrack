@@ -5,6 +5,10 @@ const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
   "https://vivatrack-backend.onrender.com";
 
+const API_PANEL_URL =
+
+  `${API_BASE_URL}/api/panel`;
+
 export default function PanelResponse() {
   const [searchParams] = useSearchParams();
   const panelID = searchParams.get("panelID");
