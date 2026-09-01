@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   CalendarDays,
   Check,
@@ -59,6 +60,9 @@ function dateInput(value) {
 }
 
 export default function Schedule() {
+  const [searchParams] = useSearchParams();
+  const requestedCaseID = searchParams.get("caseID");
+  
   const [cases, setCases] = useState([]);
   const [students, setStudents] = useState([]);
   const [examiners, setExaminers] = useState([]);
@@ -70,9 +74,9 @@ export default function Schedule() {
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
 
-  useEffect(() => {
-    loadAll();
-  }, []);
+ useEffect(() => {
+  loadAll();
+}, [requestedCaseID]);
 
   async function getJson(url, options) {
     const res = await fetch(url, options);
