@@ -1,14 +1,15 @@
 import {
   LayoutDashboard,
   Users,
+  UserCog,
   GraduationCap,
   CalendarDays,
   FileText,
-  FileCheck,
   BarChart3,
   Settings,
   LogOut,
   ChevronLeft,
+  ClipboardCheck,
 } from "lucide-react";
 
 import { NavLink } from "react-router-dom";
