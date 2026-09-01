@@ -16,10 +16,11 @@ const VIVA_SHEET = "VivaCases";
  */
 export const getPanelMember = async (req, res, next) => {
   try {
+
     const panelID = req.params.panelID;
 
     const panel = await findRow(
-      SHEET,
+      "Panel",
       "PanelID",
       panelID
     );
@@ -31,17 +32,55 @@ export const getPanelMember = async (req, res, next) => {
       });
     }
 
+    const viva = await findRow(
+      "VivaCases",
+      "CaseID",
+      panel.VivaID
+    );
+
     res.json({
       success: true,
-      data: panel,
+
+      data: {
+        ...panel,
+
+        // Viva information
+        StudentID:
+          viva?.StudentID || "",
+
+        TentativeVivaDate:
+          viva?.TentativeVivaDate || "",
+
+        ConfirmedVivaDate:
+          viva?.ConfirmedVivaDate || "",
+
+        VivaTime:
+          viva?.VivaTime || "",
+
+        Venue:
+          viva?.Venue || "",
+
+        VivaMode:
+          viva?.VivaMode || "",
+
+        MeetingLink:
+          viva?.MeetingLink || "",
+
+        CurrentStatus:
+          viva?.CurrentStatus || "",
+      },
     });
 
   } catch (err) {
-    console.error("GET PANEL MEMBER ERROR:", err);
+
+    console.error(
+      "GET PANEL MEMBER ERROR:",
+      err
+    );
+
     next(err);
   }
 };
-
 
 /**
  * ======================================================
