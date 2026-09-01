@@ -22,7 +22,9 @@ The Viva Voce examination has been scheduled as follows:
 
 <p>Thank you.</p>
 
-<p>VivaTrack Secretariat</p>
+<p>
+VivaTrack Secretariat
+</p>
 `
   );
 }
