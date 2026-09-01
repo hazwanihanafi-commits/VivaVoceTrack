@@ -1104,8 +1104,8 @@ export const sendVivaSchedule = async (
     ========================== */
 
     const frontendURL =
-      process.env.FRONTEND_URL ||
-      "http://localhost:5173";
+  process.env.FRONTEND_URL ||
+  "https://vivavocetrack.onrender.com";
 
     const recipients = [];
 
@@ -1151,9 +1151,9 @@ export const sendVivaSchedule = async (
         ========================== */
 
         const responseLink =
-          `${frontendURL}/panel-response?panelID=${encodeURIComponent(
-            panel.PanelID
-          )}`;
+  `${frontendURL}/panel-response?panelID=${encodeURIComponent(
+    panel.PanelID
+  )}`;
 
         /* ==========================
            EXAMINER OBJECT
