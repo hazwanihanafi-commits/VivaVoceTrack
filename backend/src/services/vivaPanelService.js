@@ -323,37 +323,21 @@ export async function createVivaPanel(caseData) {
     await getRows("Panel");
 
 
-  /**
-   * ====================================================
-   * CREATE PANEL RECORDS
-   * ====================================================
-   */
+  // ====================================================
+  // CREATE PANEL RECORDS
+  // ====================================================
+
   for (const member of members) {
 
     const alreadyExists =
       existing.find(
         (x) =>
-          String(x.VivaID).trim() ===
-            String(member.VivaID).trim() &&
-
-          String(x.PersonID).trim() ===
-            String(member.PersonID).trim() &&
-
-          String(x.Role).trim() ===
-            String(member.Role).trim()
+          x.VivaID === member.VivaID &&
+          x.PersonID === member.PersonID
       );
 
+    if (alreadyExists) continue;
 
-    if (alreadyExists) {
-
-      continue;
-
-    }
-
-
-    /**
-     * Generate Panel ID
-     */
     const PanelID =
       await generateID(
         "VP",
@@ -361,51 +345,37 @@ export async function createVivaPanel(caseData) {
         "PanelID"
       );
 
-
-    /**
-     * Add row to Panel sheet
-     *
-     * Panel columns:
-     *
-     * 1  PanelID
-     * 2  VivaID
-     * 3  PersonID
-     * 4  PersonType
-     * 5  Role
-     * 6  Required
-     * 7  InvitationSent
-     * 8  InvitationDate
-     * 9  Accepted
-     * 10 ResponseDate
-     * 11 Remarks
-     */
     await addRow(
       "Panel",
       [
         PanelID,
-
         member.VivaID,
-
         member.PersonID,
-
         member.PersonType,
-
         member.Role,
-
         member.Required,
 
+        // InvitationSent
         "No",
 
+        // InvitationDate
         "",
 
+        // Accepted
         "Pending",
 
+        // ResponseDate
         "",
 
+        // SuggestedDate
+        "",
+
+        // SuggestedTime
+        "",
+
+        // Remarks
         "",
       ]
     );
-
   }
-
 }
