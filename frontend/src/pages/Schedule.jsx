@@ -223,39 +223,37 @@ export default function Schedule() {
 
     const hasExistingSchedule =
       existing?.TentativeVivaDate ||
-      existing?.ConfirmedVivaDate;
-
-    const method = hasExistingSchedule
-      ? "PUT"
-      : "POST";
+      existing?.ConfirmedVivaDate ||
+      existing?.VivaTime ||
+      existing?.Venue;
 
     const payload = {
-      TentativeVivaDate:
-        form.TentativeVivaDate || "",
+      TentativeVivaDate: form.TentativeVivaDate || "",
 
       ConfirmedVivaDate:
-        form.ConfirmedVivaDate || "",
+        form.ConfirmedVivaDate ||
+        form.TentativeVivaDate ||
+        "",
 
-      VivaTime:
-        form.VivaTime || "",
+      VivaTime: form.VivaTime || "",
 
-      Venue:
-        form.Venue || "",
+      Venue: form.Venue || "",
 
-      VivaMode:
-        form.VivaMode || "Physical",
+      VivaMode: form.VivaMode || "Physical",
 
-      MeetingLink:
-        form.MeetingLink || "",
+      MeetingLink: form.MeetingLink || "",
 
-      Chairperson:
-        form.Chairperson || "",
+      Chairperson: form.Chairperson || "",
 
-      Secretary:
-        form.Secretary || "",
+      Secretary: form.Secretary || "",
+
+      // IMPORTANT
+      CurrentStatus: "Scheduled",
     };
 
-    const result = await getJson(
+    const method = hasExistingSchedule ? "PUT" : "POST";
+
+    const response = await getJson(
       `${API}/schedule/${form.caseID}`,
       {
         method,
@@ -266,16 +264,17 @@ export default function Schedule() {
       }
     );
 
-    console.log("Schedule saved:", result);
+    console.log("Schedule saved successfully:", response);
 
     setModalOpen(false);
 
+    // Reload from Google Sheets
     await loadAll();
 
     alert("Viva schedule saved successfully.");
 
   } catch (err) {
-    console.error(err);
+    console.error("SAVE SCHEDULE ERROR:", err);
 
     alert(
       err.message ||
@@ -286,7 +285,7 @@ export default function Schedule() {
     setSaving(false);
   }
 }
-
+  
   async function action(caseID, type) {
     const labels = {
       confirm: "confirm this Viva schedule",
