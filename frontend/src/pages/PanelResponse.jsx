@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
-const API_BASE_URL = "https://vivatrack-backend.onrender.com";
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://vivatrack-backend.onrender.com/api";
 
 export default function PanelResponse() {
   const [searchParams] = useSearchParams();
@@ -34,8 +36,8 @@ export default function PanelResponse() {
       setLoading(true);
       setError("");
 
-      const url =
-        `${API_BASE_URL}/api/panel/${encodeURIComponent(panelID)}`;
+const url =
+  `${API_BASE_URL}/api/panel/${encodeURIComponent(panelID)}`;
 
       console.log("Loading panel from:", url);
 
@@ -151,7 +153,7 @@ export default function PanelResponse() {
       setSubmitting(true);
 
       const url =
-        `${API_BASE_URL}/api/panel/${encodeURIComponent(panelID)}/respond`;
+  `${API_BASE_URL}/api/panel/${encodeURIComponent(panelID)}/respond`;
 
       console.log("Submitting panel response to:", url);
 
