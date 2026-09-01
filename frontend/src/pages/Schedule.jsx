@@ -93,10 +93,10 @@ export default function Schedule() {
 
     const [scheduleData, studentData, examinerData, staffData] =
   await Promise.all([
-    getJson(`${API}/schedule`),
-    getJson(`${API}/students`),
-    getJson(`${API}/examiners`),
-    getJson(`${API}/staff`),
+    getJson(`${API}/api/schedule`),
+    getJson(`${API}/api/students`),
+    getJson(`${API}/api/examiners`),
+    getJson(`${API}/api/staff`),
   ]);
 
     const loadedSchedules = Array.isArray(scheduleData.data)
@@ -131,7 +131,7 @@ export default function Schedule() {
       try {
 
         const caseData = await getJson(
-          `${API}/schedule/${requestedCaseID}`
+          `${API}/api/schedule/${requestedCaseID}`
         );
 
         if (caseData?.data) {
@@ -294,7 +294,7 @@ SecretaryID: form.Secretary || "",
     const method = hasExistingSchedule ? "PUT" : "POST";
 
     const response = await getJson(
-      `${API}/schedule/${form.caseID}`,
+      `${API}/api/schedule/${form.caseID}`,
       {
         method,
         headers: {
@@ -347,7 +347,7 @@ SecretaryID: form.Secretary || "",
             }
           : { Remarks: type === "postpone" ? "Viva postponed from Schedule page." : "Viva cancelled from Schedule page." };
 
-      await getJson(`${API}/schedule/${caseID}/${type}`, {
+      await getJson(`${API}/api/schedule/${caseID}/${type}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
