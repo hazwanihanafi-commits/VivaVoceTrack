@@ -4,7 +4,7 @@ import ExaminerModal from "../components/examiners/ExaminerModal";
 
 const API =
   import.meta.env.VITE_API_URL ||
-  "https://vivatrack-backend.onrender.com/api";
+  "https://vivatrack-backend.onrender.com";
 
 export default function Examiners() {
   const [search, setSearch] = useState("");
@@ -23,7 +23,7 @@ export default function Examiners() {
     try {
       setLoading(true);
 
-      const res = await fetch(`${API}/examiners`);
+      const res = await fetch(`${API}/api/examiners`);
       const json = await res.json();
 
       if (json.success) {
@@ -41,7 +41,7 @@ export default function Examiners() {
 
   async function deleteExaminer(id) {
     try {
-      const res = await fetch(`${API}/examiners/${id}`, {
+      const res = await fetch(`${API}/api/examiners/${id}`, {
         method: "DELETE",
       });
 
