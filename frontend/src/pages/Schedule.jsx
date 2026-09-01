@@ -90,17 +90,18 @@ export default function Schedule() {
     setLoading(true);
     setError("");
 
-    const [scheduleData, studentData, examinerData] = await Promise.all([
-  getJson(`${API}/schedule`),
-  getJson(`${API}/students`),
-  getJson(`${API}/examiners`),
-]);
+    const [scheduleData, studentData, examinerData] =
+      await Promise.all([
+        getJson(`${API}/schedule`),
+        getJson(`${API}/students`),
+        getJson(`${API}/examiners`),
+      ]);
 
     const loadedSchedules = Array.isArray(scheduleData.data)
-  ? scheduleData.data
-  : [];
+      ? scheduleData.data
+      : [];
 
-    setCases(loadedCases);
+    setCases(loadedSchedules);
 
     setStudents(
       Array.isArray(studentData.data)
@@ -114,24 +115,44 @@ export default function Schedule() {
         : []
     );
 
-    // If Schedule was opened from Viva Cases
-    if (requestedCaseID) {
-      const selected = loadedCases.find(
-        (item) => item.CaseID === requestedCaseID
-      );
+    // ============================================
+    // OPEN SPECIFIC CASE FROM VIVA CASES
+    // ============================================
 
-      if (selected) {
-        openCreate(selected);
+    if (requestedCaseID) {
+      try {
+
+        const caseData = await getJson(
+          `${API}/schedule/${requestedCaseID}`
+        );
+
+        if (caseData?.data) {
+          openCreate(caseData.data);
+        }
+
+      } catch (err) {
+
+        console.error(
+          "Unable to load requested Viva case:",
+          err
+        );
+
       }
     }
 
   } catch (err) {
-    console.error(err);
+
+    console.error("LOAD SCHEDULE ERROR:", err);
+
     setError(
-      err.message || "Unable to load Viva schedules."
+      err.message ||
+      "Unable to load Viva schedules."
     );
+
   } finally {
+
     setLoading(false);
+
   }
 }
 
