@@ -7,134 +7,22 @@ import {
 
 const SHEET = "VivaCases";
 
-async function createVivaPanel(caseData) {
-  const members = [];
-
-  function add(
-    PersonID,
-    PersonType,
-    Role,
-    Required = "Yes"
-  ) {
-    if (!PersonID) return;
-
-    members.push({
-      VivaID: caseData.CaseID,
-      PersonID,
-      PersonType,
-      Role,
-      Required,
-    });
-  }
-
-  // Student
-  add(
-    caseData.StudentID,
-    "Student",
-    "Student",
-    "Yes"
-  );
-
-  // Chairperson
-  add(
-    caseData.ChairpersonID,
-    "Staff",
-    "Chairperson",
-    "Yes"
-  );
-
-  // Secretary
-  add(
-    caseData.SecretaryID,
-    "Staff",
-    "Secretary",
-    "Yes"
-  );
-
-  // Main supervisor
-  add(
-    caseData.MainSupervisorID,
-    "Staff",
-    "Main Supervisor",
-    "Yes"
-  );
-
-  // Co-supervisor
-  add(
-    caseData.CoSupervisorID,
-    "Staff",
-    "Co-Supervisor",
-    "Yes"
-  );
-
-  // Internal examiners
-  add(
-    caseData.InternalExaminer1ID,
-    "Examiner",
-    "Internal Examiner 1",
-    "Yes"
-  );
-
-  add(
-    caseData.InternalExaminer2ID,
-    "Examiner",
-    "Internal Examiner 2",
-    "Yes"
-  );
-
-  // External examiners
-  add(
-    caseData.ExternalExaminer1ID,
-    "Examiner",
-    "External Examiner 1",
-    "No"
-  );
-
-  add(
-    caseData.ExternalExaminer2ID,
-    "Examiner",
-    "External Examiner 2",
-    "No"
-  );
-
-  const existing = await getRows("Panel");
-
-  for (const member of members) {
-    const alreadyExists = existing.find(
-      (x) =>
-        x.VivaID === member.VivaID &&
-        x.PersonID === member.PersonID &&
-        x.Role === member.Role
-    );
-
-    if (alreadyExists) continue;
-
-    const PanelID = await generateID(
-      "VP",
-      "Panel",
-      "PanelID"
-    );
-
-    await addRow("Panel", [
-      PanelID,
-      member.VivaID,
-      member.PersonID,
-      member.PersonType,
-      member.Role,
-      member.Required,
-      "No",
-      "",
-      "Pending",
-      "",
-      "",
-    ]);
-  }
-}
-
 /**
  * ======================================================
- * Create Viva Schedule
+ * CREATE VIVA SCHEDULE
  * POST /api/schedule/:id
+ *
+ * Schedule handles:
+ * - Tentative Viva Date
+ * - Confirmed Viva Date
+ * - Viva Time
+ * - Venue
+ * - Viva Mode
+ * - Meeting Link
+ * - Chairperson
+ * - Secretary
+ *
+ * Student, supervisors and examiners are NOT changed here.
  * ======================================================
  */
 export const createSchedule = async (req, res, next) => {
@@ -164,35 +52,49 @@ export const createSchedule = async (req, res, next) => {
       ...viva,
 
       TentativeVivaDate:
-        req.body.TentativeVivaDate || "",
+        req.body.TentativeVivaDate ??
+        viva.TentativeVivaDate ??
+        "",
 
       ConfirmedVivaDate:
-        req.body.ConfirmedVivaDate || "",
+        req.body.ConfirmedVivaDate ??
+        viva.ConfirmedVivaDate ??
+        "",
 
       VivaTime:
-        req.body.VivaTime || "",
+        req.body.VivaTime ??
+        viva.VivaTime ??
+        "",
 
       Venue:
-        req.body.Venue || "",
+        req.body.Venue ??
+        viva.Venue ??
+        "",
 
       VivaMode:
-        req.body.VivaMode || "",
+        req.body.VivaMode ??
+        viva.VivaMode ??
+        "",
 
       MeetingLink:
-        req.body.MeetingLink || "",
+        req.body.MeetingLink ??
+        viva.MeetingLink ??
+        "",
 
+      // ONLY scheduling committee members
       ChairpersonID:
-  req.body.ChairpersonID ||
-  req.body.Chairperson ||
-  "",
+        req.body.ChairpersonID ??
+        req.body.Chairperson ??
+        viva.ChairpersonID ??
+        "",
 
-SecretaryID:
-  req.body.SecretaryID ||
-  req.body.Secretary ||
-  "",
+      SecretaryID:
+        req.body.SecretaryID ??
+        req.body.Secretary ??
+        viva.SecretaryID ??
+        "",
 
-      CurrentStatus:
-        "Scheduled",
+      CurrentStatus: "Scheduled",
 
       LastUpdated:
         new Date().toISOString(),
@@ -206,25 +108,34 @@ SecretaryID:
 
     res.json({
       success: true,
-      message: "Viva schedule created successfully.",
+      message:
+        "Viva schedule created successfully.",
       data: updated,
     });
 
   } catch (err) {
+    console.error(
+      "CREATE SCHEDULE ERROR:",
+      err
+    );
+
     next(err);
   }
 };
 
+
 /**
  * ======================================================
- * Get One Schedule
+ * GET ONE SCHEDULE
  * GET /api/schedule/:id
  * ======================================================
  */
-export const getSchedule = async (req, res, next) => {
-
+export const getSchedule = async (
+  req,
+  res,
+  next
+) => {
   try {
-
     const viva = await findRow(
       SHEET,
       "CaseID",
@@ -244,25 +155,30 @@ export const getSchedule = async (req, res, next) => {
     });
 
   } catch (err) {
+    console.error(
+      "GET SCHEDULE ERROR:",
+      err
+    );
 
     next(err);
-
   }
-
 };
+
 
 /**
  * ======================================================
- * Get All Viva Schedules
+ * GET ALL VIVA SCHEDULES
  * GET /api/schedule
  * ======================================================
  */
-export const getSchedules = async (req, res, next) => {
+export const getSchedules = async (
+  req,
+  res,
+  next
+) => {
   try {
-
     const rows = await getRows(SHEET);
 
-    // Return all cases that have a schedule-related status
     const schedules = rows.filter((r) =>
       [
         "Scheduled",
@@ -270,7 +186,9 @@ export const getSchedules = async (req, res, next) => {
         "Postponed",
         "Cancelled",
         "Completed",
-      ].includes(r.CurrentStatus)
+      ].includes(
+        String(r.CurrentStatus || "").trim()
+      )
     );
 
     res.json({
@@ -280,20 +198,29 @@ export const getSchedules = async (req, res, next) => {
     });
 
   } catch (err) {
-
-    console.error("GET SCHEDULES ERROR:", err);
+    console.error(
+      "GET SCHEDULES ERROR:",
+      err
+    );
 
     next(err);
-
   }
 };
-  /**
+
+
+/**
  * ======================================================
- * Update Schedule
+ * UPDATE VIVA SCHEDULE
  * PUT /api/schedule/:id
+ *
+ * Only scheduling information is updated.
  * ======================================================
  */
-export const updateSchedule = async (req, res, next) => {
+export const updateSchedule = async (
+  req,
+  res,
+  next
+) => {
   try {
     const caseID = req.params.id;
 
@@ -350,18 +277,17 @@ export const updateSchedule = async (req, res, next) => {
         "",
 
       ChairpersonID:
-  req.body.ChairpersonID ||
-  req.body.Chairperson ||
-  viva.ChairpersonID ||
-  "",
+        req.body.ChairpersonID ??
+        req.body.Chairperson ??
+        viva.ChairpersonID ??
+        "",
 
       SecretaryID:
-  req.body.SecretaryID ||
-  req.body.Secretary ||
-  viva.SecretaryID ||
-  "",
-      
-      // IMPORTANT:
+        req.body.SecretaryID ??
+        req.body.Secretary ??
+        viva.SecretaryID ??
+        "",
+
       CurrentStatus: "Scheduled",
 
       LastUpdated:
@@ -376,25 +302,34 @@ export const updateSchedule = async (req, res, next) => {
 
     res.json({
       success: true,
-      message: "Schedule updated successfully.",
+      message:
+        "Schedule updated successfully.",
       data: updated,
     });
 
   } catch (err) {
+    console.error(
+      "UPDATE SCHEDULE ERROR:",
+      err
+    );
+
     next(err);
   }
 };
 
+
 /**
  * ======================================================
- * Confirm Viva Schedule
+ * CONFIRM VIVA SCHEDULE
  * PUT /api/schedule/:id/confirm
  * ======================================================
  */
-export const confirmSchedule = async (req, res, next) => {
-
+export const confirmSchedule = async (
+  req,
+  res,
+  next
+) => {
   try {
-
     const caseID = req.params.id;
 
     const viva = await findRow(
@@ -417,35 +352,51 @@ export const confirmSchedule = async (req, res, next) => {
     );
 
     const updated = {
+      ...viva,
 
-  ...viva,
+      CurrentStatus: "Confirmed",
 
-  CurrentStatus: "Confirmed",
+      ConfirmedVivaDate:
+        req.body.ConfirmedVivaDate ??
+        viva.ConfirmedVivaDate ??
+        "",
 
-  ConfirmedVivaDate:
-    req.body.ConfirmedVivaDate ||
-    viva.ConfirmedVivaDate,
+      VivaTime:
+        req.body.VivaTime ??
+        viva.VivaTime ??
+        "",
 
-  VivaTime:
-    req.body.VivaTime ||
-    viva.VivaTime,
+      Venue:
+        req.body.Venue ??
+        viva.Venue ??
+        "",
 
-  Venue:
-    req.body.Venue ||
-    viva.Venue,
+      VivaMode:
+        req.body.VivaMode ??
+        viva.VivaMode ??
+        "",
 
-  VivaMode:
-    req.body.VivaMode ||
-    viva.VivaMode,
+      MeetingLink:
+        req.body.MeetingLink ??
+        viva.MeetingLink ??
+        "",
 
-  MeetingLink:
-    req.body.MeetingLink ||
-    viva.MeetingLink,
+      // Keep Chairperson and Secretary
+      ChairpersonID:
+        req.body.ChairpersonID ??
+        req.body.Chairperson ??
+        viva.ChairpersonID ??
+        "",
 
-  LastUpdated:
-    new Date().toISOString(),
+      SecretaryID:
+        req.body.SecretaryID ??
+        req.body.Secretary ??
+        viva.SecretaryID ??
+        "",
 
-};
+      LastUpdated:
+        new Date().toISOString(),
+    };
 
     await updateRow(
       SHEET,
@@ -455,29 +406,34 @@ export const confirmSchedule = async (req, res, next) => {
 
     res.json({
       success: true,
-      message: "Viva schedule confirmed.",
+      message:
+        "Viva schedule confirmed.",
       data: updated,
     });
 
   } catch (err) {
+    console.error(
+      "CONFIRM SCHEDULE ERROR:",
+      err
+    );
 
     next(err);
-
   }
-
 };
 
 
 /**
  * ======================================================
- * Postpone Viva
+ * POSTPONE VIVA
  * PUT /api/schedule/:id/postpone
  * ======================================================
  */
-export const postponeSchedule = async (req, res, next) => {
-
+export const postponeSchedule = async (
+  req,
+  res,
+  next
+) => {
   try {
-
     const caseID = req.params.id;
 
     const viva = await findRow(
@@ -500,21 +456,22 @@ export const postponeSchedule = async (req, res, next) => {
     );
 
     const updated = {
-
       ...viva,
 
       CurrentStatus: "Postponed",
 
       TentativeVivaDate:
-        req.body.TentativeVivaDate,
+        req.body.TentativeVivaDate ??
+        viva.TentativeVivaDate ??
+        "",
 
       Remarks:
-        req.body.Remarks ||
-        viva.Remarks,
+        req.body.Remarks ??
+        viva.Remarks ??
+        "",
 
       LastUpdated:
         new Date().toISOString(),
-
     };
 
     await updateRow(
@@ -525,29 +482,34 @@ export const postponeSchedule = async (req, res, next) => {
 
     res.json({
       success: true,
-      message: "Viva postponed.",
+      message:
+        "Viva postponed.",
       data: updated,
     });
 
   } catch (err) {
+    console.error(
+      "POSTPONE SCHEDULE ERROR:",
+      err
+    );
 
     next(err);
-
   }
-
 };
 
 
 /**
  * ======================================================
- * Cancel Viva
+ * CANCEL VIVA
  * PUT /api/schedule/:id/cancel
  * ======================================================
  */
-export const cancelSchedule = async (req, res, next) => {
-
+export const cancelSchedule = async (
+  req,
+  res,
+  next
+) => {
   try {
-
     const caseID = req.params.id;
 
     const viva = await findRow(
@@ -570,18 +532,17 @@ export const cancelSchedule = async (req, res, next) => {
     );
 
     const updated = {
-
       ...viva,
 
       CurrentStatus: "Cancelled",
 
       Remarks:
-        req.body.Remarks ||
-        viva.Remarks,
+        req.body.Remarks ??
+        viva.Remarks ??
+        "",
 
       LastUpdated:
         new Date().toISOString(),
-
     };
 
     await updateRow(
@@ -592,14 +553,17 @@ export const cancelSchedule = async (req, res, next) => {
 
     res.json({
       success: true,
-      message: "Viva cancelled.",
+      message:
+        "Viva cancelled.",
       data: updated,
     });
 
   } catch (err) {
+    console.error(
+      "CANCEL SCHEDULE ERROR:",
+      err
+    );
 
     next(err);
-
   }
-
 };
