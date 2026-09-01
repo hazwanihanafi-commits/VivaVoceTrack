@@ -154,14 +154,19 @@ export default function Dashboard() {
     setError("");
 
     try {
-      const [summaryRes, upcomingRes, recentRes, studentsRes, reportsRes] =
-        await Promise.all([
-        getJson(`${API}/api/dashboard`)
-getJson(`${API}/api/dashboard/upcoming`)
-getJson(`${API}/api/dashboard/recent`)
-getJson(`${API}/api/students`)
-getJson(`${API}/api/dashboard/reports`)
-        ]);
+      const [
+  summaryRes,
+  upcomingRes,
+  recentRes,
+  studentsRes,
+  reportsRes,
+] = await Promise.all([
+  getJson(`${API}/api/dashboard`),
+  getJson(`${API}/api/dashboard/upcoming`),
+  getJson(`${API}/api/dashboard/recent`),
+  getJson(`${API}/api/students`),
+  getJson(`${API}/api/dashboard/reports`),
+]);
 
       setSummary(summaryRes.summary || {});
       setUpcoming(upcomingRes.data || []);
