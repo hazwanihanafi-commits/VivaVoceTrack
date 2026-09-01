@@ -144,14 +144,14 @@ export const respondToPanelInvitation = async (
         new Date().toISOString(),
 
       SuggestedDate:
-        response === "Suggest"
-          ? suggestedDate
-          : panel.SuggestedDate || "",
+  response === "Suggest"
+    ? suggestedDate
+    : "",
 
-      SuggestedTime:
-        response === "Suggest"
-          ? suggestedTime
-          : panel.SuggestedTime || "",
+SuggestedTime:
+  response === "Suggest"
+    ? suggestedTime
+    : "",
 
       Remarks:
         remarks || panel.Remarks || "",
