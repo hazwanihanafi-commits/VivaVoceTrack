@@ -342,28 +342,41 @@ const coSupervisorID =
     // ============================================
 
     const createdCase = {
-      ...body,
-      CaseID: caseID,
-      StudentID: body.StudentID || "",
-      InternalExaminer1ID:
-        body.InternalExaminer1ID || "",
-      InternalExaminer2ID:
-        body.InternalExaminer2ID || "",
-      ExternalExaminer1ID:
-        body.ExternalExaminer1ID || "",
-      ExternalExaminer2ID:
-        body.ExternalExaminer2ID || "",
-      ChairpersonID:
-        body.ChairpersonID || "",
-      SecretaryID:
-        body.SecretaryID || "",
-      MainSupervisorID:
-  mainSupervisorID,
+  ...body,
 
-CoSupervisorID:
-  coSupervisorID,
-    };
+  CaseID: caseID,
 
+  StudentID:
+    body.StudentID || "",
+
+  InternalExaminer1ID:
+    body.InternalExaminer1ID || "",
+
+  InternalExaminer2ID:
+    body.InternalExaminer2ID || "",
+
+  ExternalExaminer1ID:
+    body.ExternalExaminer1ID || "",
+
+  ExternalExaminer2ID:
+    body.ExternalExaminer2ID || "",
+
+  ChairpersonID:
+    body.ChairpersonID || "",
+
+  SecretaryID:
+    body.SecretaryID || "",
+
+  // AUTO FROM STUDENTS SHEET
+  MainSupervisorID:
+    mainSupervisorID,
+
+  // IMPORTANT:
+  // Pass the NAME(s) from Students sheet.
+  // vivaPanelService will convert them to StaffID.
+  CoSupervisorNames:
+    student.CoSupervisor || "",
+};
     await createVivaPanel(createdCase);
 
     // ============================================
@@ -619,11 +632,54 @@ export const updateVivaCase = async (
     // ENSURE PANEL EXISTS / UPDATE PANEL
     // ============================================
 
-    await createVivaPanel({
-      ...row,
-      ...body,
-      CaseID: caseID,
-    });
+    // ============================================
+// LOAD CURRENT STUDENT RECORD
+// ============================================
+
+const currentStudentID =
+  body.StudentID ?? row.StudentID;
+
+const student = await findRow(
+  "Students",
+  "StudentID",
+  currentStudentID
+);
+
+let mainSupervisorID = "";
+let coSupervisorNames = "";
+
+if (student) {
+
+  mainSupervisorID =
+    await getStaffIDByName(
+      student.Supervisor
+    );
+
+  coSupervisorNames =
+    student.CoSupervisor || "";
+}
+
+// ============================================
+// ENSURE PANEL EXISTS
+// ============================================
+
+await createVivaPanel({
+
+  ...row,
+  ...body,
+
+  CaseID: caseID,
+
+  StudentID:
+    currentStudentID,
+
+  MainSupervisorID:
+    mainSupervisorID,
+
+  CoSupervisorNames:
+    coSupervisorNames,
+
+});
 
     res.json({
       success: true,
