@@ -13,7 +13,7 @@ import {
 
 const API =
   import.meta.env.VITE_API_URL ||
-  "https://vivatrack-backend.onrender.com/api";
+  "https://vivatrack-backend.onrender.com";
 
 const cardConfig = [
   {
@@ -156,11 +156,11 @@ export default function Dashboard() {
     try {
       const [summaryRes, upcomingRes, recentRes, studentsRes, reportsRes] =
         await Promise.all([
-          getJson(`${API}/dashboard`),
-          getJson(`${API}/dashboard/upcoming`),
-          getJson(`${API}/dashboard/recent`),
-          getJson(`${API}/students`),
-          getJson(`${API}/dashboard/reports`),
+        getJson(`${API}/api/dashboard`)
+getJson(`${API}/api/dashboard/upcoming`)
+getJson(`${API}/api/dashboard/recent`)
+getJson(`${API}/api/students`)
+getJson(`${API}/api/dashboard/reports`)
         ]);
 
       setSummary(summaryRes.summary || {});
