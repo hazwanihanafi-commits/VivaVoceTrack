@@ -116,6 +116,16 @@ if (!student) {
   });
 }
 
+    // ============================================
+// AUTO-RESOLVE SUPERVISOR FROM STUDENTS SHEET
+// ============================================
+
+const mainSupervisorID =
+  await getStaffIDByName(student.Supervisor);
+
+const coSupervisorNames =
+  student.CoSupervisor || "";
+
   
 
     // ============================================
