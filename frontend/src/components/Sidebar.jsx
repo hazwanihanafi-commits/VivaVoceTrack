@@ -19,46 +19,36 @@ const menus = [
     icon: LayoutDashboard,
     path: "/",
   },
-
   {
     title: "Students",
     icon: Users,
     path: "/students",
   },
-
   {
     title: "Examiners",
     icon: GraduationCap,
     path: "/examiners",
   },
-
   {
     title: "Viva Cases",
     icon: FileText,
     path: "/vivacases",
   },
-
   {
     title: "Viva Schedule",
     icon: CalendarDays,
     path: "/schedule",
   },
-
-  // ============================================
-  // PANEL RESPONSES
-  // ============================================
   {
     title: "Panel Responses",
     icon: FileCheck,
-    path: "/panel-response",
+    path: "/panel-responses",
   },
-
   {
     title: "Reports",
     icon: BarChart3,
     path: "/reports",
   },
-
   {
     title: "Settings",
     icon: Settings,
@@ -70,12 +60,8 @@ export default function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 flex h-screen w-64 flex-col border-r border-gray-200 bg-white">
 
-      {/* ============================================
-          LOGO
-      ============================================ */}
-
+      {/* LOGO */}
       <div className="flex h-20 items-center justify-between border-b px-6">
-
         <div>
           <h1 className="text-2xl font-bold text-purple-700">
             VivaTrack
@@ -87,14 +73,9 @@ export default function Sidebar() {
         </div>
 
         <ChevronLeft className="text-gray-400" />
-
       </div>
 
-
-      {/* ============================================
-          NAVIGATION
-      ============================================ */}
-
+      {/* NAVIGATION */}
       <div className="flex-1 overflow-y-auto px-4 py-6">
 
         <p className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
@@ -104,7 +85,6 @@ export default function Sidebar() {
         <div className="space-y-2">
 
           {menus.map((item) => {
-
             const Icon = item.icon;
 
             return (
@@ -119,27 +99,16 @@ export default function Sidebar() {
                   }`
                 }
               >
-
                 <Icon size={20} />
-
-                <span>
-                  {item.title}
-                </span>
-
+                {item.title}
               </NavLink>
             );
-
           })}
 
         </div>
-
       </div>
 
-
-      {/* ============================================
-          USER
-      ============================================ */}
-
+      {/* USER */}
       <div className="border-t p-5">
 
         <div className="mb-4 flex items-center gap-3">
@@ -150,29 +119,23 @@ export default function Sidebar() {
             className="h-11 w-11 rounded-full"
           />
 
-          <div className="min-w-0">
-
-            <h4 className="truncate font-semibold">
+          <div>
+            <h4 className="font-semibold">
               Administrator
             </h4>
 
-            <p className="truncate text-sm text-gray-500">
+            <p className="text-sm text-gray-500">
               admin@usm.my
             </p>
-
           </div>
 
         </div>
 
         <button
-          type="button"
           className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-100 py-3 font-medium text-red-600 transition hover:bg-red-50"
         >
-
           <LogOut size={18} />
-
           Logout
-
         </button>
 
       </div>
