@@ -14,9 +14,7 @@ const SHEET = "VivaCases";
  * ======================================================
  */
 export const createSchedule = async (req, res, next) => {
-
   try {
-
     const caseID = req.params.id;
 
     const viva = await findRow(
@@ -39,7 +37,6 @@ export const createSchedule = async (req, res, next) => {
     );
 
     const updated = {
-
       ...viva,
 
       TentativeVivaDate:
@@ -52,25 +49,29 @@ export const createSchedule = async (req, res, next) => {
         req.body.VivaTime || "",
 
       Venue:
-  req.body.Venue || "",
+        req.body.Venue || "",
 
-VivaMode:
-  req.body.VivaMode || "",
+      VivaMode:
+        req.body.VivaMode || "",
 
-MeetingLink:
-  req.body.MeetingLink || "",
+      MeetingLink:
+        req.body.MeetingLink || "",
 
-Chairperson:
-  req.body.Chairperson || "",
+      ChairpersonID:
+        req.body.ChairpersonID ||
+        req.body.Chairperson ||
+        "",
 
-      Secretary:
-        req.body.Secretary || "",
+      SecretaryID:
+        req.body.SecretaryID ||
+        req.body.Secretary ||
+        "",
 
-      CurrentStatus: "Scheduled",
+      CurrentStatus:
+        "Scheduled",
 
       LastUpdated:
         new Date().toISOString(),
-
     };
 
     await updateRow(
@@ -86,11 +87,8 @@ Chairperson:
     });
 
   } catch (err) {
-
     next(err);
-
   }
-
 };
 
 /**
@@ -227,16 +225,18 @@ export const updateSchedule = async (req, res, next) => {
         viva.MeetingLink ??
         "",
 
-      Chairperson:
-        req.body.Chairperson ??
-        viva.Chairperson ??
-        "",
+      ChairpersonID:
+  req.body.ChairpersonID ||
+  req.body.Chairperson ||
+  viva.ChairpersonID ||
+  "",
 
-      Secretary:
-        req.body.Secretary ??
-        viva.Secretary ??
-        "",
-
+      SecretaryID:
+  req.body.SecretaryID ||
+  req.body.Secretary ||
+  viva.SecretaryID ||
+  "",
+      
       // IMPORTANT:
       CurrentStatus: "Scheduled",
 
