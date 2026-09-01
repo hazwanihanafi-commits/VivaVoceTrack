@@ -1,7 +1,6 @@
 import {
   LayoutDashboard,
   Users,
-  UserCog,
   GraduationCap,
   CalendarDays,
   FileText,
@@ -9,7 +8,7 @@ import {
   Settings,
   LogOut,
   ChevronLeft,
-  ClipboardCheck,
+  FileCheck,
 } from "lucide-react";
 
 import { NavLink } from "react-router-dom";
@@ -20,21 +19,25 @@ const menus = [
     icon: LayoutDashboard,
     path: "/",
   },
+
   {
     title: "Students",
     icon: Users,
     path: "/students",
   },
+
   {
     title: "Examiners",
     icon: GraduationCap,
     path: "/examiners",
   },
+
   {
     title: "Viva Cases",
     icon: FileText,
     path: "/vivacases",
   },
+
   {
     title: "Viva Schedule",
     icon: CalendarDays,
@@ -55,6 +58,7 @@ const menus = [
     icon: BarChart3,
     path: "/reports",
   },
+
   {
     title: "Settings",
     icon: Settings,
@@ -91,7 +95,7 @@ export default function Sidebar() {
           NAVIGATION
       ============================================ */}
 
-      <div className="flex-1 px-4 py-6 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto px-4 py-6">
 
         <p className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
           Main Menu
@@ -118,7 +122,9 @@ export default function Sidebar() {
 
                 <Icon size={20} />
 
-                {item.title}
+                <span>
+                  {item.title}
+                </span>
 
               </NavLink>
             );
@@ -144,13 +150,13 @@ export default function Sidebar() {
             className="h-11 w-11 rounded-full"
           />
 
-          <div>
+          <div className="min-w-0">
 
-            <h4 className="font-semibold">
+            <h4 className="truncate font-semibold">
               Administrator
             </h4>
 
-            <p className="text-sm text-gray-500">
+            <p className="truncate text-sm text-gray-500">
               admin@usm.my
             </p>
 
@@ -159,6 +165,7 @@ export default function Sidebar() {
         </div>
 
         <button
+          type="button"
           className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-100 py-3 font-medium text-red-600 transition hover:bg-red-50"
         >
 
