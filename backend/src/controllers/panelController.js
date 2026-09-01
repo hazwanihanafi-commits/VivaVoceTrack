@@ -110,6 +110,23 @@ export const respondToPanelInvitation = async (
       });
     }
 
+    // ======================================================
+// CHECK RESPONSE DEADLINE
+// ======================================================
+
+if (panel.ResponseDeadline) {
+  const deadline = new Date(panel.ResponseDeadline);
+  const now = new Date();
+
+  if (!isNaN(deadline.getTime()) && now > deadline) {
+    return res.status(400).json({
+      success: false,
+      message:
+        "The response deadline has passed. Please contact the VivaTrack Secretariat.",
+    });
+  }
+}
+
     if (!["Yes", "No", "Suggest"].includes(response)) {
       return res.status(400).json({
         success: false,
