@@ -13,7 +13,7 @@ import {
 
 const API =
   import.meta.env.VITE_API_URL ||
-  "https://vivatrack-backend.onrender.com";
+  "https://vivatrack-backend.onrender.com/api";
 
 const cardConfig = [
   {
