@@ -1,6 +1,7 @@
 import express from "express";
 
 import {
+  getAllPanelResponses,
   getVivaPanel,
   getPanelMember,
   respondToPanelInvitation,
@@ -9,9 +10,24 @@ import {
 const router = express.Router();
 
 /**
- * Get all panel members for a Viva
+ * ======================================================
+ * GET ALL PANEL RESPONSES
+ *
+ * GET /api/panel
+ * ======================================================
+ */
+router.get(
+  "/",
+  getAllPanelResponses
+);
+
+
+/**
+ * ======================================================
+ * GET ALL PANEL MEMBERS FOR ONE VIVA
  *
  * GET /api/panel/viva/:vivaID
+ * ======================================================
  */
 router.get(
   "/viva/:vivaID",
@@ -20,9 +36,11 @@ router.get(
 
 
 /**
- * Get individual panel invitation
+ * ======================================================
+ * GET INDIVIDUAL PANEL MEMBER
  *
  * GET /api/panel/:panelID
+ * ======================================================
  */
 router.get(
   "/:panelID",
@@ -31,9 +49,11 @@ router.get(
 
 
 /**
- * Submit panel response
+ * ======================================================
+ * SUBMIT PANEL RESPONSE
  *
  * POST /api/panel/:panelID/respond
+ * ======================================================
  */
 router.post(
   "/:panelID/respond",
