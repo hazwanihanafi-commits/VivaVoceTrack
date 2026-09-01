@@ -1,38 +1,70 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
-const API = "https://vivatrack-backend.onrender.com/api";
+const API =
+  "https://vivatrack-backend.onrender.com/api";
 
 export default function PanelResponse() {
+
   const [searchParams] = useSearchParams();
 
-  const panelID = searchParams.get("panelID");
+  const panelID =
+    searchParams.get("panelID");
 
   const [panel, setPanel] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
 
-  const [response, setResponse] = useState("Accept");
+  const [loading, setLoading] =
+    useState(true);
 
-  const [suggestedDate, setSuggestedDate] = useState("");
-  const [suggestedTime, setSuggestedTime] = useState("");
-  const [remarks, setRemarks] = useState("");
+  const [submitting, setSubmitting] =
+    useState(false);
 
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [response, setResponse] =
+    useState("");
+
+  const [suggestedDate, setSuggestedDate] =
+    useState("");
+
+  const [suggestedTime, setSuggestedTime] =
+    useState("");
+
+  const [remarks, setRemarks] =
+    useState("");
+
+  const [message, setMessage] =
+    useState("");
+
+  const [error, setError] =
+    useState("");
+
+
+  /**
+   * ================================================
+   * LOAD PANEL INVITATION
+   * ================================================
+   */
 
   useEffect(() => {
+
     if (!panelID) {
-      setError("Invalid panel invitation.");
+      setError(
+        "Invalid panel invitation."
+      );
+
       setLoading(false);
+
       return;
     }
 
     loadPanel();
+
   }, [panelID]);
 
+
   async function loadPanel() {
+
     try {
+
       const res = await fetch(
         `${API}/panel/${encodeURIComponent(panelID)}`
       );
@@ -40,46 +72,63 @@ export default function PanelResponse() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.message || "Unable to load panel invitation.");
+
+        setError(
+          data.message ||
+          "Unable to load invitation."
+        );
+
         return;
       }
 
       setPanel(data.data);
 
-      if (data.data?.Accepted === "Accepted") {
-        setResponse("Accept");
-      }
-
     } catch (err) {
+
       console.error(err);
-      setError("Unable to connect to VivaTrack server.");
+
+      setError(
+        "Unable to connect to VivaTrack."
+      );
+
     } finally {
+
       setLoading(false);
+
     }
   }
 
-  async function submitResponse(e) {
-    e.preventDefault();
+
+  /**
+   * ================================================
+   * SUBMIT RESPONSE
+   * ================================================
+   */
+
+  async function submitResponse() {
 
     setError("");
     setMessage("");
 
-    if (!panelID) {
-      setError("Invalid panel invitation.");
+    if (!response) {
+
+      setError(
+        "Please select your response."
+      );
+
       return;
     }
 
-    if (response === "Cannot Attend") {
+    if (
+      response === "Suggest" &&
+      (!suggestedDate || !suggestedTime)
+    ) {
 
-      if (!suggestedDate) {
-        setError("Please suggest an alternative date.");
-        return;
-      }
+      setError(
+        "Please provide your suggested date and time."
+      );
 
-      if (!suggestedTime) {
-        setError("Please suggest an alternative time.");
-        return;
-      }
+      return;
     }
 
     try {
@@ -89,26 +138,29 @@ export default function PanelResponse() {
       const res = await fetch(
         `${API}/panel/${encodeURIComponent(panelID)}/respond`,
         {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            Accepted: response === "Accept"
-              ? "Accepted"
-              : "Cannot Attend",
+          method: "POST",
 
-            SuggestedDate:
-              response === "Cannot Attend"
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+
+            response,
+
+            suggestedDate:
+              response === "Suggest"
                 ? suggestedDate
                 : "",
 
-            SuggestedTime:
-              response === "Cannot Attend"
+            suggestedTime:
+              response === "Suggest"
                 ? suggestedTime
                 : "",
 
-            Remarks: remarks,
+            remarks,
+
           }),
         }
       );
@@ -116,25 +168,28 @@ export default function PanelResponse() {
       const data = await res.json();
 
       if (!res.ok) {
+
         setError(
           data.message ||
-          "Unable to submit your response."
+          "Unable to submit response."
         );
+
         return;
       }
 
       setMessage(
-        "Thank you. Your Viva panel response has been recorded."
+        data.message ||
+        "Response submitted successfully."
       );
 
-      await loadPanel();
+      setPanel(data.data);
 
     } catch (err) {
 
       console.error(err);
 
       setError(
-        "Unable to connect to VivaTrack server."
+        "Unable to connect to VivaTrack."
       );
 
     } finally {
@@ -144,311 +199,371 @@ export default function PanelResponse() {
     }
   }
 
+
+  /**
+   * ================================================
+   * LOADING
+   * ================================================
+   */
+
   if (loading) {
+
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+
         <div className="rounded-2xl bg-white p-8 shadow">
-          Loading Viva invitation...
+
+          <p className="text-gray-600">
+            Loading Viva Voce invitation...
+          </p>
+
         </div>
+
       </div>
     );
   }
 
-  if (error && !panel) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 p-6">
-        <div className="w-full max-w-lg rounded-2xl bg-white p-8 text-center shadow">
 
-          <h1 className="mb-3 text-xl font-bold text-red-600">
-            Viva Invitation
+  /**
+   * ================================================
+   * ERROR
+   * ================================================
+   */
+
+  if (error && !panel) {
+
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+
+        <div className="w-full max-w-xl rounded-2xl bg-white p-8 shadow">
+
+          <h1 className="mb-4 text-2xl font-bold text-red-600">
+            VivaTrack
           </h1>
 
-          <p className="text-gray-600">
+          <p className="text-gray-700">
             {error}
           </p>
 
         </div>
+
       </div>
     );
   }
 
-  if (!panel) return null;
-
-  const alreadyResponded =
-    panel.Accepted === "Accepted" ||
-    panel.Accepted === "Cannot Attend";
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-10">
 
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-2xl">
 
-        {/* Header */}
+        {/* HEADER */}
 
         <div className="mb-6 text-center">
 
-          <h1 className="text-3xl font-bold text-gray-900">
-            VivaTrack
+          <h1 className="text-2xl font-bold">
+            Universiti Sains Malaysia
           </h1>
 
-          <p className="mt-2 text-gray-500">
-            Viva Examination Panel Response
+          <p className="text-gray-600">
+            Pusat Kanser Tun Abdullah Ahmad Badawi
+            (PKTAAB)
+          </p>
+
+          <p className="text-gray-600">
+            Academic & International Division
           </p>
 
         </div>
 
 
-        {/* Main Card */}
+        {/* CARD */}
 
         <div className="rounded-2xl bg-white p-8 shadow">
 
-          {/* Viva Information */}
+          <h2 className="mb-2 text-2xl font-bold">
+            Viva Voce Schedule Invitation
+          </h2>
 
-          <div className="mb-6 rounded-xl bg-purple-50 p-5">
+          <p className="mb-6 text-gray-600">
+            Dear Panel Member,
+          </p>
 
-            <p className="text-xs font-semibold uppercase tracking-wide text-purple-600">
-              Viva Case
+
+          {/* ROLE */}
+
+          <div className="mb-6 rounded-xl bg-gray-50 p-5">
+
+            <p className="text-sm text-gray-500">
+              Your Role
             </p>
 
-            <h2 className="mt-1 text-xl font-bold text-purple-900">
-              {panel.CaseID || panel.VivaID}
-            </h2>
+            <p className="text-lg font-semibold">
+              {panel?.Role}
+            </p>
 
           </div>
 
 
-          {/* Panel Information */}
+          {/* DETAILS */}
 
-          <div className="mb-8">
+          <div className="mb-6 space-y-3">
 
-            <h3 className="mb-4 text-lg font-semibold">
-              Panel Information
-            </h3>
+            <div className="flex justify-between border-b pb-2">
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <span className="font-medium">
+                Viva Case
+              </span>
 
-              <Info
-                label="Name"
-                value={
-                  panel.PersonName ||
-                  panel.ExaminerName ||
-                  panel.StaffName ||
-                  ""
-                }
-              />
+              <span>
+                {panel?.VivaID}
+              </span>
 
-              <Info
-                label="Role"
-                value={panel.Role}
-              />
+            </div>
+
+            <div className="flex justify-between border-b pb-2">
+
+              <span className="font-medium">
+                Proposed Date
+              </span>
+
+              <span>
+                {panel?.ProposedDate ||
+                  panel?.TentativeVivaDate ||
+                  "Please refer to invitation"}
+              </span>
+
+            </div>
+
+            <div className="flex justify-between border-b pb-2">
+
+              <span className="font-medium">
+                Proposed Time
+              </span>
+
+              <span>
+                {panel?.ProposedTime ||
+                  panel?.SuggestedTime ||
+                  "-"}
+              </span>
 
             </div>
 
           </div>
 
 
-          {/* Viva Information */}
+          {/* CURRENT RESPONSE */}
 
-          <div className="mb-8">
+          {panel?.Accepted &&
+            panel.Accepted !== "Pending" && (
 
-            <h3 className="mb-4 text-lg font-semibold">
-              Viva Examination
-            </h3>
+            <div className="mb-6 rounded-xl bg-gray-50 p-5">
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <p className="text-sm text-gray-500">
+                Your Current Response
+              </p>
 
-              <Info
-                label="Student"
-                value={panel.StudentName}
-              />
+              <p className="font-semibold">
+                {panel.Accepted}
+              </p>
 
-              <Info
-                label="Programme"
-                value={panel.Programme}
-              />
-
-              <Info
-                label="Tentative Viva Date"
-                value={panel.TentativeVivaDate}
-              />
-
-              <Info
-                label="Viva Time"
-                value={panel.VivaTime}
-              />
-
-              <Info
-                label="Mode"
-                value={panel.VivaMode}
-              />
-
-              <Info
-                label="Venue"
-                value={panel.Venue}
-              />
-
-            </div>
-
-            {panel.VivaMode !== "Physical" &&
-              panel.MeetingLink && (
-                <div className="mt-4">
-
-                  <a
-                    href={panel.MeetingLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block rounded-lg bg-blue-600 px-5 py-3 text-white hover:bg-blue-700"
-                  >
-                    Join Meeting
-                  </a>
-
-                </div>
+              {panel.SuggestedDate && (
+                <p className="mt-2 text-sm">
+                  Suggested Date:{" "}
+                  {panel.SuggestedDate}
+                </p>
               )}
 
-          </div>
-
-
-          {/* Thesis */}
-
-          {panel.ThesisTitle && (
-            <div className="mb-8">
-
-              <h3 className="mb-2 text-lg font-semibold">
-                Thesis Title
-              </h3>
-
-              <div className="rounded-xl border bg-gray-50 p-4 text-gray-700">
-                {panel.ThesisTitle}
-              </div>
+              {panel.SuggestedTime && (
+                <p className="text-sm">
+                  Suggested Time:{" "}
+                  {panel.SuggestedTime}
+                </p>
+              )}
 
             </div>
+
           )}
 
 
-          {/* Response */}
+          {/* SUCCESS */}
 
-          <form onSubmit={submitResponse}>
+          {message && (
 
-            <h3 className="mb-4 text-lg font-semibold">
-              Your Response
-            </h3>
+            <div className="mb-6 rounded-xl bg-green-50 p-4 text-green-700">
 
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-
-              {/* Accept */}
-
-              <button
-                type="button"
-                disabled={alreadyResponded}
-                onClick={() => setResponse("Accept")}
-                className={`rounded-xl border-2 p-5 text-left ${
-                  response === "Accept"
-                    ? "border-green-500 bg-green-50"
-                    : "border-gray-200 bg-white"
-                }`}
-              >
-
-                <div className="text-lg font-bold text-green-700">
-                  ✓ Accept
-                </div>
-
-                <p className="mt-1 text-sm text-gray-500">
-                  I am available for this Viva.
-                </p>
-
-              </button>
-
-
-              {/* Cannot Attend */}
-
-              <button
-                type="button"
-                disabled={alreadyResponded}
-                onClick={() =>
-                  setResponse("Cannot Attend")
-                }
-                className={`rounded-xl border-2 p-5 text-left ${
-                  response === "Cannot Attend"
-                    ? "border-red-500 bg-red-50"
-                    : "border-gray-200 bg-white"
-                }`}
-              >
-
-                <div className="text-lg font-bold text-red-700">
-                  ✕ Cannot Attend
-                </div>
-
-                <p className="mt-1 text-sm text-gray-500">
-                  I need another date/time.
-                </p>
-
-              </button>
+              {message}
 
             </div>
 
+          )}
 
-            {/* Alternative date */}
 
-            {response === "Cannot Attend" && (
-              <div className="mt-6 rounded-xl bg-orange-50 p-5">
+          {/* ERROR */}
 
-                <h4 className="font-semibold text-orange-800">
-                  Suggest an Alternative
-                </h4>
+          {error && (
 
-                <p className="mt-1 text-sm text-orange-700">
-                  Please suggest a suitable date and time.
+            <div className="mb-6 rounded-xl bg-red-50 p-4 text-red-700">
+
+              {error}
+
+            </div>
+
+          )}
+
+
+          {/* RESPONSE */}
+
+          <div className="space-y-5">
+
+            <h3 className="text-lg font-semibold">
+              Please indicate your availability
+            </h3>
+
+
+            {/* ACCEPT */}
+
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border p-4 hover:bg-gray-50">
+
+              <input
+                type="radio"
+                name="response"
+                value="Yes"
+                checked={response === "Yes"}
+                onChange={(e) =>
+                  setResponse(e.target.value)
+                }
+                className="mt-1"
+              />
+
+              <div>
+
+                <p className="font-semibold">
+                  I Agree
                 </p>
 
-                <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                <p className="text-sm text-gray-500">
+                  I am available for the proposed Viva Voce schedule.
+                </p>
 
-                  <div>
+              </div>
 
-                    <label className="mb-2 block text-sm font-medium">
-                      Suggested Date
-                    </label>
-
-                    <input
-                      type="date"
-                      value={suggestedDate}
-                      onChange={(e) =>
-                        setSuggestedDate(e.target.value)
-                      }
-                      disabled={alreadyResponded}
-                      className="w-full rounded-xl border p-3"
-                    />
-
-                  </div>
+            </label>
 
 
-                  <div>
+            {/* UNABLE */}
 
-                    <label className="mb-2 block text-sm font-medium">
-                      Suggested Time
-                    </label>
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border p-4 hover:bg-gray-50">
 
-                    <input
-                      type="time"
-                      value={suggestedTime}
-                      onChange={(e) =>
-                        setSuggestedTime(e.target.value)
-                      }
-                      disabled={alreadyResponded}
-                      className="w-full rounded-xl border p-3"
-                    />
+              <input
+                type="radio"
+                name="response"
+                value="No"
+                checked={response === "No"}
+                onChange={(e) =>
+                  setResponse(e.target.value)
+                }
+                className="mt-1"
+              />
 
-                  </div>
+              <div>
+
+                <p className="font-semibold">
+                  I Am Unable to Attend
+                </p>
+
+                <p className="text-sm text-gray-500">
+                  I cannot attend the proposed Viva Voce schedule.
+                </p>
+
+              </div>
+
+            </label>
+
+
+            {/* SUGGEST */}
+
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border p-4 hover:bg-gray-50">
+
+              <input
+                type="radio"
+                name="response"
+                value="Suggest"
+                checked={response === "Suggest"}
+                onChange={(e) =>
+                  setResponse(e.target.value)
+                }
+                className="mt-1"
+              />
+
+              <div>
+
+                <p className="font-semibold">
+                  Suggest Another Date / Time
+                </p>
+
+                <p className="text-sm text-gray-500">
+                  I cannot attend this proposed schedule but would like to suggest an alternative.
+                </p>
+
+              </div>
+
+            </label>
+
+
+            {/* SUGGESTED DATE */}
+
+            {response === "Suggest" && (
+
+              <div className="rounded-xl bg-gray-50 p-5 space-y-4">
+
+                <div>
+
+                  <label className="mb-2 block font-medium">
+                    Suggested Date
+                  </label>
+
+                  <input
+                    type="date"
+                    value={suggestedDate}
+                    onChange={(e) =>
+                      setSuggestedDate(
+                        e.target.value
+                      )
+                    }
+                    className="w-full rounded-xl border p-3"
+                  />
+
+                </div>
+
+
+                <div>
+
+                  <label className="mb-2 block font-medium">
+                    Suggested Time
+                  </label>
+
+                  <input
+                    type="time"
+                    value={suggestedTime}
+                    onChange={(e) =>
+                      setSuggestedTime(
+                        e.target.value
+                      )
+                    }
+                    className="w-full rounded-xl border p-3"
+                  />
 
                 </div>
 
               </div>
+
             )}
 
 
-            {/* Remarks */}
+            {/* REMARKS */}
 
-            <div className="mt-6">
+            <div>
 
               <label className="mb-2 block font-medium">
                 Remarks
@@ -460,89 +575,40 @@ export default function PanelResponse() {
                 onChange={(e) =>
                   setRemarks(e.target.value)
                 }
-                disabled={alreadyResponded}
-                placeholder="Optional comments..."
+                placeholder="Optional remarks..."
                 className="w-full rounded-xl border p-3"
               />
 
             </div>
 
 
-            {/* Error */}
+            {/* SUBMIT */}
 
-            {error && (
-              <div className="mt-5 rounded-lg bg-red-50 p-4 text-sm text-red-700">
-                {error}
-              </div>
-            )}
+            <button
+              type="button"
+              disabled={submitting}
+              onClick={submitResponse}
+              className="w-full rounded-xl bg-purple-600 px-6 py-3 font-semibold text-white hover:bg-purple-700 disabled:opacity-50"
+            >
 
+              {submitting
+                ? "Submitting..."
+                : "Submit Response"}
 
-            {/* Success */}
+            </button>
 
-            {message && (
-              <div className="mt-5 rounded-lg bg-green-50 p-4 text-sm text-green-700">
-                {message}
-              </div>
-            )}
-
-
-            {/* Submit */}
-
-            {!alreadyResponded && (
-              <button
-                type="submit"
-                disabled={submitting}
-                className="mt-6 w-full rounded-xl bg-purple-600 px-6 py-4 font-semibold text-white hover:bg-purple-700 disabled:opacity-50"
-              >
-                {submitting
-                  ? "Submitting..."
-                  : "Submit Response"}
-              </button>
-            )}
+          </div>
 
 
-            {/* Existing response */}
+          <div className="mt-8 border-t pt-5 text-center text-sm text-gray-500">
 
-            {alreadyResponded && (
-              <div className="mt-6 rounded-xl bg-gray-50 p-5 text-center">
+            VivaTrack Secretariat
 
-                <p className="font-semibold">
-                  Response Recorded
-                </p>
-
-                <p className="mt-1 text-sm text-gray-500">
-                  Your response has already been submitted.
-                </p>
-
-              </div>
-            )}
-
-          </form>
+          </div>
 
         </div>
 
       </div>
-
-    </div>
-  );
-}
-
-
-/* ======================================================
-   INFO COMPONENT
-====================================================== */
-
-function Info({ label, value }) {
-  return (
-    <div className="rounded-xl border bg-gray-50 p-4">
-
-      <p className="text-xs font-medium uppercase text-gray-400">
-        {label}
-      </p>
-
-      <p className="mt-1 font-medium text-gray-800">
-        {value || "—"}
-      </p>
 
     </div>
   );
