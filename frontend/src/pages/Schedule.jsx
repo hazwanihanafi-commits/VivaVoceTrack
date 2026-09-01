@@ -73,6 +73,7 @@ export default function Schedule() {
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [staff, setStaff] = useState([]);
 
  useEffect(() => {
   loadAll();
@@ -90,12 +91,13 @@ export default function Schedule() {
     setLoading(true);
     setError("");
 
-    const [scheduleData, studentData, examinerData] =
-      await Promise.all([
-        getJson(`${API}/schedule`),
-        getJson(`${API}/students`),
-        getJson(`${API}/examiners`),
-      ]);
+    const [scheduleData, studentData, examinerData, staffData] =
+  await Promise.all([
+    getJson(`${API}/schedule`),
+    getJson(`${API}/students`),
+    getJson(`${API}/examiners`),
+    getJson(`${API}/staff`),
+  ]);
 
     const loadedSchedules = Array.isArray(scheduleData.data)
       ? scheduleData.data
@@ -114,6 +116,12 @@ export default function Schedule() {
         ? examinerData.data
         : []
     );
+
+    setStaff(
+  Array.isArray(staffData.data)
+    ? staffData.data
+    : []
+);
 
     // ============================================
     // OPEN SPECIFIC CASE FROM VIVA CASES
@@ -166,6 +174,13 @@ export default function Schedule() {
     [examiners]
   );
 
+  const staffMap = useMemo(
+  () => Object.fromEntries(
+    staff.map((s) => [s.StaffID, s])
+  ),
+  [staff]
+);
+
   function studentName(item) {
     return studentMap[item.StudentID]?.StudentName || item.StudentID || "Unknown student";
   }
@@ -174,6 +189,11 @@ export default function Schedule() {
     if (!value) return "—";
     return examinerMap[value]?.ExaminerName || value;
   }
+
+  function staffName(value) {
+  if (!value) return "—";
+  return staffMap[value]?.StaffName || value;
+}
 
   function openCreate(item = null) {
   if (!item) {
@@ -562,8 +582,21 @@ SecretaryID: form.Secretary || "",
                 </label>
                 <Field label="Venue" name="Venue" value={form.Venue} onChange={updateField} placeholder="e.g. DK 1, PPS" />
                 <Field label="Meeting Link" name="MeetingLink" value={form.MeetingLink} onChange={updateField} placeholder="https://..." />
-                <PersonField label="Chairperson" name="Chairperson" value={form.Chairperson} onChange={updateField} examiners={examiners} />
-                <PersonField label="Secretary" name="Secretary" value={form.Secretary} onChange={updateField} examiners={examiners} />
+                <PersonField
+  label="Chairperson"
+  name="Chairperson"
+  value={form.Chairperson}
+  onChange={updateField}
+  staff={staff}
+/>
+
+<PersonField
+  label="Secretary"
+  name="Secretary"
+  value={form.Secretary}
+  onChange={updateField}
+  staff={staff}
+/>
               </div>
 
               <div className="flex justify-end gap-3 border-t pt-5">
@@ -603,14 +636,36 @@ function Field({ label, name, value, onChange, type = "text", placeholder = "" }
   );
 }
 
-function PersonField({ label, name, value, onChange, examiners }) {
+function PersonField({
+  label,
+  name,
+  value,
+  onChange,
+  staff,
+}) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-semibold text-gray-700">{label}</span>
-      <select name={name} value={value} onChange={onChange} className="w-full rounded-xl border px-4 py-3 outline-none focus:border-purple-500">
-        <option value="">Select examiner / staff</option>
-        {examiners.map((e) => (
-          <option key={e.ExaminerID} value={e.ExaminerID}>{e.ExaminerName} — {e.ExaminerType || "Examiner"}</option>
+      <span className="mb-2 block text-sm font-semibold text-gray-700">
+        {label}
+      </span>
+
+      <select
+        name={name}
+        value={value}
+        onChange={onChange}
+        className="w-full rounded-xl border px-4 py-3 outline-none focus:border-purple-500"
+      >
+        <option value="">
+          Select {label}
+        </option>
+
+        {staff.map((s) => (
+          <option
+            key={s.StaffID}
+            value={s.StaffID}
+          >
+            {s.StaffName} — {s.Role}
+          </option>
         ))}
       </select>
     </label>
