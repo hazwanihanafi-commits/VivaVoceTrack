@@ -131,18 +131,24 @@ export const getSchedule = async (req, res, next) => {
 
 /**
  * ======================================================
- * Get All Scheduled Viva
+ * Get All Viva Schedules
  * GET /api/schedule
  * ======================================================
  */
 export const getSchedules = async (req, res, next) => {
-
   try {
 
     const rows = await getRows(SHEET);
 
-    const schedules = rows.filter(
-      r => r.CurrentStatus === "Scheduled"
+    // Return all cases that have a schedule-related status
+    const schedules = rows.filter((r) =>
+      [
+        "Scheduled",
+        "Confirmed",
+        "Postponed",
+        "Cancelled",
+        "Completed",
+      ].includes(r.CurrentStatus)
     );
 
     res.json({
@@ -153,10 +159,11 @@ export const getSchedules = async (req, res, next) => {
 
   } catch (err) {
 
+    console.error("GET SCHEDULES ERROR:", err);
+
     next(err);
 
   }
-  
 };
   /**
  * ======================================================
