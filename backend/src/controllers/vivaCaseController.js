@@ -5,12 +5,39 @@ import {
   getRows,
   addRow,
   deleteRow,
+  generateID,
 } from "../services/sheetsService.js";
 
-import { generateID } from "../utils/idGenerator.js";
 import { createVivaPanel } from "../services/vivaPanelService.js";
 
 const SHEET = "VivaCases";
+
+/**
+ * ======================================================
+ * GET STAFF ID BY STAFF NAME
+ * ======================================================
+ */
+async function getStaffIDByName(name) {
+  if (!name) return "";
+
+  const staffRows = await getRows("Staff");
+
+  const searchName = String(name)
+    .trim()
+    .toLowerCase();
+
+  const staff = staffRows.find(
+    (s) =>
+      String(s.StaffName || "")
+        .trim()
+        .toLowerCase() === searchName &&
+      String(s.Active || "")
+        .trim()
+        .toLowerCase() === "yes"
+  );
+
+  return staff ? staff.StaffID : "";
+}
 
 /**
  * ======================================================
@@ -71,6 +98,33 @@ export const getVivaCase = async (req, res, next) => {
 export const createVivaCase = async (req, res, next) => {
   try {
     const body = req.body;
+
+    // ============================================
+// LOAD STUDENT RECORD
+// ============================================
+
+const student = await findRow(
+  "Students",
+  "StudentID",
+  body.StudentID
+);
+
+if (!student) {
+  return res.status(404).json({
+    success: false,
+    message: "Student not found.",
+  });
+}
+
+    // ============================================
+// AUTO-RESOLVE SUPERVISOR IDS
+// ============================================
+
+const mainSupervisorID =
+  await getStaffIDByName(student.Supervisor);
+
+const coSupervisorID =
+  await getStaffIDByName(student.CoSupervisor);
 
     // ============================================
     // CHECK IF STUDENT ALREADY HAS ACTIVE CASE
@@ -304,9 +358,10 @@ export const createVivaCase = async (req, res, next) => {
       SecretaryID:
         body.SecretaryID || "",
       MainSupervisorID:
-        body.MainSupervisorID || "",
-      CoSupervisorID:
-        body.CoSupervisorID || "",
+  mainSupervisorID,
+
+CoSupervisorID:
+  coSupervisorID,
     };
 
     await createVivaPanel(createdCase);
