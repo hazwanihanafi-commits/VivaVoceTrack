@@ -15,6 +15,7 @@ import emailRoutes from "./routes/emailRoutes.js";
 import scheduleRoutes from "./routes/scheduleRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import staffRoutes from "./routes/staffRoutes.js";
+import panelRoutes from "./routes/panelRoutes.js";
 
 
 // Middleware
@@ -51,6 +52,8 @@ app.use("/api/schedule", scheduleRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/staff", staffRoutes);
+app.use("/api/panel", panelRoutes);
+
 
 /************************************************
  * Logger
