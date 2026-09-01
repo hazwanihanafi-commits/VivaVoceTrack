@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+
 import MainLayout from "./layouts/MainLayout";
 
 import Dashboard from "./pages/Dashboard";
@@ -6,7 +7,7 @@ import Students from "./pages/Students";
 import VivaCases from "./pages/VivaCases";
 import Examiners from "./pages/Examiners";
 import Schedule from "./pages/Schedule";
-import PanelResponse from "./pages/PanelResponse";
+import PanelResponses from "./pages/PanelResponses";
 
 export default function App() {
   return (
@@ -40,9 +41,10 @@ export default function App() {
           element={<Schedule />}
         />
 
+        {/* ADMIN PANEL RESPONSES */}
         <Route
-          path="/panel-response"
-          element={<PanelResponse />}
+          path="/panel-responses"
+          element={<PanelResponses />}
         />
 
       </Route>
