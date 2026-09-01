@@ -1,15 +1,16 @@
 import {
   LayoutDashboard,
   Users,
-  UserCog,
   GraduationCap,
   CalendarDays,
   FileText,
+  FileCheck,
   BarChart3,
   Settings,
   LogOut,
   ChevronLeft,
 } from "lucide-react";
+
 import { NavLink } from "react-router-dom";
 
 const menus = [
@@ -38,6 +39,16 @@ const menus = [
     icon: CalendarDays,
     path: "/schedule",
   },
+
+  // ============================================
+  // PANEL RESPONSES
+  // ============================================
+  {
+    title: "Panel Responses",
+    icon: FileCheck,
+    path: "/panel-response",
+  },
+
   {
     title: "Reports",
     icon: BarChart3,
@@ -54,12 +65,13 @@ export default function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 flex h-screen w-64 flex-col border-r border-gray-200 bg-white">
 
-      {/* Logo */}
+      {/* ============================================
+          LOGO
+      ============================================ */}
 
       <div className="flex h-20 items-center justify-between border-b px-6">
 
         <div>
-
           <h1 className="text-2xl font-bold text-purple-700">
             VivaTrack
           </h1>
@@ -67,15 +79,18 @@ export default function Sidebar() {
           <p className="text-xs text-gray-500">
             Viva Management System
           </p>
-
         </div>
 
         <ChevronLeft className="text-gray-400" />
+
       </div>
 
-      {/* Navigation */}
 
-      <div className="flex-1 px-4 py-6">
+      {/* ============================================
+          NAVIGATION
+      ============================================ */}
+
+      <div className="flex-1 px-4 py-6 overflow-y-auto">
 
         <p className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
           Main Menu
@@ -99,15 +114,24 @@ export default function Sidebar() {
                   }`
                 }
               >
+
                 <Icon size={20} />
+
                 {item.title}
+
               </NavLink>
             );
+
           })}
+
         </div>
+
       </div>
 
-      {/* User */}
+
+      {/* ============================================
+          USER
+      ============================================ */}
 
       <div className="border-t p-5">
 
@@ -115,7 +139,7 @@ export default function Sidebar() {
 
           <img
             src="https://ui-avatars.com/api/?name=Admin&background=6D28D9&color=fff"
-            alt=""
+            alt="Administrator"
             className="h-11 w-11 rounded-full"
           />
 
@@ -133,7 +157,9 @@ export default function Sidebar() {
 
         </div>
 
-        <button className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-100 py-3 font-medium text-red-600 transition hover:bg-red-50">
+        <button
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-100 py-3 font-medium text-red-600 transition hover:bg-red-50"
+        >
 
           <LogOut size={18} />
 
