@@ -21,12 +21,10 @@ export default function PanelResponse() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  /**
-   * ======================================================
-   * LOAD PANEL INVITATION
-   * GET /api/panel/:panelID
-   * ======================================================
-   */
+  // ======================================================
+  // LOAD PANEL INVITATION
+  // GET /api/panel/:panelID
+  // ======================================================
 
   useEffect(() => {
     if (!panelID) {
@@ -43,33 +41,35 @@ export default function PanelResponse() {
       setLoading(true);
       setError("");
 
-      const response = await fetch(
+      const result = await fetch(
         `${API_BASE_URL}/api/panel/${encodeURIComponent(panelID)}`
       );
 
-      const data = await response.json();
+      const data = await result.json();
 
-      if (!response.ok || !data.success) {
+      if (!result.ok || !data.success) {
         throw new Error(
           data.message || "Unable to load panel invitation."
         );
       }
 
-      setPanel(data.data);
+      const panelData = data.data;
 
-      // Load existing response
-      setResponse(data.data.Accepted || "");
+      setPanel(panelData);
+
+      // Existing response
+      setResponse(panelData.Accepted || "");
 
       setSuggestedDate(
-        data.data.SuggestedDate || ""
+        panelData.SuggestedDate || ""
       );
 
       setSuggestedTime(
-        data.data.SuggestedTime || ""
+        panelData.SuggestedTime || ""
       );
 
       setRemarks(
-        data.data.Remarks || ""
+        panelData.Remarks || ""
       );
 
     } catch (err) {
@@ -84,11 +84,9 @@ export default function PanelResponse() {
     }
   };
 
-  /**
-   * ======================================================
-   * CHECK DEADLINE
-   * ======================================================
-   */
+  // ======================================================
+  // DEADLINE
+  // ======================================================
 
   const getDeadline = () => {
     if (!panel?.ResponseDeadline) {
@@ -109,14 +107,12 @@ export default function PanelResponse() {
   const deadline = getDeadline();
 
   const isExpired =
-    deadline &&
+    deadline !== null &&
     new Date() > deadline;
 
-  /**
-   * ======================================================
-   * FORMAT DATE
-   * ======================================================
-   */
+  // ======================================================
+  // FORMAT DATE
+  // ======================================================
 
   const formatDate = (date) => {
     if (!date) return "-";
@@ -134,11 +130,9 @@ export default function PanelResponse() {
     });
   };
 
-  /**
-   * ======================================================
-   * FORMAT DATETIME
-   * ======================================================
-   */
+  // ======================================================
+  // FORMAT DATE TIME
+  // ======================================================
 
   const formatDateTime = (date) => {
     if (!date) return "-";
@@ -158,12 +152,10 @@ export default function PanelResponse() {
     });
   };
 
-  /**
-   * ======================================================
-   * SUBMIT RESPONSE
-   * POST /api/panel/:panelID/respond
-   * ======================================================
-   */
+  // ======================================================
+  // SUBMIT RESPONSE
+  // POST /api/panel/:panelID/respond
+  // ======================================================
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -172,10 +164,7 @@ export default function PanelResponse() {
     setError("");
 
     if (!response) {
-      setError(
-        "Please select your response."
-      );
-
+      setError("Please select your response.");
       return;
     }
 
@@ -183,7 +172,6 @@ export default function PanelResponse() {
       setError(
         "The response deadline has passed. Please contact the VivaTrack Secretariat."
       );
-
       return;
     }
 
@@ -194,7 +182,6 @@ export default function PanelResponse() {
       setError(
         "Please provide your suggested date and time."
       );
-
       return;
     }
 
@@ -209,8 +196,7 @@ export default function PanelResponse() {
           method: "POST",
 
           headers: {
-            "Content-Type":
-              "application/json",
+            "Content-Type": "application/json",
           },
 
           body: JSON.stringify({
@@ -257,16 +243,15 @@ export default function PanelResponse() {
         err.message ||
           "Unable to submit your response."
       );
+
     } finally {
       setSubmitting(false);
     }
   };
 
-  /**
-   * ======================================================
-   * LOADING
-   * ======================================================
-   */
+  // ======================================================
+  // LOADING
+  // ======================================================
 
   if (loading) {
     return (
@@ -280,41 +265,57 @@ export default function PanelResponse() {
     );
   }
 
-  /**
-   * ======================================================
-   * ERROR
-   * ======================================================
-   */
+  // ======================================================
+  // INVALID / ERROR
+  // ======================================================
 
   if (error && !panel) {
     return (
       <div style={styles.page}>
-        <div style={styles.card}>
-          <h2 style={styles.title}>
-            Viva Voce Invitation
-          </h2>
+        <div style={styles.container}>
 
-          <div style={styles.error}>
-            {error}
+          <div style={styles.header}>
+            <div style={styles.university}>
+              Universiti Sains Malaysia
+            </div>
+
+            <div style={styles.department}>
+              Pusat Kanser Tun Abdullah Ahmad Badawi
+              <br />
+              Academic & International Division
+            </div>
           </div>
+
+          <div style={styles.card}>
+
+            <h2 style={styles.title}>
+              Viva Voce Invitation
+            </h2>
+
+            <div style={styles.error}>
+              {error}
+            </div>
+
+          </div>
+
         </div>
       </div>
     );
   }
 
-  /**
-   * ======================================================
-   * MAIN PAGE
-   * ======================================================
-   */
+  // ======================================================
+  // MAIN PAGE
+  // ======================================================
 
   return (
     <div style={styles.page}>
+
       <div style={styles.container}>
 
         {/* HEADER */}
 
         <div style={styles.header}>
+
           <div style={styles.university}>
             Universiti Sains Malaysia
           </div>
@@ -324,6 +325,7 @@ export default function PanelResponse() {
             <br />
             Academic & International Division
           </div>
+
         </div>
 
         {/* CARD */}
@@ -448,9 +450,11 @@ export default function PanelResponse() {
             </strong>
 
             <div style={styles.deadlineDate}>
+
               {deadline
                 ? formatDateTime(deadline)
                 : "Not specified"}
+
             </div>
 
             {isExpired && (
@@ -461,7 +465,7 @@ export default function PanelResponse() {
 
           </div>
 
-          {/* RESPONSE */}
+          {/* RESPONSE FORM */}
 
           {!isExpired && (
             <form onSubmit={handleSubmit}>
@@ -472,7 +476,7 @@ export default function PanelResponse() {
                   Your Response
                 </h3>
 
-                {/* ACCEPT */}
+                {/* YES */}
 
                 <label style={styles.option}>
 
@@ -491,6 +495,7 @@ export default function PanelResponse() {
                   />
 
                   <span>
+
                     <strong>
                       I agree
                     </strong>
@@ -500,6 +505,7 @@ export default function PanelResponse() {
                       proposed Viva Voce
                       schedule.
                     </small>
+
                   </span>
 
                 </label>
@@ -523,6 +529,7 @@ export default function PanelResponse() {
                   />
 
                   <span>
+
                     <strong>
                       I am unable to attend
                     </strong>
@@ -531,6 +538,7 @@ export default function PanelResponse() {
                       I am not available for
                       the proposed schedule.
                     </small>
+
                   </span>
 
                 </label>
@@ -544,8 +552,7 @@ export default function PanelResponse() {
                     name="response"
                     value="Suggest"
                     checked={
-                      response ===
-                      "Suggest"
+                      response === "Suggest"
                     }
                     onChange={(e) =>
                       setResponse(
@@ -555,6 +562,7 @@ export default function PanelResponse() {
                   />
 
                   <span>
+
                     <strong>
                       Suggest another date/time
                     </strong>
@@ -563,72 +571,60 @@ export default function PanelResponse() {
                       I would like to suggest
                       an alternative schedule.
                     </small>
+
                   </span>
 
                 </label>
 
               </div>
 
-              {/* SUGGESTED DATE */}
+              {/* SUGGESTED DATE/TIME */}
 
-              {response ===
-                "Suggest" && (
-                <div
-                  style={styles.suggestionBox}
-                >
+              {response === "Suggest" && (
+                <div style={styles.suggestionBox}>
 
-                  <h3
-                    style={
-                      styles.sectionTitle
-                    }
-                  >
+                  <h3 style={styles.sectionTitle}>
                     Suggested Schedule
                   </h3>
 
-                  <div
-                    style={styles.formGroup}
-                  >
+                  <div style={styles.formGroup}>
+
                     <label>
                       Suggested Date
                     </label>
 
                     <input
                       type="date"
-                      value={
-                        suggestedDate
-                      }
+                      value={suggestedDate}
                       onChange={(e) =>
                         setSuggestedDate(
                           e.target.value
                         )
                       }
-                      style={
-                        styles.input
-                      }
+                      style={styles.input}
+                      required
                     />
+
                   </div>
 
-                  <div
-                    style={styles.formGroup}
-                  >
+                  <div style={styles.formGroup}>
+
                     <label>
                       Suggested Time
                     </label>
 
                     <input
                       type="time"
-                      value={
-                        suggestedTime
-                      }
+                      value={suggestedTime}
                       onChange={(e) =>
                         setSuggestedTime(
                           e.target.value
                         )
                       }
-                      style={
-                        styles.input
-                      }
+                      style={styles.input}
+                      required
                     />
+
                   </div>
 
                 </div>
@@ -651,9 +647,7 @@ export default function PanelResponse() {
                   }
                   placeholder="Enter any additional remarks..."
                   rows={4}
-                  style={
-                    styles.textarea
-                  }
+                  style={styles.textarea}
                 />
 
               </div>
@@ -678,12 +672,11 @@ export default function PanelResponse() {
             </form>
           )}
 
-          {/* ALREADY RESPONDED */}
+          {/* RESPONSE INFORMATION */}
 
           {panel?.ResponseDate && (
-            <div
-              style={styles.responseInfo}
-            >
+            <div style={styles.responseInfo}>
+
               <strong>
                 Response submitted:
               </strong>
@@ -699,34 +692,62 @@ export default function PanelResponse() {
               <strong>
                 Response:
               </strong>{" "}
+
               {panel.Accepted || "-"}
+
+              {panel.Accepted === "Suggest" &&
+                panel.SuggestedDate && (
+                  <>
+                    <br />
+
+                    <strong>
+                      Suggested Date:
+                    </strong>{" "}
+
+                    {formatDate(
+                      panel.SuggestedDate
+                    )}
+
+                    <br />
+
+                    <strong>
+                      Suggested Time:
+                    </strong>{" "}
+
+                    {panel.SuggestedTime || "-"}
+                  </>
+                )}
+
             </div>
           )}
 
           {/* FOOTER */}
 
           <div style={styles.footer}>
+
             VivaTrack Secretariat
             <br />
             Universiti Sains Malaysia
+
           </div>
 
         </div>
+
       </div>
+
     </div>
   );
 }
 
 
-/**
- * ======================================================
- * INFO ROW
- * ======================================================
- */
+// ======================================================
+// INFO ROW
+// ======================================================
 
 function InfoRow({ label, value }) {
   return (
     <div style={styles.infoRow}>
+
       <div style={styles.infoLabel}>
         {label}
       </div>
@@ -734,16 +755,15 @@ function InfoRow({ label, value }) {
       <div style={styles.infoValue}>
         {value || "-"}
       </div>
+
     </div>
   );
 }
 
 
-/**
- * ======================================================
- * STYLES
- * ======================================================
- */
+// ======================================================
+// STYLES
+// ======================================================
 
 const styles = {
 
@@ -845,8 +865,7 @@ const styles = {
 
   deadlineExpired: {
     background: "#fff0f0",
-    border:
-      "1px solid #e0a0a0",
+    border: "1px solid #e0a0a0",
   },
 
   deadlineDate: {
@@ -867,14 +886,9 @@ const styles = {
     alignItems: "flex-start",
     padding: "15px",
     marginBottom: "10px",
-    border:
-      "1px solid #ddd",
+    border: "1px solid #ddd",
     borderRadius: "8px",
     cursor: "pointer",
-  },
-
-  optionSmall: {
-    display: "block",
   },
 
   suggestionBox: {
@@ -894,8 +908,7 @@ const styles = {
     boxSizing: "border-box",
     padding: "11px",
     marginTop: "7px",
-    border:
-      "1px solid #ccc",
+    border: "1px solid #ccc",
     borderRadius: "6px",
     fontSize: "15px",
   },
@@ -906,8 +919,7 @@ const styles = {
     boxSizing: "border-box",
     padding: "11px",
     marginTop: "7px",
-    border:
-      "1px solid #ccc",
+    border: "1px solid #ccc",
     borderRadius: "6px",
     fontSize: "15px",
     resize: "vertical",
@@ -937,8 +949,7 @@ const styles = {
     borderRadius: "7px",
     background: "#e8f5e9",
     color: "#1b5e20",
-    border:
-      "1px solid #a5d6a7",
+    border: "1px solid #a5d6a7",
   },
 
   error: {
@@ -947,8 +958,7 @@ const styles = {
     borderRadius: "7px",
     background: "#ffebee",
     color: "#b71c1c",
-    border:
-      "1px solid #ef9a9a",
+    border: "1px solid #ef9a9a",
   },
 
   responseInfo: {
@@ -968,11 +978,11 @@ const styles = {
   footer: {
     marginTop: "35px",
     paddingTop: "20px",
-    borderTop:
-      "1px solid #eee",
+    borderTop: "1px solid #eee",
     textAlign: "center",
     color: "#777",
     fontSize: "13px",
     lineHeight: "1.6",
   },
+
 };
