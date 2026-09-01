@@ -264,9 +264,8 @@ export default function Schedule() {
 
       MeetingLink: form.MeetingLink || "",
 
-      Chairperson: form.Chairperson || "",
-
-      Secretary: form.Secretary || "",
+      ChairpersonID: form.Chairperson || "",
+SecretaryID: form.Secretary || "",
 
       // IMPORTANT
       CurrentStatus: "Scheduled",
