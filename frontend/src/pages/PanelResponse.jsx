@@ -1,13 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL ||
-  "https://vivatrack-backend.onrender.com";
+const API_BASE_URL = "https://vivatrack-backend.onrender.com";
 
 export default function PanelResponse() {
   const [searchParams] = useSearchParams();
-
   const panelID = searchParams.get("panelID");
 
   const [panel, setPanel] = useState(null);
@@ -21,11 +18,6 @@ export default function PanelResponse() {
 
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-
-  // ======================================================
-  // LOAD PANEL INVITATION
-  // GET /api/panel/:panelID
-  // ======================================================
 
   useEffect(() => {
     if (!panelID) {
@@ -42,9 +34,12 @@ export default function PanelResponse() {
       setLoading(true);
       setError("");
 
-      const result = await fetch(
-        `${API_BASE_URL}/api/panel/${encodeURIComponent(panelID)}`
-      );
+      const url =
+        `${API_BASE_URL}/api/panel/${encodeURIComponent(panelID)}`;
+
+      console.log("Loading panel from:", url);
+
+      const result = await fetch(url);
 
       const data = await result.json();
 
@@ -54,49 +49,29 @@ export default function PanelResponse() {
         );
       }
 
-      const panelData = data.data;
+      setPanel(data.data);
 
-      setPanel(panelData);
-
-      // Existing response
-      setResponse(panelData.Accepted || "");
-
-      setSuggestedDate(
-        panelData.SuggestedDate || ""
-      );
-
-      setSuggestedTime(
-        panelData.SuggestedTime || ""
-      );
-
-      setRemarks(
-        panelData.Remarks || ""
-      );
+      setResponse(data.data.Accepted || "");
+      setSuggestedDate(data.data.SuggestedDate || "");
+      setSuggestedTime(data.data.SuggestedTime || "");
+      setRemarks(data.data.Remarks || "");
 
     } catch (err) {
       console.error("LOAD PANEL ERROR:", err);
-
       setError(
-        err.message ||
-          "Unable to load panel invitation."
+        err.message || "Unable to load panel invitation."
       );
     } finally {
       setLoading(false);
     }
   };
 
-  // ======================================================
-  // DEADLINE
-  // ======================================================
-
   const getDeadline = () => {
     if (!panel?.ResponseDeadline) {
       return null;
     }
 
-    const deadline = new Date(
-      panel.ResponseDeadline
-    );
+    const deadline = new Date(panel.ResponseDeadline);
 
     if (isNaN(deadline.getTime())) {
       return null;
@@ -108,12 +83,7 @@ export default function PanelResponse() {
   const deadline = getDeadline();
 
   const isExpired =
-    deadline !== null &&
-    new Date() > deadline;
-
-  // ======================================================
-  // FORMAT DATE
-  // ======================================================
+    deadline && new Date() > deadline;
 
   const formatDate = (date) => {
     if (!date) return "-";
@@ -130,10 +100,6 @@ export default function PanelResponse() {
       year: "numeric",
     });
   };
-
-  // ======================================================
-  // FORMAT DATE TIME
-  // ======================================================
 
   const formatDateTime = (date) => {
     if (!date) return "-";
@@ -152,11 +118,6 @@ export default function PanelResponse() {
       minute: "2-digit",
     });
   };
-
-  // ======================================================
-  // SUBMIT RESPONSE
-  // POST /api/panel/:panelID/respond
-  // ======================================================
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -189,41 +150,41 @@ export default function PanelResponse() {
     try {
       setSubmitting(true);
 
-      const result = await fetch(
-        `${API_BASE_URL}/api/panel/${encodeURIComponent(
-          panelID
-        )}/respond`,
-        {
-          method: "POST",
+      const url =
+        `${API_BASE_URL}/api/panel/${encodeURIComponent(panelID)}/respond`;
 
-          headers: {
-            "Content-Type": "application/json",
-          },
+      console.log("Submitting panel response to:", url);
 
-          body: JSON.stringify({
-            response,
+      const result = await fetch(url, {
+        method: "POST",
 
-            suggestedDate:
-              response === "Suggest"
-                ? suggestedDate
-                : "",
+        headers: {
+          "Content-Type": "application/json",
+        },
 
-            suggestedTime:
-              response === "Suggest"
-                ? suggestedTime
-                : "",
+        body: JSON.stringify({
+          response,
 
-            remarks,
-          }),
-        }
-      );
+          suggestedDate:
+            response === "Suggest"
+              ? suggestedDate
+              : "",
+
+          suggestedTime:
+            response === "Suggest"
+              ? suggestedTime
+              : "",
+
+          remarks,
+        }),
+      });
 
       const data = await result.json();
 
       if (!result.ok || !data.success) {
         throw new Error(
           data.message ||
-            "Unable to submit your response."
+          "Unable to submit your response."
         );
       }
 
@@ -231,7 +192,7 @@ export default function PanelResponse() {
 
       setMessage(
         data.message ||
-          "Your response has been recorded successfully."
+        "Your response has been recorded successfully."
       );
 
     } catch (err) {
@@ -242,17 +203,13 @@ export default function PanelResponse() {
 
       setError(
         err.message ||
-          "Unable to submit your response."
+        "Unable to submit your response."
       );
 
     } finally {
       setSubmitting(false);
     }
   };
-
-  // ======================================================
-  // LOADING
-  // ======================================================
 
   if (loading) {
     return (
@@ -266,57 +223,27 @@ export default function PanelResponse() {
     );
   }
 
-  // ======================================================
-  // INVALID / ERROR
-  // ======================================================
-
   if (error && !panel) {
     return (
       <div style={styles.page}>
-        <div style={styles.container}>
+        <div style={styles.card}>
+          <h2 style={styles.title}>
+            Viva Voce Invitation
+          </h2>
 
-          <div style={styles.header}>
-            <div style={styles.university}>
-              Universiti Sains Malaysia
-            </div>
-
-            <div style={styles.department}>
-              Pusat Kanser Tun Abdullah Ahmad Badawi
-              <br />
-              Academic & International Division
-            </div>
+          <div style={styles.error}>
+            {error}
           </div>
-
-          <div style={styles.card}>
-
-            <h2 style={styles.title}>
-              Viva Voce Invitation
-            </h2>
-
-            <div style={styles.error}>
-              {error}
-            </div>
-
-          </div>
-
         </div>
       </div>
     );
   }
 
-  // ======================================================
-  // MAIN PAGE
-  // ======================================================
-
   return (
     <div style={styles.page}>
-
       <div style={styles.container}>
 
-        {/* HEADER */}
-
         <div style={styles.header}>
-
           <div style={styles.university}>
             Universiti Sains Malaysia
           </div>
@@ -326,10 +253,7 @@ export default function PanelResponse() {
             <br />
             Academic & International Division
           </div>
-
         </div>
-
-        {/* CARD */}
 
         <div style={styles.card}>
 
@@ -341,15 +265,11 @@ export default function PanelResponse() {
             Panel Member Response
           </p>
 
-          {/* SUCCESS */}
-
           {message && (
             <div style={styles.success}>
               {message}
             </div>
           )}
-
-          {/* ERROR */}
 
           {error && (
             <div style={styles.error}>
@@ -357,10 +277,7 @@ export default function PanelResponse() {
             </div>
           )}
 
-          {/* PANEL INFORMATION */}
-
           <div style={styles.section}>
-
             <h3 style={styles.sectionTitle}>
               Panel Information
             </h3>
@@ -388,10 +305,7 @@ export default function PanelResponse() {
               />
 
             </div>
-
           </div>
-
-          {/* VIVA INFORMATION */}
 
           <div style={styles.section}>
 
@@ -419,23 +333,16 @@ export default function PanelResponse() {
 
               <InfoRow
                 label="Time"
-                value={
-                  panel?.VivaTime || "-"
-                }
+                value={panel?.VivaTime || "-"}
               />
 
               <InfoRow
                 label="Venue"
-                value={
-                  panel?.Venue || "-"
-                }
+                value={panel?.Venue || "-"}
               />
 
             </div>
-
           </div>
-
-          {/* DEADLINE */}
 
           <div
             style={{
@@ -451,11 +358,9 @@ export default function PanelResponse() {
             </strong>
 
             <div style={styles.deadlineDate}>
-
               {deadline
                 ? formatDateTime(deadline)
                 : "Not specified"}
-
             </div>
 
             {isExpired && (
@@ -466,8 +371,6 @@ export default function PanelResponse() {
 
           </div>
 
-          {/* RESPONSE FORM */}
-
           {!isExpired && (
             <form onSubmit={handleSubmit}>
 
@@ -477,109 +380,76 @@ export default function PanelResponse() {
                   Your Response
                 </h3>
 
-                {/* YES */}
-
                 <label style={styles.option}>
-
                   <input
                     type="radio"
                     name="response"
                     value="Yes"
-                    checked={
-                      response === "Yes"
-                    }
+                    checked={response === "Yes"}
                     onChange={(e) =>
-                      setResponse(
-                        e.target.value
-                      )
+                      setResponse(e.target.value)
                     }
                   />
 
                   <span>
-
                     <strong>
                       I agree
                     </strong>
 
                     <small>
-                      I am available for the
-                      proposed Viva Voce
-                      schedule.
+                      I am available for the proposed
+                      Viva Voce schedule.
                     </small>
-
                   </span>
-
                 </label>
 
-                {/* NO */}
-
                 <label style={styles.option}>
-
                   <input
                     type="radio"
                     name="response"
                     value="No"
-                    checked={
-                      response === "No"
-                    }
+                    checked={response === "No"}
                     onChange={(e) =>
-                      setResponse(
-                        e.target.value
-                      )
+                      setResponse(e.target.value)
                     }
                   />
 
                   <span>
-
                     <strong>
                       I am unable to attend
                     </strong>
 
                     <small>
-                      I am not available for
-                      the proposed schedule.
+                      I am not available for the proposed
+                      schedule.
                     </small>
-
                   </span>
-
                 </label>
 
-                {/* SUGGEST */}
-
                 <label style={styles.option}>
-
                   <input
                     type="radio"
                     name="response"
                     value="Suggest"
-                    checked={
-                      response === "Suggest"
-                    }
+                    checked={response === "Suggest"}
                     onChange={(e) =>
-                      setResponse(
-                        e.target.value
-                      )
+                      setResponse(e.target.value)
                     }
                   />
 
                   <span>
-
                     <strong>
                       Suggest another date/time
                     </strong>
 
                     <small>
-                      I would like to suggest
-                      an alternative schedule.
+                      I would like to suggest an alternative
+                      schedule.
                     </small>
-
                   </span>
-
                 </label>
 
               </div>
-
-              {/* SUGGESTED DATE/TIME */}
 
               {response === "Suggest" && (
                 <div style={styles.suggestionBox}>
@@ -589,7 +459,6 @@ export default function PanelResponse() {
                   </h3>
 
                   <div style={styles.formGroup}>
-
                     <label>
                       Suggested Date
                     </label>
@@ -603,13 +472,10 @@ export default function PanelResponse() {
                         )
                       }
                       style={styles.input}
-                      required
                     />
-
                   </div>
 
                   <div style={styles.formGroup}>
-
                     <label>
                       Suggested Time
                     </label>
@@ -623,15 +489,11 @@ export default function PanelResponse() {
                         )
                       }
                       style={styles.input}
-                      required
                     />
-
                   </div>
 
                 </div>
               )}
-
-              {/* REMARKS */}
 
               <div style={styles.formGroup}>
 
@@ -642,9 +504,7 @@ export default function PanelResponse() {
                 <textarea
                   value={remarks}
                   onChange={(e) =>
-                    setRemarks(
-                      e.target.value
-                    )
+                    setRemarks(e.target.value)
                   }
                   placeholder="Enter any additional remarks..."
                   rows={4}
@@ -652,8 +512,6 @@ export default function PanelResponse() {
                 />
 
               </div>
-
-              {/* SUBMIT */}
 
               <button
                 type="submit"
@@ -673,8 +531,6 @@ export default function PanelResponse() {
             </form>
           )}
 
-          {/* RESPONSE INFORMATION */}
-
           {panel?.ResponseDate && (
             <div style={styles.responseInfo}>
 
@@ -693,62 +549,26 @@ export default function PanelResponse() {
               <strong>
                 Response:
               </strong>{" "}
-
               {panel.Accepted || "-"}
-
-              {panel.Accepted === "Suggest" &&
-                panel.SuggestedDate && (
-                  <>
-                    <br />
-
-                    <strong>
-                      Suggested Date:
-                    </strong>{" "}
-
-                    {formatDate(
-                      panel.SuggestedDate
-                    )}
-
-                    <br />
-
-                    <strong>
-                      Suggested Time:
-                    </strong>{" "}
-
-                    {panel.SuggestedTime || "-"}
-                  </>
-                )}
 
             </div>
           )}
 
-          {/* FOOTER */}
-
           <div style={styles.footer}>
-
             VivaTrack Secretariat
             <br />
             Universiti Sains Malaysia
-
           </div>
 
         </div>
-
       </div>
-
     </div>
   );
 }
 
-
-// ======================================================
-// INFO ROW
-// ======================================================
-
 function InfoRow({ label, value }) {
   return (
     <div style={styles.infoRow}>
-
       <div style={styles.infoLabel}>
         {label}
       </div>
@@ -756,15 +576,9 @@ function InfoRow({ label, value }) {
       <div style={styles.infoValue}>
         {value || "-"}
       </div>
-
     </div>
   );
 }
-
-
-// ======================================================
-// STYLES
-// ======================================================
 
 const styles = {
 
@@ -772,8 +586,7 @@ const styles = {
     minHeight: "100vh",
     background: "#f4f6f8",
     padding: "40px 20px",
-    fontFamily:
-      "Arial, Helvetica, sans-serif",
+    fontFamily: "Arial, Helvetica, sans-serif",
   },
 
   container: {
@@ -803,8 +616,7 @@ const styles = {
     background: "#fff",
     borderRadius: "12px",
     padding: "35px",
-    boxShadow:
-      "0 4px 20px rgba(0,0,0,0.08)",
+    boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
   },
 
   title: {
@@ -985,5 +797,4 @@ const styles = {
     fontSize: "13px",
     lineHeight: "1.6",
   },
-
 };
