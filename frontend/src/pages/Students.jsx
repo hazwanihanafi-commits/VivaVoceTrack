@@ -20,7 +20,7 @@ export default function Students() {
   async function loadStudents() {
     try {
       setLoading(true);
-      const res = await fetch(`${API}/students`);
+      const res = await fetch(`${API}/api/students`);
       const json = await res.json();
 
       if (json.success) {
@@ -39,7 +39,7 @@ export default function Students() {
 
   async function deleteStudent(id) {
     try {
-      const res = await fetch(`${API}/students/${id}`, {
+      const res = await fetch(`${API}/api/students/${id}`, {
         method: "DELETE",
       });
 
