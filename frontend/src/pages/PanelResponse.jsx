@@ -37,7 +37,7 @@ export default function PanelResponse() {
       setError("");
 
 const url =
-  `${API_BASE_URL}/panel/${encodeURIComponent(panelID)}`;
+  `${API_BASE_URL}/api/panel/${encodeURIComponent(panelID)}`;
 
       console.log("Loading panel from:", url);
 
@@ -152,8 +152,8 @@ const url =
     try {
       setSubmitting(true);
 
-      const url =
-  `${API_BASE_URL}/panel/${encodeURIComponent(panelID)}/respond`;
+  const url =
+  `${API_BASE_URL}/api/panel/${encodeURIComponent(panelID)}/respond`;
 
       console.log("Submitting panel response to:", url);
 
