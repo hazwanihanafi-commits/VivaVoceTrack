@@ -12,17 +12,13 @@ export default function App() {
   return (
     <Routes>
 
-      {/* =========================================
-          PUBLIC PANEL RESPONSE PAGE
-          ========================================= */}
+      {/* PUBLIC PANEL RESPONSE PAGE */}
       <Route
         path="/panel-response"
         element={<PanelResponse />}
       />
 
-      {/* =========================================
-          MAIN SYSTEM
-          ========================================= */}
+      {/* ADMIN APPLICATION */}
       <Route element={<MainLayout />}>
 
         <Route
