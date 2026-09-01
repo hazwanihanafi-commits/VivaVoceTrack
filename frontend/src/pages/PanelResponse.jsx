@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
-  "https://vivatrack-backend.onrender.com/api";
+  "https://vivatrack-backend.onrender.com";
 
 export default function PanelResponse() {
   const [searchParams] = useSearchParams();
