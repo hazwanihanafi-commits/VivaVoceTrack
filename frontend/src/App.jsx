@@ -12,19 +12,7 @@ export default function App() {
   return (
     <Routes>
 
-      {/* =========================================
-          PUBLIC PANEL RESPONSE
-          Example:
-          /panel-response?panelID=VP001
-          ========================================= */}
-      <Route
-        path="/panel-response"
-        element={<PanelResponse />}
-      />
-
-      {/* =========================================
-          ADMIN APPLICATION
-          ========================================= */}
+      {/* ADMIN APPLICATION */}
       <Route element={<MainLayout />}>
 
         <Route
@@ -38,18 +26,23 @@ export default function App() {
         />
 
         <Route
-          path="/vivacases"
-          element={<VivaCases />}
-        />
-
-        <Route
           path="/examiners"
           element={<Examiners />}
         />
 
         <Route
+          path="/vivacases"
+          element={<VivaCases />}
+        />
+
+        <Route
           path="/schedule"
           element={<Schedule />}
+        />
+
+        <Route
+          path="/panel-response"
+          element={<PanelResponse />}
         />
 
       </Route>
