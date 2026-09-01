@@ -7,6 +7,7 @@ import VivaCases from "./pages/VivaCases";
 import Examiners from "./pages/Examiners";
 import Schedule from "./pages/Schedule";
 import PanelResponse from "./pages/PanelResponse";
+import PanelResponses from "./pages/PanelResponses";
 
 export default function App() {
   return (
@@ -45,6 +46,11 @@ export default function App() {
           path="/schedule"
           element={<Schedule />}
         />
+
+        <Route
+  path="/panel-responses"
+  element={<PanelResponses />}
+/>
 
       </Route>
 
