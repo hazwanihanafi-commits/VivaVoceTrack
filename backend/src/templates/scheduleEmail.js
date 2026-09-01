@@ -7,7 +7,7 @@ export default function scheduleEmail() {
 <p>Dear {{ExaminerTitle}} {{ExaminerName}},</p>
 
 <p>
-The proposed Viva Voce examination schedule for the candidate below is as follows:
+The Viva Voce examination for the following candidate has been proposed:
 </p>
 
 <ul>
@@ -16,16 +16,19 @@ The proposed Viva Voce examination schedule for the candidate below is as follow
   <li><strong>Time:</strong> {{VivaTime}}</li>
   <li><strong>Venue:</strong> {{Venue}}</li>
   <li><strong>Mode:</strong> {{VivaMode}}</li>
-  <li>
-  <strong>Response Deadline:</strong> {{ResponseDeadline}}
-</li>
 </ul>
 
-{{MeetingLinkSection}}
+<p>
+Kindly confirm your availability for the proposed Viva Voce schedule.
+</p>
 
 <p>
-<strong>Your confirmation is required.</strong>
-Please click the button below to confirm whether you are available for the proposed Viva schedule.
+<strong>Response Deadline:</strong>
+{{ResponseDeadline}}
+</p>
+
+<p>
+Please select one of the following options:
 </p>
 
 <p>
@@ -34,22 +37,35 @@ Please click the button below to confirm whether you are available for the propo
   style="
     display:inline-block;
     padding:12px 20px;
-    background:#4f46e5;
-    color:white;
+    background:#1a73e8;
+    color:#ffffff;
     text-decoration:none;
-    border-radius:8px;
+    border-radius:6px;
     font-weight:bold;
   "
 >
-  Confirm / Respond to Viva Schedule
+  Respond to Viva Schedule
 </a>
 </p>
 
 <p>
-If you are unable to attend the proposed date and time, you may indicate that you are unavailable and suggest an alternative date and time through the response page.
+You may:
 </p>
 
-<p>Thank you.</p>
+<ul>
+  <li>Accept the proposed date and time.</li>
+  <li>Indicate that you are unable to attend.</li>
+  <li>Suggest an alternative date and time.</li>
+  <li>Provide additional remarks if necessary.</li>
+</ul>
+
+<p>
+Please submit your response before the stated deadline.
+</p>
+
+<p>
+Thank you for your cooperation.
+</p>
 
 <p>
 VivaTrack Secretariat
