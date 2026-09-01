@@ -16,6 +16,9 @@ The proposed Viva Voce examination schedule for the candidate below is as follow
   <li><strong>Time:</strong> {{VivaTime}}</li>
   <li><strong>Venue:</strong> {{Venue}}</li>
   <li><strong>Mode:</strong> {{VivaMode}}</li>
+  <li>
+  <strong>Response Deadline:</strong> {{ResponseDeadline}}
+</li>
 </ul>
 
 {{MeetingLinkSection}}
