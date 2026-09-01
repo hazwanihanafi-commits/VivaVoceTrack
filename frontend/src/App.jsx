@@ -6,6 +6,7 @@ import Students from "./pages/Students";
 import VivaCases from "./pages/VivaCases";
 import Examiners from "./pages/Examiners";
 import Schedule from "./pages/Schedule";
+import PanelResponse from "./pages/PanelResponse";
 
 export default function App() {
   return (
@@ -20,6 +21,11 @@ export default function App() {
         <Route path="/examiners" element={<Examiners />} />
 
         <Route path="/schedule" element={<Schedule />} />
+        <Route
+  path="/panel-response"
+  element={<PanelResponse />}
+/>
+        
       </Route>
     </Routes>
   );
