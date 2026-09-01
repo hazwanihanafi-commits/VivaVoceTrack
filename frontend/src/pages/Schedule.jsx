@@ -90,15 +90,15 @@ export default function Schedule() {
     setLoading(true);
     setError("");
 
-    const [caseData, studentData, examinerData] = await Promise.all([
-      getJson(`${API}/vivacases`),
-      getJson(`${API}/students`),
-      getJson(`${API}/examiners`),
-    ]);
+    const [scheduleData, studentData, examinerData] = await Promise.all([
+  getJson(`${API}/schedule`),
+  getJson(`${API}/students`),
+  getJson(`${API}/examiners`),
+]);
 
-    const loadedCases = Array.isArray(caseData.data)
-      ? caseData.data
-      : [];
+    const loadedSchedules = Array.isArray(scheduleData.data)
+  ? scheduleData.data
+  : [];
 
     setCases(loadedCases);
 
