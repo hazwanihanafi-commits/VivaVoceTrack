@@ -165,9 +165,7 @@ export const getSchedules = async (req, res, next) => {
  * ======================================================
  */
 export const updateSchedule = async (req, res, next) => {
-
   try {
-
     const caseID = req.params.id;
 
     const viva = await findRow(
@@ -190,13 +188,53 @@ export const updateSchedule = async (req, res, next) => {
     );
 
     const updated = {
-
       ...viva,
 
-      ...req.body,
+      TentativeVivaDate:
+        req.body.TentativeVivaDate ??
+        viva.TentativeVivaDate ??
+        "",
 
-      LastUpdated: new Date().toISOString(),
+      ConfirmedVivaDate:
+        req.body.ConfirmedVivaDate ??
+        viva.ConfirmedVivaDate ??
+        "",
 
+      VivaTime:
+        req.body.VivaTime ??
+        viva.VivaTime ??
+        "",
+
+      Venue:
+        req.body.Venue ??
+        viva.Venue ??
+        "",
+
+      VivaMode:
+        req.body.VivaMode ??
+        viva.VivaMode ??
+        "",
+
+      MeetingLink:
+        req.body.MeetingLink ??
+        viva.MeetingLink ??
+        "",
+
+      Chairperson:
+        req.body.Chairperson ??
+        viva.Chairperson ??
+        "",
+
+      Secretary:
+        req.body.Secretary ??
+        viva.Secretary ??
+        "",
+
+      // IMPORTANT:
+      CurrentStatus: "Scheduled",
+
+      LastUpdated:
+        new Date().toISOString(),
     };
 
     await updateRow(
@@ -212,13 +250,9 @@ export const updateSchedule = async (req, res, next) => {
     });
 
   } catch (err) {
-
     next(err);
-
   }
-
 };
-
 
 /**
  * ======================================================
