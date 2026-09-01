@@ -171,41 +171,26 @@ export const getSchedule = async (
  * GET /api/schedule
  * ======================================================
  */
-export const getSchedules = async (
-  req,
-  res,
-  next
-) => {
+export const getSchedules = async (req, res, next) => {
   try {
     const rows = await getRows(SHEET);
 
-    const schedules = rows.filter((r) =>
-      [
-        "Scheduled",
-        "Confirmed",
-        "Postponed",
-        "Cancelled",
-        "Completed",
-      ].includes(
-        String(r.CurrentStatus || "").trim()
-      )
-    );
+    console.log("VivaCases TOTAL ROWS:", rows.length);
+    console.log("FIRST ROW:", rows[0]);
+    console.log("STATUSES:", rows.map((r) => r.CurrentStatus));
 
     res.json({
       success: true,
-      total: schedules.length,
-      data: schedules,
+      total: rows.length,
+      data: rows,
     });
 
   } catch (err) {
-    console.error(
-      "GET SCHEDULES ERROR:",
-      err
-    );
-
+    console.error("GET SCHEDULES ERROR:", err);
     next(err);
   }
 };
+  
 
 
 /**
