@@ -2,6 +2,7 @@ import {
   findRow,
   findRowNumber,
   updateRow,
+  getRows,
 } from "../services/sheetsService.js";
 
 import thesisEmail from "../templates/thesisEmail.js";
@@ -15,70 +16,11 @@ import sendEmail from "../services/sendEmail.js";
 const VIVA_SHEET = "VivaCases";
 const STUDENT_SHEET = "Students";
 const EXAMINER_SHEET = "Examiners";
+const PANEL_SHEET = "Panel";
+const STAFF_SHEET = "Staff";
 
 /* ======================================================
-   Get all assigned examiners
-====================================================== */
-
-async function getAssignedExaminers(viva) {
-  const assigned = [];
-  const usedEmails = new Set();
-
-  const examinerList = [
-    {
-      id: viva.InternalExaminer1ID,
-      type: "Internal Examiner 1",
-      reportField: "Internal1ReportReceived",
-    },
-
-    {
-      id: viva.InternalExaminer2ID,
-      type: "Internal Examiner 2",
-      reportField: "Internal2ReportReceived",
-    },
-
-    {
-      id: viva.ExternalExaminer1ID,
-      type: "External Examiner 1",
-      reportField: "External1ReportReceived",
-    },
-
-    {
-      id: viva.ExternalExaminer2ID,
-      type: "External Examiner 2",
-      reportField: "External2ReportReceived",
-    },
-  ];
-
-  for (const item of examinerList) {
-    if (!item.id) continue;
-
-    const examiner = await findRow(
-      EXAMINER_SHEET,
-      "ExaminerID",
-      item.id
-    );
-
-    if (!examiner) continue;
-
-    if (!examiner.Email) continue;
-
-    if (usedEmails.has(examiner.Email)) continue;
-
-    usedEmails.add(examiner.Email);
-
-    assigned.push({
-      ...examiner,
-      ExaminerType: item.type,
-      ReportField: item.reportField,
-    });
-  }
-
-  return assigned;
-}
-
-/* ======================================================
-   Format Date
+   FORMAT DATE
 ====================================================== */
 
 function formatDate(dateString) {
@@ -98,29 +40,95 @@ function formatDate(dateString) {
 }
 
 /* ======================================================
-   Replace Email Placeholders
+   GET ASSIGNED EXAMINERS
+====================================================== */
+
+async function getAssignedExaminers(viva) {
+  const assigned = [];
+  const usedEmails = new Set();
+
+  const examinerList = [
+    {
+      id: viva.InternalExaminer1ID,
+      type: "Internal Examiner 1",
+      reportField: "Internal1ReportReceived",
+    },
+    {
+      id: viva.InternalExaminer2ID,
+      type: "Internal Examiner 2",
+      reportField: "Internal2ReportReceived",
+    },
+    {
+      id: viva.ExternalExaminer1ID,
+      type: "External Examiner 1",
+      reportField: "External1ReportReceived",
+    },
+    {
+      id: viva.ExternalExaminer2ID,
+      type: "External Examiner 2",
+      reportField: "External2ReportReceived",
+    },
+  ];
+
+  for (const item of examinerList) {
+    if (!item.id) continue;
+
+    const examiner = await findRow(
+      EXAMINER_SHEET,
+      "ExaminerID",
+      item.id
+    );
+
+    if (!examiner) continue;
+    if (!examiner.Email) continue;
+
+    const email = String(examiner.Email).trim().toLowerCase();
+
+    if (usedEmails.has(email)) continue;
+
+    usedEmails.add(email);
+
+    assigned.push({
+      ...examiner,
+      ExaminerType: item.type,
+      ReportField: item.reportField,
+    });
+  }
+
+  return assigned;
+}
+
+/* ======================================================
+   REPLACE EMAIL TEMPLATE
 ====================================================== */
 
 function replaceTemplate(
   template,
   student,
   examiner,
-  viva
+  viva,
+  panel = null
 ) {
-  const meetingLinkSection = viva.MeetingLink
-    ? `
-<p>
-  <strong>Meeting Link:</strong>
-  <a
-    href="${viva.MeetingLink}"
-    target="_blank"
-    rel="noopener noreferrer"
-  >
-    Join Viva Voce Meeting
-  </a>
-</p>
-`
-    : "";
+  const vivaMode =
+    viva.VivaMode ||
+    viva.Mode ||
+    "Physical";
+
+  let meetingLinkSection = "";
+
+  if (
+    vivaMode !== "Physical" &&
+    viva.MeetingLink
+  ) {
+    meetingLinkSection = `
+      <p>
+        <strong>Meeting Link:</strong>
+        <a href="${viva.MeetingLink}" target="_blank">
+          Join Viva Meeting
+        </a>
+      </p>
+    `;
+  }
 
   return template
 
@@ -221,7 +229,18 @@ function replaceTemplate(
       student?.ThesisTitle || ""
     )
 
-    /* Viva / Examination */
+    /* Panel */
+    .replaceAll(
+      "{{PanelID}}",
+      panel?.PanelID || ""
+    )
+
+    .replaceAll(
+      "{{PanelRole}}",
+      panel?.Role || ""
+    )
+
+    /* Viva */
     .replaceAll(
       "{{ReportDueDate}}",
       formatDate(viva.ReportDueDate)
@@ -238,18 +257,29 @@ function replaceTemplate(
     )
 
     .replaceAll(
+      "{{VivaDate}}",
+      formatDate(
+        viva.ConfirmedVivaDate ||
+        viva.TentativeVivaDate ||
+        viva.VivaDate
+      )
+    )
+
+    .replaceAll(
       "{{VivaTime}}",
       viva.VivaTime || ""
     )
 
     .replaceAll(
       "{{Venue}}",
-      viva.Venue || ""
+      viva.Venue ||
+      viva.VivaVenue ||
+      ""
     )
 
     .replaceAll(
       "{{VivaMode}}",
-      viva.VivaMode || ""
+      vivaMode
     )
 
     .replaceAll(
@@ -267,7 +297,7 @@ function replaceTemplate(
       viva.GoogleDriveLink || ""
     )
 
-    /* Links */
+    /* System links */
     .replaceAll(
       "{{ExaminerReportLink}}",
       process.env.EXAMINER_REPORT_LINK || ""
@@ -288,7 +318,12 @@ function replaceTemplate(
       process.env.ANNOTATED_THESIS_UPLOAD_LINK || ""
     )
 
-    /* Year */
+    /* Panel response */
+    .replaceAll(
+      "{{PanelResponseLink}}",
+      panel?.PanelResponseLink || ""
+    )
+
     .replaceAll(
       "{{Year}}",
       String(new Date().getFullYear())
@@ -296,7 +331,7 @@ function replaceTemplate(
 }
 
 /* ======================================================
-   Get Template
+   GET EMAIL TEMPLATE
 ====================================================== */
 
 function getTemplate(type) {
@@ -322,7 +357,7 @@ function getTemplate(type) {
 }
 
 /* ======================================================
-   Send Email to All Assigned Examiners
+   SEND EMAIL TO ALL EXAMINERS
 ====================================================== */
 
 async function sendToAllExaminers({
@@ -377,7 +412,7 @@ async function sendToAllExaminers({
 }
 
 /* ======================================================
-   Preview Email
+   PREVIEW EMAIL
 ====================================================== */
 
 export const previewEmail = async (
@@ -466,7 +501,7 @@ export const previewEmail = async (
       case "schedule":
         subject =
           viva.EmailSubject ||
-          `Confirmed Viva Voce Schedule - ${student.StudentName}`;
+          `Viva Voce Schedule Confirmation - ${student.StudentName}`;
         break;
 
       case "thankyou":
@@ -487,7 +522,7 @@ export const previewEmail = async (
 };
 
 /* ======================================================
-   Send Thesis Email
+   SEND THESIS
 ====================================================== */
 
 export const sendThesis = async (
@@ -584,7 +619,7 @@ export const sendThesis = async (
 };
 
 /* ======================================================
-   Send Appointment Email
+   SEND APPOINTMENT EMAIL
 ====================================================== */
 
 export const sendAppointmentEmail = async (
@@ -625,7 +660,8 @@ export const sendAppointmentEmail = async (
       viva.EmailSubject ||
       `Appointment as ${student.Programme} Thesis Examiner`;
 
-    const body = appointmentEmail();
+    const body =
+      appointmentEmail();
 
     const recipients =
       await sendToAllExaminers({
@@ -681,7 +717,7 @@ export const sendAppointmentEmail = async (
 };
 
 /* ======================================================
-   Send Reminder Email
+   SEND REMINDER
 ====================================================== */
 
 export const sendReminderEmail = async (
@@ -722,22 +758,24 @@ export const sendReminderEmail = async (
       await getAssignedExaminers(viva);
 
     const pending =
-      allExaminers.filter((examiner) => {
-        const status =
-          viva[examiner.ReportField];
+      allExaminers.filter(
+        (examiner) => {
+          const status =
+            viva[examiner.ReportField];
 
-        const received =
-          String(status || "")
-            .trim()
-            .toLowerCase();
+          const received =
+            String(status || "")
+              .trim()
+              .toLowerCase();
 
-        return ![
-          "yes",
-          "true",
-          "submitted",
-          "received",
-        ].includes(received);
-      });
+          return ![
+            "yes",
+            "true",
+            "submitted",
+            "received",
+          ].includes(received);
+        }
+      );
 
     if (pending.length === 0) {
       return res.json({
@@ -751,7 +789,8 @@ export const sendReminderEmail = async (
       viva.EmailSubject ||
       `Reminder: Thesis Examination Report - ${student.StudentName}`;
 
-    const body = reminderEmail();
+    const body =
+      reminderEmail();
 
     const recipients = [];
 
@@ -835,7 +874,141 @@ export const sendReminderEmail = async (
 };
 
 /* ======================================================
-   Send Viva Schedule
+   GET ALL VIVA PANEL MEMBERS
+====================================================== */
+
+async function getVivaPanelMembers(vivaID) {
+  const rows =
+    await getRows(PANEL_SHEET);
+
+  return rows.filter(
+    (row) =>
+      String(row.VivaID || "").trim() ===
+      String(vivaID || "").trim()
+  );
+}
+
+/* ======================================================
+   GET PANEL MEMBER CONTACT
+====================================================== */
+
+async function getPanelMemberContact(panel) {
+  const personID =
+    String(panel.PersonID || "").trim();
+
+  const personType =
+    String(panel.PersonType || "")
+      .trim()
+      .toLowerCase();
+
+  /* ==========================
+     STUDENT
+  ========================== */
+
+  if (personType === "student") {
+    const student = await findRow(
+      STUDENT_SHEET,
+      "StudentID",
+      personID
+    );
+
+    if (!student) return null;
+
+    return {
+      name: student.StudentName || "",
+      email: student.Email || "",
+      title: "",
+      type: "Student",
+    };
+  }
+
+  /* ==========================
+     EXAMINER
+  ========================== */
+
+  if (personType === "examiner") {
+    const examiner = await findRow(
+      EXAMINER_SHEET,
+      "ExaminerID",
+      personID
+    );
+
+    if (!examiner) return null;
+
+    return {
+      name:
+        examiner.ExaminerName || "",
+
+      email:
+        examiner.Email || "",
+
+      title:
+        examiner.Title || "",
+
+      type:
+        panel.Role || "Examiner",
+    };
+  }
+
+  /* ==========================
+     STAFF
+  ========================== */
+
+  if (personType === "staff") {
+    const staff = await findRow(
+      STAFF_SHEET,
+      "StaffID",
+      personID
+    );
+
+    if (!staff) return null;
+
+    return {
+      name:
+        staff.StaffName || "",
+
+      email:
+        staff.Email || "",
+
+      title:
+        staff.Title || "",
+
+      type:
+        panel.Role || "Staff",
+    };
+  }
+
+  return null;
+}
+
+/* ======================================================
+   SEND VIVA SCHEDULE FOR PANEL CONFIRMATION
+======================================================
+
+FLOW:
+
+Admin sets proposed date/time
+        ↓
+Send schedule
+        ↓
+ALL panel members receive email
+        ↓
+Each gets unique PanelResponseLink
+        ↓
+Panel member:
+    ACCEPT
+       OR
+    CANNOT ATTEND + suggest date/time
+        ↓
+Panel sheet updated
+        ↓
+System checks required members
+        ↓
+If all required accept:
+    Viva = Confirmed
+Else:
+    Waiting for Panel Confirmation
+
 ====================================================== */
 
 export const sendVivaSchedule = async (
@@ -845,6 +1018,10 @@ export const sendVivaSchedule = async (
 ) => {
   try {
     const caseID = req.params.id;
+
+    /* ==========================
+       GET VIVA
+    ========================== */
 
     const viva = await findRow(
       VIVA_SHEET,
@@ -859,6 +1036,10 @@ export const sendVivaSchedule = async (
       });
     }
 
+    /* ==========================
+       GET STUDENT
+    ========================== */
+
     const student = await findRow(
       STUDENT_SHEET,
       "StudentID",
@@ -872,63 +1053,263 @@ export const sendVivaSchedule = async (
       });
     }
 
-    /* ----------------------------------------------
-       Check schedule information
-    ---------------------------------------------- */
+    /* ==========================
+       GET PANEL
+    ========================== */
 
-    if (!viva.TentativeVivaDate) {
-      return res.status(400).json({
+    const panels =
+      await getVivaPanelMembers(caseID);
+
+    if (panels.length === 0) {
+      return res.status(404).json({
         success: false,
         message:
-          "Viva date has not been set.",
+          "No Viva Panel members found for this case.",
       });
     }
 
-    if (!viva.VivaTime) {
+    /* ==========================
+       CHECK DATE
+    ========================== */
+
+    const proposedDate =
+      viva.TentativeVivaDate ||
+      viva.VivaDate ||
+      "";
+
+    const proposedTime =
+      viva.VivaTime || "";
+
+    if (!proposedDate) {
       return res.status(400).json({
         success: false,
         message:
-          "Viva time has not been set.",
+          "Please set the proposed Viva date before sending the schedule.",
       });
     }
 
-    if (!viva.VivaMode) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Viva mode has not been set.",
-      });
-    }
+    /* ==========================
+       TEMPLATE
+    ========================== */
 
-    /* ----------------------------------------------
-       Subject
-    ---------------------------------------------- */
+    const template =
+      scheduleEmail();
 
     const subject =
       viva.EmailSubject ||
-      `Confirmed Viva Voce Schedule - ${student.StudentName}`;
+      `Viva Voce Schedule Confirmation - ${student.StudentName}`;
 
-    /* ----------------------------------------------
-       Email body
-    ---------------------------------------------- */
+    /* ==========================
+       FRONTEND
+    ========================== */
 
-    const body = scheduleEmail();
+    const frontendURL =
+      process.env.FRONTEND_URL ||
+      "http://localhost:5173";
 
-    /* ----------------------------------------------
-       Send to examiners
-    ---------------------------------------------- */
+    const recipients = [];
 
-    const recipients =
-      await sendToAllExaminers({
-        viva,
-        student,
-        subject,
-        body,
-      });
+    /* ==========================
+       SEND TO EACH PANEL MEMBER
+    ========================== */
 
-    /* ----------------------------------------------
-       Update VivaCases
-    ---------------------------------------------- */
+    for (const panel of panels) {
+      try {
+        const contact =
+          await getPanelMemberContact(panel);
+
+        if (!contact) {
+          recipients.push({
+            panelID: panel.PanelID,
+            name: "",
+            email: "",
+            role: panel.Role,
+            status: "Failed",
+            error:
+              "Panel member could not be found.",
+          });
+
+          continue;
+        }
+
+        if (!contact.email) {
+          recipients.push({
+            panelID: panel.PanelID,
+            name: contact.name,
+            email: "",
+            role: panel.Role,
+            status: "Failed",
+            error:
+              "Panel member has no email address.",
+          });
+
+          continue;
+        }
+
+        /* ==========================
+           UNIQUE RESPONSE LINK
+        ========================== */
+
+        const responseLink =
+          `${frontendURL}/panel-response?panelID=${encodeURIComponent(
+            panel.PanelID
+          )}`;
+
+        /* ==========================
+           EXAMINER OBJECT
+        ========================== */
+
+        const examiner = {
+          ExaminerName:
+            contact.name,
+
+          Title:
+            contact.title,
+
+          ExaminerType:
+            contact.type,
+        };
+
+        /* ==========================
+           PANEL LINK
+        ========================== */
+
+        const panelWithLink = {
+          ...panel,
+          PanelResponseLink:
+            responseLink,
+        };
+
+        /* ==========================
+           HTML
+        ========================== */
+
+        let html =
+          replaceTemplate(
+            template,
+            student,
+            examiner,
+            viva,
+            panelWithLink
+          );
+
+        /* ==========================
+           EXTRA REPLACEMENTS
+        ========================== */
+
+        html = html
+          .replaceAll(
+            "{{PanelResponseLink}}",
+            responseLink
+          )
+          .replaceAll(
+            "{{ProposedDate}}",
+            formatDate(proposedDate)
+          )
+          .replaceAll(
+            "{{ProposedTime}}",
+            proposedTime
+          );
+
+        /* ==========================
+           SEND
+        ========================== */
+
+        await sendEmail({
+          to: contact.email,
+          subject,
+          html,
+        });
+
+        /* ==========================
+           UPDATE PANEL
+        ========================== */
+
+        const panelRowNumber =
+          await findRowNumber(
+            PANEL_SHEET,
+            "PanelID",
+            panel.PanelID
+          );
+
+        if (panelRowNumber !== -1) {
+          await updateRow(
+            PANEL_SHEET,
+            panelRowNumber,
+            {
+              ...panel,
+
+              InvitationSent:
+                "Yes",
+
+              InvitationDate:
+                new Date().toISOString(),
+
+              Accepted:
+                "Pending",
+
+              ResponseDate:
+                "",
+
+              SuggestedDate:
+                "",
+
+              SuggestedTime:
+                "",
+
+              Remarks:
+                panel.Remarks || "",
+            }
+          );
+        }
+
+        recipients.push({
+          panelID:
+            panel.PanelID,
+
+          name:
+            contact.name,
+
+          email:
+            contact.email,
+
+          role:
+            panel.Role,
+
+          status:
+            "Sent",
+
+          responseLink,
+        });
+      } catch (err) {
+        console.error(
+          `Failed to send panel email for ${panel.PanelID}`,
+          err
+        );
+
+        recipients.push({
+          panelID:
+            panel.PanelID,
+
+          name: "",
+
+          email: "",
+
+          role:
+            panel.Role,
+
+          status:
+            "Failed",
+
+          error:
+            err.message,
+        });
+      }
+    }
+
+    /* ==========================
+       UPDATE VIVA
+    ========================== */
 
     const rowNumber =
       await findRowNumber(
@@ -943,11 +1324,17 @@ export const sendVivaSchedule = async (
       {
         ...viva,
 
+        TentativeVivaDate:
+          proposedDate,
+
+        VivaTime:
+          proposedTime,
+
         CurrentStatus:
-          "Viva Scheduled",
+          "Waiting for Panel Confirmation",
 
         EmailStatus:
-          "Viva Scheduled",
+          "Waiting for Panel Confirmation",
 
         ScheduleEmailSent:
           "Yes",
@@ -960,23 +1347,33 @@ export const sendVivaSchedule = async (
       }
     );
 
+    /* ==========================
+       RESPONSE
+    ========================== */
+
     return res.json({
       success: true,
 
-      total: recipients.length,
+      total:
+        recipients.length,
 
       recipients,
 
       message:
-        "Viva schedule emails sent successfully.",
+        "Viva schedule sent to all panel members for confirmation.",
     });
   } catch (err) {
+    console.error(
+      "SEND VIVA SCHEDULE ERROR:",
+      err
+    );
+
     next(err);
   }
 };
 
 /* ======================================================
-   Send Thank You Email
+   SEND THANK YOU
 ====================================================== */
 
 export const sendThankYouEmail = async (
@@ -1017,7 +1414,8 @@ export const sendThankYouEmail = async (
       viva.EmailSubject ||
       `Thank You for Serving as Examiner - ${student.StudentName}`;
 
-    const body = thankYouEmail();
+    const body =
+      thankYouEmail();
 
     const recipients =
       await sendToAllExaminers({
@@ -1063,7 +1461,8 @@ export const sendThankYouEmail = async (
     return res.json({
       success: true,
 
-      total: recipients.length,
+      total:
+        recipients.length,
 
       recipients,
 
