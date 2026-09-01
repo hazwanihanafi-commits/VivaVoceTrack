@@ -1,999 +1,806 @@
-import React, { useEffect, useMemo, useState } from "react";
-import {
-  CalendarDays,
-  CheckCircle2,
-  Clock3,
-  Eye,
-  RefreshCw,
-  Search,
-  UserCheck,
-  Users,
-  X,
-  XCircle,
-} from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
-const API =
+const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
   "https://vivatrack-backend.onrender.com";
 
-function formatDate(value) {
-  if (!value) return "—";
+const API_PANEL_URL =
 
-  const date = new Date(value);
+  `${API_BASE_URL}/api/panel`;
 
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
+export default function PanelResponse() {
+  const [searchParams] = useSearchParams();
+  const panelID = searchParams.get("panelID");
 
-  return date.toLocaleDateString("en-MY", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function formatDateTime(value) {
-  if (!value) return "—";
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return date.toLocaleString("en-MY", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function responseLabel(value) {
-  if (value === "Yes") return "Accepted";
-  if (value === "No") return "Unable to Attend";
-  if (value === "Suggest") return "Suggested Alternative";
-  return "No Response";
-}
-
-function responseClass(value) {
-  if (value === "Yes") {
-    return "bg-emerald-50 text-emerald-700 border-emerald-200";
-  }
-
-  if (value === "No") {
-    return "bg-red-50 text-red-700 border-red-200";
-  }
-
-  if (value === "Suggest") {
-    return "bg-amber-50 text-amber-700 border-amber-200";
-  }
-
-  return "bg-gray-50 text-gray-500 border-gray-200";
-}
-
-function ResponseIcon({ value, size = 18 }) {
-  if (value === "Yes") {
-    return <CheckCircle2 size={size} />;
-  }
-
-  if (value === "No") {
-    return <XCircle size={size} />;
-  }
-
-  if (value === "Suggest") {
-    return <Clock3 size={size} />;
-  }
-
-  return <Clock3 size={size} />;
-}
-
-export default function PanelResponses() {
-  const [cases, setCases] = useState([]);
-  const [students, setStudents] = useState([]);
-  const [panelData, setPanelData] = useState({});
+  const [panel, setPanel] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const [selectedCase, setSelectedCase] = useState(null);
-  const [selectedPanel, setSelectedPanel] = useState(null);
-  const [previewOpen, setPreviewOpen] = useState(false);
+  const [response, setResponse] = useState("");
+  const [suggestedDate, setSuggestedDate] = useState("");
+  const [suggestedTime, setSuggestedTime] = useState("");
+  const [remarks, setRemarks] = useState("");
+
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    loadAll();
-  }, []);
-
-  async function getJson(url) {
-    const response = await fetch(url);
-
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok || !data.success) {
-      throw new Error(
-        data.message || "Unable to load panel responses."
-      );
+    if (!panelID) {
+      setError("Invalid panel invitation link.");
+      setLoading(false);
+      return;
     }
 
-    return data;
-  }
+    loadPanel();
+  }, [panelID]);
 
-  async function loadAll() {
+  const loadPanel = async () => {
     try {
       setLoading(true);
       setError("");
 
-      const [scheduleData, studentData] =
-        await Promise.all([
-          getJson(`${API}/schedule`),
-          getJson(`${API}/students`),
-        ]);
+const url =
+  `${API_BASE_URL}/api/panel/${encodeURIComponent(panelID)}`;
 
-      const scheduleCases = Array.isArray(scheduleData.data)
-        ? scheduleData.data
-        : [];
+      console.log("Loading panel from:", url);
 
-      const studentRows = Array.isArray(studentData.data)
-        ? studentData.data
-        : [];
+      const result = await fetch(url);
 
-      setCases(scheduleCases);
-      setStudents(studentRows);
+      const data = await result.json();
 
-      /*
-       * Load panel members for every Viva case.
-       */
-      const panelResults = await Promise.all(
-        scheduleCases.map(async (item) => {
-          try {
-            const result = await getJson(
-              `${API}/api/panel/viva/${encodeURIComponent(
-                item.CaseID
-              )}`
-            );
+      if (!result.ok || !data.success) {
+        throw new Error(
+          data.message || "Unable to load panel invitation."
+        );
+      }
 
-            return {
-              vivaID: item.CaseID,
-              data: Array.isArray(result.data)
-                ? result.data
-                : [],
-            };
-          } catch (err) {
-            console.error(
-              `Unable to load panel ${item.CaseID}:`,
-              err
-            );
+      setPanel(data.data);
 
-            return {
-              vivaID: item.CaseID,
-              data: [],
-            };
-          }
-        })
-      );
+      setResponse(data.data.Accepted || "");
+      setSuggestedDate(data.data.SuggestedDate || "");
+      setSuggestedTime(data.data.SuggestedTime || "");
+      setRemarks(data.data.Remarks || "");
 
-      const map = {};
-
-      panelResults.forEach((item) => {
-        map[item.vivaID] = item.data;
-      });
-
-      setPanelData(map);
     } catch (err) {
-      console.error("LOAD PANEL RESPONSES ERROR:", err);
-
+      console.error("LOAD PANEL ERROR:", err);
       setError(
-        err.message ||
-          "Unable to load panel responses."
+        err.message || "Unable to load panel invitation."
       );
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  const studentMap = useMemo(
-    () =>
-      Object.fromEntries(
-        students.map((s) => [
-          s.StudentID,
-          s,
-        ])
-      ),
-    [students]
-  );
-
-  function studentName(item) {
-    return (
-      studentMap[item.StudentID]?.StudentName ||
-      item.StudentID ||
-      "Unknown student"
-    );
-  }
-
-  const filteredCases = useMemo(() => {
-    const q = search.trim().toLowerCase();
-
-    return cases.filter((item) => {
-      if (!q) return true;
-
-      const panels =
-        panelData[item.CaseID] || [];
-
-      const panelText = panels
-        .map(
-          (p) =>
-            `${p.PanelID} ${p.PanelName || ""} ${
-              p.Role || ""
-            } ${p.PersonType || ""} ${
-              p.Accepted || ""
-            }`
-        )
-        .join(" ");
-
-      return `${item.CaseID} ${
-        item.StudentID
-      } ${studentName(item)} ${panelText}`
-        .toLowerCase()
-        .includes(q);
-    });
-  }, [cases, panelData, search, studentMap]);
-
-  function openResponses(item) {
-    setSelectedCase(item);
-  }
-
-  async function openPreview(panel) {
-    try {
-      const result = await getJson(
-        `${API}/api/panel/${encodeURIComponent(
-          panel.PanelID
-        )}`
-      );
-
-      setSelectedPanel(result.data);
-      setPreviewOpen(true);
-    } catch (err) {
-      alert(
-        err.message ||
-          "Unable to load panel response."
-      );
+  const getDeadline = () => {
+    if (!panel?.ResponseDeadline) {
+      return null;
     }
-  }
 
-  function closeAll() {
-    setPreviewOpen(false);
-    setSelectedPanel(null);
-  }
+    const deadline = new Date(panel.ResponseDeadline);
 
-  const stats = useMemo(() => {
-    let total = 0;
-    let accepted = 0;
-    let unable = 0;
-    let suggested = 0;
-    let pending = 0;
+    if (isNaN(deadline.getTime())) {
+      return null;
+    }
 
-    Object.values(panelData).forEach(
-      (panels) => {
-        panels.forEach((panel) => {
-          total++;
+    return deadline;
+  };
 
-          if (panel.Accepted === "Yes") {
-            accepted++;
-          } else if (panel.Accepted === "No") {
-            unable++;
-          } else if (
-            panel.Accepted === "Suggest"
-          ) {
-            suggested++;
-          } else {
-            pending++;
-          }
-        });
+  const deadline = getDeadline();
+
+  const isExpired =
+    deadline && new Date() > deadline;
+
+  const formatDate = (date) => {
+    if (!date) return "-";
+
+    const parsed = new Date(date);
+
+    if (isNaN(parsed.getTime())) {
+      return date;
+    }
+
+    return parsed.toLocaleDateString("en-MY", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  };
+
+  const formatDateTime = (date) => {
+    if (!date) return "-";
+
+    const parsed = new Date(date);
+
+    if (isNaN(parsed.getTime())) {
+      return date;
+    }
+
+    return parsed.toLocaleString("en-MY", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    setMessage("");
+    setError("");
+
+    if (!response) {
+      setError("Please select your response.");
+      return;
+    }
+
+    if (isExpired) {
+      setError(
+        "The response deadline has passed. Please contact the VivaTrack Secretariat."
+      );
+      return;
+    }
+
+    if (
+      response === "Suggest" &&
+      (!suggestedDate || !suggestedTime)
+    ) {
+      setError(
+        "Please provide your suggested date and time."
+      );
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+  const url =
+  `${API_BASE_URL}/api/panel/${encodeURIComponent(panelID)}/respond`;
+
+      console.log("Submitting panel response to:", url);
+
+      const result = await fetch(url, {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          response,
+
+          suggestedDate:
+            response === "Suggest"
+              ? suggestedDate
+              : "",
+
+          suggestedTime:
+            response === "Suggest"
+              ? suggestedTime
+              : "",
+
+          remarks,
+        }),
+      });
+
+      const data = await result.json();
+
+      if (!result.ok || !data.success) {
+        throw new Error(
+          data.message ||
+          "Unable to submit your response."
+        );
       }
+
+      setPanel(data.data);
+
+      setMessage(
+        data.message ||
+        "Your response has been recorded successfully."
+      );
+
+    } catch (err) {
+      console.error(
+        "SUBMIT PANEL RESPONSE ERROR:",
+        err
+      );
+
+      setError(
+        err.message ||
+        "Unable to submit your response."
+      );
+
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div style={styles.page}>
+        <div style={styles.card}>
+          <div style={styles.loading}>
+            Loading Viva Voce invitation...
+          </div>
+        </div>
+      </div>
     );
+  }
 
-    return {
-      total,
-      accepted,
-      unable,
-      suggested,
-      pending,
-    };
-  }, [panelData]);
-
-  return (
-    <div className="space-y-6">
-
-      {/* HEADER */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Panel Responses
-          </h1>
-
-          <p className="mt-1 text-gray-500">
-            Monitor panel availability and Viva Voce schedule responses.
-          </p>
-        </div>
-
-        <button
-          onClick={loadAll}
-          className="flex items-center justify-center gap-2 rounded-xl border bg-white px-4 py-3 font-medium text-gray-700 hover:bg-gray-50"
-        >
-          <RefreshCw size={18} />
-          Refresh
-        </button>
-
-      </div>
-
-      {/* STATISTICS */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-
-        <StatCard
-          icon={Users}
-          label="Total Panels"
-          value={stats.total}
-        />
-
-        <StatCard
-          icon={CheckCircle2}
-          label="Accepted"
-          value={stats.accepted}
-        />
-
-        <StatCard
-          icon={XCircle}
-          label="Unable"
-          value={stats.unable}
-        />
-
-        <StatCard
-          icon={Clock3}
-          label="Suggested"
-          value={stats.suggested}
-        />
-
-        <StatCard
-          icon={UserCheck}
-          label="Pending"
-          value={stats.pending}
-        />
-
-      </div>
-
-      {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">
-          {error}
-        </div>
-      )}
-
-      {/* SEARCH */}
-      <div className="rounded-2xl border bg-white p-5 shadow-sm">
-
-        <div className="relative">
-
-          <Search
-            size={18}
-            className="absolute left-4 top-3.5 text-gray-400"
-          />
-
-          <input
-            value={search}
-            onChange={(e) =>
-              setSearch(e.target.value)
-            }
-            placeholder="Search Case ID, student, panel or response..."
-            className="w-full rounded-xl border py-3 pl-11 pr-4 outline-none focus:border-purple-500"
-          />
-
-        </div>
-
-      </div>
-
-      {/* CASE LIST */}
-      <div className="rounded-2xl border bg-white shadow-sm">
-
-        <div className="border-b px-5 py-4">
-          <h2 className="font-bold text-gray-900">
-            Viva Cases
+  if (error && !panel) {
+    return (
+      <div style={styles.page}>
+        <div style={styles.card}>
+          <h2 style={styles.title}>
+            Viva Voce Invitation
           </h2>
 
-          <p className="text-sm text-gray-500">
-            Select a case to view panel responses.
-          </p>
+          <div style={styles.error}>
+            {error}
+          </div>
         </div>
-
-        {loading ? (
-          <div className="py-14 text-center text-gray-500">
-            Loading panel responses...
-          </div>
-        ) : filteredCases.length === 0 ? (
-          <div className="py-14 text-center text-gray-500">
-            No Viva cases found.
-          </div>
-        ) : (
-          <div className="divide-y">
-
-            {filteredCases.map((item) => {
-
-              const panels =
-                panelData[item.CaseID] || [];
-
-              const responded =
-                panels.filter(
-                  (p) => p.Accepted
-                ).length;
-
-              return (
-                <div
-                  key={item.CaseID}
-                  className="flex flex-col gap-4 p-5 hover:bg-gray-50 md:flex-row md:items-center md:justify-between"
-                >
-
-                  <div className="min-w-0">
-
-                    <div className="flex items-center gap-3">
-
-                      <div className="rounded-xl bg-purple-50 p-3 text-purple-600">
-                        <CalendarDays size={22} />
-                      </div>
-
-                      <div>
-                        <div className="font-bold text-gray-900">
-                          {studentName(item)}
-                        </div>
-
-                        <div className="text-sm text-gray-400">
-                          {item.CaseID}
-                        </div>
-                      </div>
-
-                    </div>
-
-                    <div className="mt-3 flex flex-wrap gap-4 text-sm text-gray-500">
-
-                      <span>
-                        Viva Date:{" "}
-                        <strong className="text-gray-700">
-                          {formatDate(
-                            item.ConfirmedVivaDate ||
-                              item.TentativeVivaDate
-                          )}
-                        </strong>
-                      </span>
-
-                      <span>
-                        Time:{" "}
-                        <strong className="text-gray-700">
-                          {item.VivaTime || "—"}
-                        </strong>
-                      </span>
-
-                    </div>
-
-                  </div>
-
-                  <div className="flex items-center gap-4">
-
-                    <div className="text-right">
-
-                      <div className="text-sm text-gray-500">
-                        Panel Responses
-                      </div>
-
-                      <div className="font-bold text-gray-900">
-                        {responded} / {panels.length}
-                      </div>
-
-                    </div>
-
-                    <button
-                      onClick={() =>
-                        openResponses(item)
-                      }
-                      className="rounded-xl bg-purple-600 px-4 py-3 font-semibold text-white hover:bg-purple-700"
-                    >
-                      View Responses
-                    </button>
-
-                  </div>
-
-                </div>
-              );
-            })}
-
-          </div>
-        )}
-
       </div>
-
-      {/* RESPONSE MODAL */}
-      {selectedCase && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 p-4">
-
-          <div className="max-h-[90vh] w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-2xl">
-
-            {/* HEADER */}
-            <div className="flex items-center justify-between border-b px-6 py-5">
-
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">
-                  Panel Responses
-                </h2>
-
-                <p className="text-sm text-gray-500">
-                  {selectedCase.CaseID} —{" "}
-                  {studentName(selectedCase)}
-                </p>
-              </div>
-
-              <button
-                onClick={() =>
-                  setSelectedCase(null)
-                }
-                className="rounded-lg p-2 hover:bg-gray-100"
-              >
-                <X />
-              </button>
-
-            </div>
-
-            {/* TABLE */}
-            <div className="max-h-[70vh] overflow-auto">
-
-              {(
-                panelData[
-                  selectedCase.CaseID
-                ] || []
-              ).length === 0 ? (
-
-                <div className="py-16 text-center text-gray-500">
-                  No panel members found for this Viva case.
-                </div>
-
-              ) : (
-
-                <table className="w-full min-w-[850px]">
-
-                  <thead className="sticky top-0 bg-gray-50">
-
-                    <tr className="border-b text-left text-sm text-gray-500">
-
-                      <th className="px-6 py-4">
-                        Panel
-                      </th>
-
-                      <th className="px-4 py-4">
-                        Role
-                      </th>
-
-                      <th className="px-4 py-4">
-                        Response
-                      </th>
-
-                      <th className="px-4 py-4">
-                        Response Date
-                      </th>
-
-                      <th className="px-4 py-4">
-                        Remarks
-                      </th>
-
-                      <th className="px-6 py-4 text-center">
-                        Preview
-                      </th>
-
-                    </tr>
-
-                  </thead>
-
-                  <tbody>
-
-                    {(
-                      panelData[
-                        selectedCase.CaseID
-                      ] || []
-                    ).map((panel) => (
-
-                      <tr
-                        key={panel.PanelID}
-                        className="border-b last:border-0 hover:bg-gray-50"
-                      >
-
-                        <td className="px-6 py-4">
-
-                          <div className="font-semibold text-gray-900">
-                            {panel.PanelName ||
-                              panel.Name ||
-                              panel.PanelID}
-                          </div>
-
-                          <div className="text-xs text-gray-400">
-                            {panel.PanelID}
-                          </div>
-
-                        </td>
-
-                        <td className="px-4 py-4 text-gray-600">
-                          {panel.Role || "—"}
-                        </td>
-
-                        <td className="px-4 py-4">
-
-                          <span
-                            className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold ${responseClass(
-                              panel.Accepted
-                            )}`}
-                          >
-
-                            <ResponseIcon
-                              value={
-                                panel.Accepted
-                              }
-                              size={15}
-                            />
-
-                            {responseLabel(
-                              panel.Accepted
-                            )}
-
-                          </span>
-
-                        </td>
-
-                        <td className="px-4 py-4 text-sm text-gray-600">
-                          {formatDateTime(
-                            panel.ResponseDate
-                          )}
-                        </td>
-
-                        <td className="max-w-[220px] px-4 py-4 text-sm text-gray-500">
-                          {panel.Remarks || "—"}
-                        </td>
-
-                        <td className="px-6 py-4 text-center">
-
-                          <button
-                            onClick={() =>
-                              openPreview(panel)
-                            }
-                            className="inline-flex items-center gap-2 rounded-lg border border-purple-200 px-3 py-2 text-sm font-medium text-purple-600 hover:bg-purple-50"
-                          >
-                            <Eye size={16} />
-                            Preview
-                          </button>
-
-                        </td>
-
-                      </tr>
-
-                    ))}
-
-                  </tbody>
-
-                </table>
-
-              )}
-
-            </div>
-
-          </div>
-
-        </div>
-      )}
-
-      {/* ADMIN PREVIEW */}
-      {previewOpen && selectedPanel && (
-        <PanelPreview
-          panel={selectedPanel}
-          onClose={closeAll}
-        />
-      )}
-
-    </div>
-  );
-}
-
-
-/* ======================================================
-   ADMIN PREVIEW
-====================================================== */
-
-function PanelPreview({ panel, onClose }) {
+    );
+  }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
+    <div style={styles.page}>
+      <div style={styles.container}>
 
-      <div className="max-h-[92vh] w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl">
-
-        {/* PREVIEW HEADER */}
-        <div className="flex items-center justify-between border-b px-6 py-5">
-
-          <div>
-
-            <div className="text-xs font-bold uppercase tracking-wider text-purple-600">
-              Admin Preview
-            </div>
-
-            <h2 className="mt-1 text-2xl font-bold text-gray-900">
-              Panel Response
-            </h2>
-
+        <div style={styles.header}>
+          <div style={styles.university}>
+            Universiti Sains Malaysia
           </div>
 
-          <button
-            onClick={onClose}
-            className="rounded-lg p-2 hover:bg-gray-100"
-          >
-            <X size={24} />
-          </button>
-
+          <div style={styles.department}>
+            Pusat Kanser Tun Abdullah Ahmad Badawi
+            <br />
+            Academic & International Division
+          </div>
         </div>
 
-        <div className="max-h-[calc(92vh-90px)] overflow-y-auto">
+        <div style={styles.card}>
 
-          {/* UNIVERSITY */}
-          <div className="border-b px-6 py-7 text-center">
+          <h1 style={styles.title}>
+            Viva Voce Schedule Confirmation
+          </h1>
 
-            <div className="text-2xl font-bold text-purple-600">
-              Universiti Sains Malaysia
+          <p style={styles.subtitle}>
+            Panel Member Response
+          </p>
+
+          {message && (
+            <div style={styles.success}>
+              {message}
+            </div>
+          )}
+
+          {error && (
+            <div style={styles.error}>
+              {error}
+            </div>
+          )}
+
+          <div style={styles.section}>
+            <h3 style={styles.sectionTitle}>
+              Panel Information
+            </h3>
+
+            <div style={styles.infoGrid}>
+
+              <InfoRow
+                label="Panel ID"
+                value={panel?.PanelID}
+              />
+
+              <InfoRow
+                label="Role"
+                value={panel?.Role}
+              />
+
+              <InfoRow
+                label="Person Type"
+                value={panel?.PersonType}
+              />
+
+              <InfoRow
+                label="Required"
+                value={panel?.Required}
+              />
+
+            </div>
+          </div>
+
+          <div style={styles.section}>
+
+            <h3 style={styles.sectionTitle}>
+              Viva Voce Schedule
+            </h3>
+
+            <div style={styles.infoGrid}>
+
+              <InfoRow
+                label="Viva ID"
+                value={panel?.VivaID}
+              />
+
+              <InfoRow
+                label="Proposed Date"
+                value={
+                  panel?.TentativeVivaDate
+                    ? formatDate(
+                        panel.TentativeVivaDate
+                      )
+                    : "-"
+                }
+              />
+
+              <InfoRow
+                label="Time"
+                value={panel?.VivaTime || "-"}
+              />
+
+              <InfoRow
+                label="Venue"
+                value={panel?.Venue || "-"}
+              />
+
+            </div>
+          </div>
+
+          <div
+            style={{
+              ...styles.deadlineBox,
+              ...(isExpired
+                ? styles.deadlineExpired
+                : {}),
+            }}
+          >
+
+            <strong>
+              Response Deadline
+            </strong>
+
+            <div style={styles.deadlineDate}>
+              {deadline
+                ? formatDateTime(deadline)
+                : "Not specified"}
             </div>
 
-            <div className="mt-2 text-sm text-gray-500">
-              Pusat Kanser Tun Abdullah Ahmad Badawi
-            </div>
+            {isExpired && (
+              <div style={styles.expiredText}>
+                The response deadline has passed.
+              </div>
+            )}
 
           </div>
 
-          <div className="space-y-7 p-6">
+          {!isExpired && (
+            <form onSubmit={handleSubmit}>
 
-            {/* TITLE */}
-            <div className="rounded-2xl border bg-gray-50 px-6 py-7 text-center">
+              <div style={styles.section}>
 
-              <h1 className="text-2xl font-bold text-gray-900">
-                Viva Voce Schedule Confirmation
-              </h1>
+                <h3 style={styles.sectionTitle}>
+                  Your Response
+                </h3>
 
-              <p className="mt-2 text-gray-500">
-                Panel Member Response
-              </p>
-
-            </div>
-
-            {/* PANEL INFORMATION */}
-            <PreviewSection title="Panel Information">
-
-              <PreviewGrid>
-
-                <Info
-                  label="Panel ID"
-                  value={panel.PanelID}
-                />
-
-                <Info
-                  label="Panel Name"
-                  value={
-                    panel.PanelName ||
-                    panel.Name
-                  }
-                />
-
-                <Info
-                  label="Role"
-                  value={panel.Role}
-                />
-
-                <Info
-                  label="Person Type"
-                  value={panel.PersonType}
-                />
-
-              </PreviewGrid>
-
-            </PreviewSection>
-
-            {/* VIVA INFORMATION */}
-            <PreviewSection title="Viva Voce Schedule">
-
-              <PreviewGrid>
-
-                <Info
-                  label="Viva ID"
-                  value={panel.VivaID}
-                />
-
-                <Info
-                  label="Proposed Date"
-                  value={formatDate(
-                    panel.TentativeVivaDate
-                  )}
-                />
-
-                <Info
-                  label="Time"
-                  value={panel.VivaTime}
-                />
-
-                <Info
-                  label="Venue"
-                  value={panel.Venue}
-                />
-
-              </PreviewGrid>
-
-            </PreviewSection>
-
-            {/* RESPONSE */}
-            <PreviewSection title="Panel Response">
-
-              <div
-                className={`rounded-2xl border p-5 ${responseClass(
-                  panel.Accepted
-                )}`}
-              >
-
-                <div className="flex items-start gap-4">
-
-                  <ResponseIcon
-                    value={panel.Accepted}
-                    size={25}
-                  />
-
-                  <div>
-
-                    <div className="text-lg font-bold">
-                      {responseLabel(
-                        panel.Accepted
-                      )}
-                    </div>
-
-                    {panel.ResponseDate && (
-                      <div className="mt-1 text-sm opacity-75">
-                        Submitted{" "}
-                        {formatDateTime(
-                          panel.ResponseDate
-                        )}
-                      </div>
-                    )}
-
-                  </div>
-
-                </div>
-
-              </div>
-
-            </PreviewSection>
-
-            {/* SUGGESTED DATE */}
-            {panel.Accepted === "Suggest" && (
-              <PreviewSection title="Suggested Schedule">
-
-                <PreviewGrid>
-
-                  <Info
-                    label="Suggested Date"
-                    value={formatDate(
-                      panel.SuggestedDate
-                    )}
-                  />
-
-                  <Info
-                    label="Suggested Time"
-                    value={
-                      panel.SuggestedTime
+                <label style={styles.option}>
+                  <input
+                    type="radio"
+                    name="response"
+                    value="Yes"
+                    checked={response === "Yes"}
+                    onChange={(e) =>
+                      setResponse(e.target.value)
                     }
                   />
 
-                </PreviewGrid>
+                  <span>
+                    <strong>
+                      I agree
+                    </strong>
 
-              </PreviewSection>
-            )}
+                    <small>
+                      I am available for the proposed
+                      Viva Voce schedule.
+                    </small>
+                  </span>
+                </label>
 
-            {/* REMARKS */}
-            {panel.Remarks && (
-              <PreviewSection title="Remarks">
+                <label style={styles.option}>
+                  <input
+                    type="radio"
+                    name="response"
+                    value="No"
+                    checked={response === "No"}
+                    onChange={(e) =>
+                      setResponse(e.target.value)
+                    }
+                  />
 
-                <div className="rounded-xl border bg-gray-50 p-4 text-gray-700">
-                  {panel.Remarks}
+                  <span>
+                    <strong>
+                      I am unable to attend
+                    </strong>
+
+                    <small>
+                      I am not available for the proposed
+                      schedule.
+                    </small>
+                  </span>
+                </label>
+
+                <label style={styles.option}>
+                  <input
+                    type="radio"
+                    name="response"
+                    value="Suggest"
+                    checked={response === "Suggest"}
+                    onChange={(e) =>
+                      setResponse(e.target.value)
+                    }
+                  />
+
+                  <span>
+                    <strong>
+                      Suggest another date/time
+                    </strong>
+
+                    <small>
+                      I would like to suggest an alternative
+                      schedule.
+                    </small>
+                  </span>
+                </label>
+
+              </div>
+
+              {response === "Suggest" && (
+                <div style={styles.suggestionBox}>
+
+                  <h3 style={styles.sectionTitle}>
+                    Suggested Schedule
+                  </h3>
+
+                  <div style={styles.formGroup}>
+                    <label>
+                      Suggested Date
+                    </label>
+
+                    <input
+                      type="date"
+                      value={suggestedDate}
+                      onChange={(e) =>
+                        setSuggestedDate(
+                          e.target.value
+                        )
+                      }
+                      style={styles.input}
+                    />
+                  </div>
+
+                  <div style={styles.formGroup}>
+                    <label>
+                      Suggested Time
+                    </label>
+
+                    <input
+                      type="time"
+                      value={suggestedTime}
+                      onChange={(e) =>
+                        setSuggestedTime(
+                          e.target.value
+                        )
+                      }
+                      style={styles.input}
+                    />
+                  </div>
+
                 </div>
+              )}
 
-              </PreviewSection>
-            )}
+              <div style={styles.formGroup}>
 
-          </div>
+                <label>
+                  Remarks
+                </label>
 
-          {/* FOOTER */}
-          <div className="border-t bg-gray-50 px-6 py-5 text-center">
+                <textarea
+                  value={remarks}
+                  onChange={(e) =>
+                    setRemarks(e.target.value)
+                  }
+                  placeholder="Enter any additional remarks..."
+                  rows={4}
+                  style={styles.textarea}
+                />
 
-            <button
-              onClick={onClose}
-              className="rounded-xl bg-purple-600 px-7 py-3 font-semibold text-white hover:bg-purple-700"
-            >
-              Close Preview
-            </button>
+              </div>
 
+              <button
+                type="submit"
+                disabled={submitting}
+                style={{
+                  ...styles.submitButton,
+                  ...(submitting
+                    ? styles.disabledButton
+                    : {}),
+                }}
+              >
+                {submitting
+                  ? "Submitting..."
+                  : "Submit Response"}
+              </button>
+
+            </form>
+          )}
+
+          {panel?.ResponseDate && (
+            <div style={styles.responseInfo}>
+
+              <strong>
+                Response submitted:
+              </strong>
+
+              <br />
+
+              {formatDateTime(
+                panel.ResponseDate
+              )}
+
+              <br />
+
+              <strong>
+                Response:
+              </strong>{" "}
+              {panel.Accepted || "-"}
+
+            </div>
+          )}
+
+          <div style={styles.footer}>
+            VivaTrack Secretariat
+            <br />
+            Universiti Sains Malaysia
           </div>
 
         </div>
-
       </div>
-
     </div>
   );
 }
 
-
-function PreviewSection({ title, children }) {
+function InfoRow({ label, value }) {
   return (
-    <section>
-
-      <h3 className="mb-3 text-lg font-bold text-gray-900">
-        {title}
-      </h3>
-
-      {children}
-
-    </section>
-  );
-}
-
-
-function PreviewGrid({ children }) {
-  return (
-    <div className="grid gap-3 md:grid-cols-2">
-      {children}
-    </div>
-  );
-}
-
-
-function Info({ label, value }) {
-  return (
-    <div className="rounded-xl bg-gray-50 p-4">
-
-      <div className="text-xs font-medium text-gray-400">
+    <div style={styles.infoRow}>
+      <div style={styles.infoLabel}>
         {label}
       </div>
 
-      <div className="mt-1 font-semibold text-gray-900">
-        {value || "—"}
+      <div style={styles.infoValue}>
+        {value || "-"}
       </div>
-
     </div>
   );
 }
 
+const styles = {
 
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-}) {
-  return (
-    <div className="rounded-2xl border bg-white p-5 shadow-sm">
+  page: {
+    minHeight: "100vh",
+    background: "#f4f6f8",
+    padding: "40px 20px",
+    fontFamily: "Arial, Helvetica, sans-serif",
+  },
 
-      <div className="flex items-center gap-4">
+  container: {
+    maxWidth: "850px",
+    margin: "0 auto",
+  },
 
-        <div className="rounded-xl bg-purple-50 p-3 text-purple-600">
-          <Icon size={21} />
-        </div>
+  header: {
+    textAlign: "center",
+    marginBottom: "20px",
+  },
 
-        <div>
+  university: {
+    fontSize: "24px",
+    fontWeight: "700",
+    color: "#123c69",
+  },
 
-          <p className="text-sm text-gray-500">
-            {label}
-          </p>
+  department: {
+    marginTop: "8px",
+    fontSize: "14px",
+    lineHeight: "1.6",
+    color: "#555",
+  },
 
-          <p className="text-2xl font-bold text-gray-900">
-            {value}
-          </p>
+  card: {
+    background: "#fff",
+    borderRadius: "12px",
+    padding: "35px",
+    boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+  },
 
-        </div>
+  title: {
+    margin: 0,
+    textAlign: "center",
+    fontSize: "26px",
+    color: "#222",
+  },
 
-      </div>
+  subtitle: {
+    textAlign: "center",
+    color: "#666",
+    marginBottom: "30px",
+  },
 
-    </div>
-  );
-}
+  section: {
+    marginTop: "25px",
+  },
+
+  sectionTitle: {
+    fontSize: "18px",
+    marginBottom: "15px",
+    color: "#333",
+  },
+
+  infoGrid: {
+    display: "grid",
+    gridTemplateColumns:
+      "repeat(auto-fit, minmax(250px, 1fr))",
+    gap: "12px",
+  },
+
+  infoRow: {
+    padding: "12px",
+    background: "#f7f8fa",
+    borderRadius: "6px",
+  },
+
+  infoLabel: {
+    fontSize: "12px",
+    color: "#777",
+    marginBottom: "4px",
+  },
+
+  infoValue: {
+    fontSize: "15px",
+    fontWeight: "600",
+    color: "#222",
+  },
+
+  deadlineBox: {
+    marginTop: "25px",
+    padding: "18px",
+    borderRadius: "8px",
+    background: "#fff8e1",
+    border: "1px solid #f0d98c",
+    textAlign: "center",
+  },
+
+  deadlineExpired: {
+    background: "#fff0f0",
+    border: "1px solid #e0a0a0",
+  },
+
+  deadlineDate: {
+    marginTop: "6px",
+    fontSize: "17px",
+    fontWeight: "700",
+  },
+
+  expiredText: {
+    marginTop: "8px",
+    color: "#b00020",
+    fontWeight: "600",
+  },
+
+  option: {
+    display: "flex",
+    gap: "12px",
+    alignItems: "flex-start",
+    padding: "15px",
+    marginBottom: "10px",
+    border: "1px solid #ddd",
+    borderRadius: "8px",
+    cursor: "pointer",
+  },
+
+  suggestionBox: {
+    padding: "20px",
+    marginTop: "15px",
+    background: "#f7f9fc",
+    borderRadius: "8px",
+  },
+
+  formGroup: {
+    marginTop: "20px",
+  },
+
+  input: {
+    display: "block",
+    width: "100%",
+    boxSizing: "border-box",
+    padding: "11px",
+    marginTop: "7px",
+    border: "1px solid #ccc",
+    borderRadius: "6px",
+    fontSize: "15px",
+  },
+
+  textarea: {
+    display: "block",
+    width: "100%",
+    boxSizing: "border-box",
+    padding: "11px",
+    marginTop: "7px",
+    border: "1px solid #ccc",
+    borderRadius: "6px",
+    fontSize: "15px",
+    resize: "vertical",
+  },
+
+  submitButton: {
+    width: "100%",
+    marginTop: "25px",
+    padding: "14px",
+    border: "none",
+    borderRadius: "7px",
+    background: "#123c69",
+    color: "#fff",
+    fontSize: "16px",
+    fontWeight: "700",
+    cursor: "pointer",
+  },
+
+  disabledButton: {
+    opacity: 0.6,
+    cursor: "not-allowed",
+  },
+
+  success: {
+    padding: "14px",
+    marginBottom: "20px",
+    borderRadius: "7px",
+    background: "#e8f5e9",
+    color: "#1b5e20",
+    border: "1px solid #a5d6a7",
+  },
+
+  error: {
+    padding: "14px",
+    marginBottom: "20px",
+    borderRadius: "7px",
+    background: "#ffebee",
+    color: "#b71c1c",
+    border: "1px solid #ef9a9a",
+  },
+
+  responseInfo: {
+    marginTop: "25px",
+    padding: "15px",
+    background: "#f1f5f9",
+    borderRadius: "7px",
+    lineHeight: "1.8",
+  },
+
+  loading: {
+    textAlign: "center",
+    padding: "40px",
+    color: "#555",
+  },
+
+  footer: {
+    marginTop: "35px",
+    paddingTop: "20px",
+    borderTop: "1px solid #eee",
+    textAlign: "center",
+    color: "#777",
+    fontSize: "13px",
+    lineHeight: "1.6",
+  },
+};
