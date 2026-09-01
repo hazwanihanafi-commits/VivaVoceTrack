@@ -11,22 +11,49 @@ import PanelResponse from "./pages/PanelResponse";
 export default function App() {
   return (
     <Routes>
+
+      {/* ==================================================
+          PUBLIC / EXTERNAL PANEL RESPONSE PAGE
+          Example:
+          /panel-response?panelID=VP001
+      ================================================== */}
+      <Route
+        path="/panel-response"
+        element={<PanelResponse />}
+      />
+
+      {/* ==================================================
+          MAIN SYSTEM
+      ================================================== */}
       <Route element={<MainLayout />}>
-        <Route path="/" element={<Dashboard />} />
 
-        <Route path="/students" element={<Students />} />
-
-        <Route path="/vivacases" element={<VivaCases />} />
-
-        <Route path="/examiners" element={<Examiners />} />
-
-        <Route path="/schedule" element={<Schedule />} />
         <Route
-  path="/panel-response"
-  element={<PanelResponse />}
-/>
-        
+          path="/"
+          element={<Dashboard />}
+        />
+
+        <Route
+          path="/students"
+          element={<Students />}
+        />
+
+        <Route
+          path="/vivacases"
+          element={<VivaCases />}
+        />
+
+        <Route
+          path="/examiners"
+          element={<Examiners />}
+        />
+
+        <Route
+          path="/schedule"
+          element={<Schedule />}
+        />
+
       </Route>
+
     </Routes>
   );
 }
