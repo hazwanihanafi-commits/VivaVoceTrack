@@ -346,36 +346,50 @@ export async function createVivaPanel(caseData) {
       );
 
     await addRow(
-      "Panel",
-      [
-        PanelID,
-        member.VivaID,
-        member.PersonID,
-        member.PersonType,
-        member.Role,
-        member.Required,
+  "Panel",
+  [
+    // 1 PanelID
+    PanelID,
 
-        // InvitationSent
-        "No",
+    // 2 VivaID
+    member.VivaID,
 
-        // InvitationDate
-        "",
+    // 3 PersonID
+    member.PersonID,
 
-        // Accepted
-        "Pending",
+    // 4 PersonType
+    member.PersonType,
 
-        // ResponseDate
-        "",
+    // 5 Role
+    member.Role,
 
-        // SuggestedDate
-        "",
+    // 6 Required
+    member.Required,
 
-        // SuggestedTime
-        "",
+    // 7 InvitationSent
+    "No",
 
-        // Remarks
-        "",
-      ]
-    );
+    // 8 InvitationDate
+    "",
+
+    // 9 Accepted
+    "Pending",
+
+    // 10 ResponseDate
+    "",
+
+    // 11 ResponseDeadline
+    caseData.ResponseDeadline || "",
+
+    // 12 SuggestedDate
+    "",
+
+    // 13 SuggestedTime
+    "",
+
+    // 14 Remarks
+    "",
+  ]
+);
   }
 }
