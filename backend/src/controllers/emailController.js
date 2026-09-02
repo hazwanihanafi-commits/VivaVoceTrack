@@ -10,6 +10,7 @@ import appointmentEmail from "../templates/appointmentEmail.js";
 import reminderEmail from "../templates/reminderEmail.js";
 import scheduleEmail from "../templates/scheduleEmail.js";
 import thankYouEmail from "../templates/thankYouEmail.js";
+import { createVivaPanel } from "../services/vivaPanelService.js";
 
 import sendEmail from "../services/sendEmail.js";
 
