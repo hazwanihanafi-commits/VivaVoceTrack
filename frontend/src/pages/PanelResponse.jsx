@@ -10,36 +10,50 @@ export default function PanelResponse() {
 
   const panelID = searchParams.get("panelID");
 
+  // ======================================================
+  // PANEL
+  // ======================================================
+
   const [panel, setPanel] = useState(null);
 
   const [loading, setLoading] = useState(true);
+
   const [submitting, setSubmitting] = useState(false);
 
-  // ============================================
-  // PANEL RESPONSE
-  // ============================================
+  // ======================================================
+  // RESPONSE
+  // ======================================================
 
   const [response, setResponse] = useState("");
+
   const [suggestedDate, setSuggestedDate] = useState("");
+
   const [suggestedTime, setSuggestedTime] = useState("");
+
   const [remarks, setRemarks] = useState("");
 
   const [message, setMessage] = useState("");
+
   const [error, setError] = useState("");
 
-  // ============================================
+  // ======================================================
   // REPORT UPLOAD
-  // ============================================
+  // ======================================================
 
   const [reportFile, setReportFile] = useState(null);
-  const [uploadingReport, setUploadingReport] = useState(false);
 
-  const [reportMessage, setReportMessage] = useState("");
-  const [reportError, setReportError] = useState("");
+  const [uploadingReport, setUploadingReport] =
+    useState(false);
 
-  // ============================================
+  const [reportMessage, setReportMessage] =
+    useState("");
+
+  const [reportError, setReportError] =
+    useState("");
+
+  // ======================================================
   // LOAD PANEL
-  // ============================================
+  // ======================================================
 
   useEffect(() => {
     if (!panelID) {
@@ -57,7 +71,9 @@ export default function PanelResponse() {
       setError("");
 
       const url =
-        `${API_BASE_URL}/api/panel/${encodeURIComponent(panelID)}`;
+        `${API_BASE_URL}/api/panel/${encodeURIComponent(
+          panelID
+        )}`;
 
       console.log("Loading panel from:", url);
 
@@ -68,17 +84,25 @@ export default function PanelResponse() {
       if (!result.ok || !data.success) {
         throw new Error(
           data.message ||
-          "Unable to load panel invitation."
+            "Unable to load panel invitation."
         );
       }
 
       setPanel(data.data);
 
       setResponse(data.data.Accepted || "");
-      setSuggestedDate(data.data.SuggestedDate || "");
-      setSuggestedTime(data.data.SuggestedTime || "");
-      setRemarks(data.data.Remarks || "");
 
+      setSuggestedDate(
+        data.data.SuggestedDate || ""
+      );
+
+      setSuggestedTime(
+        data.data.SuggestedTime || ""
+      );
+
+      setRemarks(
+        data.data.Remarks || ""
+      );
     } catch (err) {
       console.error(
         "LOAD PANEL ERROR:",
@@ -87,25 +111,25 @@ export default function PanelResponse() {
 
       setError(
         err.message ||
-        "Unable to load panel invitation."
+          "Unable to load panel invitation."
       );
-
     } finally {
       setLoading(false);
     }
   };
 
-  // ============================================
+  // ======================================================
   // DEADLINE
-  // ============================================
+  // ======================================================
 
   const getDeadline = () => {
     if (!panel?.ResponseDeadline) {
       return null;
     }
 
-    const deadline =
-      new Date(panel.ResponseDeadline);
+    const deadline = new Date(
+      panel.ResponseDeadline
+    );
 
     if (isNaN(deadline.getTime())) {
       return null;
@@ -117,17 +141,14 @@ export default function PanelResponse() {
   const deadline = getDeadline();
 
   const isExpired =
-    deadline &&
-    new Date() > deadline;
+    deadline && new Date() > deadline;
 
-  // ============================================
-  // DATE FORMAT
-  // ============================================
+  // ======================================================
+  // FORMAT DATE
+  // ======================================================
 
   const formatDate = (date) => {
-    if (!date) {
-      return "-";
-    }
+    if (!date) return "-";
 
     const parsed = new Date(date);
 
@@ -145,10 +166,12 @@ export default function PanelResponse() {
     );
   };
 
+  // ======================================================
+  // FORMAT DATE TIME
+  // ======================================================
+
   const formatDateTime = (date) => {
-    if (!date) {
-      return "-";
-    }
+    if (!date) return "-";
 
     const parsed = new Date(date);
 
@@ -168,9 +191,9 @@ export default function PanelResponse() {
     );
   };
 
-  // ============================================
+  // ======================================================
   // SUBMIT PANEL RESPONSE
-  // ============================================
+  // ======================================================
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -207,43 +230,40 @@ export default function PanelResponse() {
       setSubmitting(true);
 
       const url =
-        `${API_BASE_URL}/api/panel/${encodeURIComponent(panelID)}/respond`;
+        `${API_BASE_URL}/api/panel/${encodeURIComponent(
+          panelID
+        )}/respond`;
 
       console.log(
         "Submitting panel response to:",
         url
       );
 
-      const result = await fetch(
-        url,
-        {
-          method: "POST",
+      const result = await fetch(url, {
+        method: "POST",
 
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
+        headers: {
+          "Content-Type": "application/json",
+        },
 
-          body: JSON.stringify({
-            response,
+        body: JSON.stringify({
+          response,
 
-            suggestedDate:
-              response === "Suggest"
-                ? suggestedDate
-                : "",
+          suggestedDate:
+            response === "Suggest"
+              ? suggestedDate
+              : "",
 
-            suggestedTime:
-              response === "Suggest"
-                ? suggestedTime
-                : "",
+          suggestedTime:
+            response === "Suggest"
+              ? suggestedTime
+              : "",
 
-            remarks,
-          }),
-        }
-      );
+          remarks,
+        }),
+      });
 
-      const data =
-        await result.json();
+      const data = await result.json();
 
       if (
         !result.ok ||
@@ -251,7 +271,7 @@ export default function PanelResponse() {
       ) {
         throw new Error(
           data.message ||
-          "Unable to submit your response."
+            "Unable to submit your response."
         );
       }
 
@@ -259,9 +279,8 @@ export default function PanelResponse() {
 
       setMessage(
         data.message ||
-        "Your response has been recorded successfully."
+          "Your response has been recorded successfully."
       );
-
     } catch (err) {
       console.error(
         "SUBMIT PANEL RESPONSE ERROR:",
@@ -270,17 +289,16 @@ export default function PanelResponse() {
 
       setError(
         err.message ||
-        "Unable to submit your response."
+          "Unable to submit your response."
       );
-
     } finally {
       setSubmitting(false);
     }
   };
 
-  // ============================================
+  // ======================================================
   // REPORT UPLOAD
-  // ============================================
+  // ======================================================
 
   const handleReportUpload = async () => {
     setReportMessage("");
@@ -293,15 +311,31 @@ export default function PanelResponse() {
       return;
     }
 
+    // ----------------------------------------------------
+    // FILE TYPE
+    // ----------------------------------------------------
+
     const allowedTypes = [
       "application/pdf",
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ];
 
+    const fileExtension =
+      reportFile.name
+        .split(".")
+        .pop()
+        ?.toLowerCase();
+
+    const validExtension =
+      ["pdf", "docx"].includes(
+        fileExtension
+      );
+
     if (
       !allowedTypes.includes(
         reportFile.type
-      )
+      ) &&
+      !validExtension
     ) {
       setReportError(
         "Only PDF and DOCX files are allowed."
@@ -309,7 +343,10 @@ export default function PanelResponse() {
       return;
     }
 
-    // 20 MB
+    // ----------------------------------------------------
+    // FILE SIZE
+    // ----------------------------------------------------
+
     if (
       reportFile.size >
       20 * 1024 * 1024
@@ -320,18 +357,10 @@ export default function PanelResponse() {
       return;
     }
 
-    if (!panelID) {
-      setReportError(
-        "Invalid panel ID."
-      );
-      return;
-    }
-
     try {
       setUploadingReport(true);
 
-      const formData =
-        new FormData();
+      const formData = new FormData();
 
       formData.append(
         "report",
@@ -339,7 +368,9 @@ export default function PanelResponse() {
       );
 
       const url =
-        `${API_BASE_URL}/api/reports/panel/${encodeURIComponent(panelID)}/upload`;
+        `${API_BASE_URL}/api/reports/panel/${encodeURIComponent(
+          panelID
+        )}/upload`;
 
       console.log(
         "Uploading report to:",
@@ -363,11 +394,14 @@ export default function PanelResponse() {
       ) {
         throw new Error(
           data.message ||
-          "Unable to upload report."
+            "Unable to upload report."
         );
       }
 
-      // Update panel information
+      // --------------------------------------------------
+      // UPDATE PANEL STATE
+      // --------------------------------------------------
+
       setPanel((previous) => ({
         ...previous,
 
@@ -382,23 +416,18 @@ export default function PanelResponse() {
           data.data?.ReportFileURL ||
           "",
 
-        ReportFileID:
-          data.data?.ReportFileID ||
-          "",
-
         ReportUploadedDate:
           data.data?.ReportUploadedDate ||
           new Date().toISOString(),
       }));
 
       setReportMessage(
-        data.message ||
         "Your report has been uploaded successfully."
       );
 
       setReportFile(null);
 
-      // Clear file input
+      // Reset input
       const input =
         document.getElementById(
           "panel-report-upload"
@@ -407,7 +436,6 @@ export default function PanelResponse() {
       if (input) {
         input.value = "";
       }
-
     } catch (err) {
       console.error(
         "REPORT UPLOAD ERROR:",
@@ -416,17 +444,16 @@ export default function PanelResponse() {
 
       setReportError(
         err.message ||
-        "Unable to upload report."
+          "Unable to upload report."
       );
-
     } finally {
       setUploadingReport(false);
     }
   };
 
-  // ============================================
-  // LOADING
-  // ============================================
+  // ======================================================
+  // LOADING SCREEN
+  // ======================================================
 
   if (loading) {
     return (
@@ -440,40 +467,39 @@ export default function PanelResponse() {
     );
   }
 
-  // ============================================
-  // INVALID PANEL
-  // ============================================
+  // ======================================================
+  // ERROR SCREEN
+  // ======================================================
 
   if (error && !panel) {
     return (
       <div style={styles.page}>
-        <div style={styles.card}>
+        <div style={styles.container}>
+          <div style={styles.card}>
+            <h2 style={styles.title}>
+              Viva Voce Invitation
+            </h2>
 
-          <h2 style={styles.title}>
-            Viva Voce Invitation
-          </h2>
-
-          <div style={styles.error}>
-            {error}
+            <div style={styles.error}>
+              {error}
+            </div>
           </div>
-
         </div>
       </div>
     );
   }
 
-  // ============================================
+  // ======================================================
   // MAIN PAGE
-  // ============================================
+  // ======================================================
 
   return (
     <div style={styles.page}>
-
       <div style={styles.container}>
 
-        {/* ======================================
+        {/* ==================================================
             HEADER
-        ====================================== */}
+        ================================================== */}
 
         <div style={styles.header}>
 
@@ -489,11 +515,13 @@ export default function PanelResponse() {
 
         </div>
 
-        {/* ======================================
+        {/* ==================================================
             MAIN CARD
-        ====================================== */}
+        ================================================== */}
 
         <div style={styles.card}>
+
+          {/* TITLE */}
 
           <h1 style={styles.title}>
             Viva Voce Schedule Confirmation
@@ -503,9 +531,9 @@ export default function PanelResponse() {
             Panel Member Response
           </p>
 
-          {/* ====================================
-              MESSAGES
-          ==================================== */}
+          {/* ==================================================
+              SUCCESS MESSAGE
+          ================================================== */}
 
           {message && (
             <div style={styles.success}>
@@ -513,15 +541,19 @@ export default function PanelResponse() {
             </div>
           )}
 
+          {/* ==================================================
+              ERROR MESSAGE
+          ================================================== */}
+
           {error && (
             <div style={styles.error}>
               {error}
             </div>
           )}
 
-          {/* ====================================
+          {/* ==================================================
               PANEL INFORMATION
-          ==================================== */}
+          ================================================== */}
 
           <div style={styles.section}>
 
@@ -555,9 +587,9 @@ export default function PanelResponse() {
 
           </div>
 
-          {/* ====================================
-              VIVA SCHEDULE
-          ==================================== */}
+          {/* ==================================================
+              VIVA INFORMATION
+          ================================================== */}
 
           <div style={styles.section}>
 
@@ -599,13 +631,21 @@ export default function PanelResponse() {
                 }
               />
 
+              <InfoRow
+                label="Mode"
+                value={
+                  panel?.VivaMode ||
+                  "-"
+                }
+              />
+
             </div>
 
           </div>
 
-          {/* ====================================
-              DEADLINE
-          ==================================== */}
+          {/* ==================================================
+              RESPONSE DEADLINE
+          ================================================== */}
 
           <div
             style={{
@@ -621,11 +661,7 @@ export default function PanelResponse() {
               Response Deadline
             </strong>
 
-            <div
-              style={
-                styles.deadlineDate
-              }
-            >
+            <div style={styles.deadlineDate}>
               {deadline
                 ? formatDateTime(
                     deadline
@@ -634,21 +670,16 @@ export default function PanelResponse() {
             </div>
 
             {isExpired && (
-              <div
-                style={
-                  styles.expiredText
-                }
-              >
-                The response deadline has
-                passed.
+              <div style={styles.expiredText}>
+                The response deadline has passed.
               </div>
             )}
 
           </div>
 
-          {/* ====================================
+          {/* ==================================================
               RESPONSE FORM
-          ==================================== */}
+          ================================================== */}
 
           {!isExpired && (
             <form
@@ -685,16 +716,19 @@ export default function PanelResponse() {
                     }
                   />
 
-                  <span>
+                  <span
+                    style={
+                      styles.optionText
+                    }
+                  >
 
                     <strong>
                       I agree
                     </strong>
 
                     <small>
-                      I am available for
-                      the proposed Viva
-                      Voce schedule.
+                      I am available for the proposed
+                      Viva Voce schedule.
                     </small>
 
                   </span>
@@ -721,15 +755,18 @@ export default function PanelResponse() {
                     }
                   />
 
-                  <span>
+                  <span
+                    style={
+                      styles.optionText
+                    }
+                  >
 
                     <strong>
                       I am unable to attend
                     </strong>
 
                     <small>
-                      I am not available
-                      for the proposed
+                      I am not available for the proposed
                       schedule.
                     </small>
 
@@ -748,7 +785,8 @@ export default function PanelResponse() {
                     name="response"
                     value="Suggest"
                     checked={
-                      response === "Suggest"
+                      response ===
+                      "Suggest"
                     }
                     onChange={(e) =>
                       setResponse(
@@ -757,17 +795,19 @@ export default function PanelResponse() {
                     }
                   />
 
-                  <span>
+                  <span
+                    style={
+                      styles.optionText
+                    }
+                  >
 
                     <strong>
-                      Suggest another
-                      date/time
+                      Suggest another date/time
                     </strong>
 
                     <small>
-                      I would like to
-                      suggest an
-                      alternative schedule.
+                      I would like to suggest an alternative
+                      schedule.
                     </small>
 
                   </span>
@@ -776,9 +816,9 @@ export default function PanelResponse() {
 
               </div>
 
-              {/* ==================================
-                  SUGGESTED DATE / TIME
-              ================================== */}
+              {/* ==================================================
+                  SUGGESTED DATE
+              ================================================== */}
 
               {response === "Suggest" && (
                 <div
@@ -852,9 +892,9 @@ export default function PanelResponse() {
                 </div>
               )}
 
-              {/* ==================================
+              {/* ==================================================
                   REMARKS
-              ================================== */}
+              ================================================== */}
 
               <div
                 style={
@@ -882,9 +922,7 @@ export default function PanelResponse() {
 
               </div>
 
-              {/* ==================================
-                  SUBMIT
-              ================================== */}
+              {/* SUBMIT */}
 
               <button
                 type="submit"
@@ -897,19 +935,17 @@ export default function PanelResponse() {
                     : {}),
                 }}
               >
-
                 {submitting
                   ? "Submitting..."
                   : "Submit Response"}
-
               </button>
 
             </form>
           )}
 
-          {/* ====================================
-              EXISTING RESPONSE
-          ==================================== */}
+          {/* ==================================================
+              PREVIOUS RESPONSE
+          ================================================== */}
 
           {panel?.ResponseDate && (
             <div
@@ -939,9 +975,9 @@ export default function PanelResponse() {
             </div>
           )}
 
-          {/* ====================================
+          {/* ==================================================
               VIVA VOCE REPORT
-          ==================================== */}
+          ================================================== */}
 
           <div style={styles.section}>
 
@@ -953,11 +989,12 @@ export default function PanelResponse() {
               Viva Voce Report
             </h3>
 
-            {/* ==================================
+            {/* --------------------------------------------------
                 REPORT ALREADY SUBMITTED
-            ================================== */}
+            -------------------------------------------------- */}
 
-            {panel?.ReportReceived === "Yes" ? (
+            {panel?.ReportReceived ===
+            "Yes" ? (
 
               <div
                 style={
@@ -967,7 +1004,7 @@ export default function PanelResponse() {
 
                 <div
                   style={
-                    styles.reportSubmittedContent
+                    styles.reportDetails
                   }
                 >
 
@@ -1022,9 +1059,9 @@ export default function PanelResponse() {
 
             ) : (
 
-              /* ==================================
+              /* --------------------------------------------------
                   REPORT UPLOAD
-              ================================== */
+              -------------------------------------------------- */
 
               <div
                 style={
@@ -1045,7 +1082,7 @@ export default function PanelResponse() {
                     styles.uploadTitle
                   }
                 >
-                  Upload Viva Voce Report
+                  Upload Your Viva Voce Report
                 </h4>
 
                 <p
@@ -1054,8 +1091,10 @@ export default function PanelResponse() {
                   }
                 >
                   Please upload your completed
-                  Viva Voce report.
+                  Viva Voce report for this case.
                 </p>
+
+                {/* FILE */}
 
                 <input
                   id="panel-report-upload"
@@ -1064,13 +1103,15 @@ export default function PanelResponse() {
                   onChange={(e) =>
                     setReportFile(
                       e.target.files?.[0] ||
-                      null
+                        null
                     )
                   }
                   style={
                     styles.fileInput
                   }
                 />
+
+                {/* SELECTED FILE */}
 
                 {reportFile && (
                   <div
@@ -1086,15 +1127,7 @@ export default function PanelResponse() {
                   </div>
                 )}
 
-                {reportMessage && (
-                  <div
-                    style={
-                      styles.success
-                    }
-                  >
-                    {reportMessage}
-                  </div>
-                )}
+                {/* ERROR */}
 
                 {reportError && (
                   <div
@@ -1105,6 +1138,20 @@ export default function PanelResponse() {
                     {reportError}
                   </div>
                 )}
+
+                {/* SUCCESS */}
+
+                {reportMessage && (
+                  <div
+                    style={
+                      styles.success
+                    }
+                  >
+                    {reportMessage}
+                  </div>
+                )}
+
+                {/* UPLOAD */}
 
                 <button
                   type="button"
@@ -1124,11 +1171,9 @@ export default function PanelResponse() {
                       : {}),
                   }}
                 >
-
                   {uploadingReport
-                    ? "Uploading Report..."
+                    ? "Uploading..."
                     : "Upload Report"}
-
                 </button>
 
                 <small
@@ -1136,33 +1181,34 @@ export default function PanelResponse() {
                     styles.uploadHint
                   }
                 >
-                  Accepted formats:
-                  PDF or DOCX.
+                  Accepted formats: PDF or DOCX
                   <br />
-                  Maximum size: 20 MB.
+                  Maximum file size: 20 MB
                 </small>
 
               </div>
+
             )}
 
           </div>
 
-          {/* ====================================
+          {/* ==================================================
               FOOTER
-          ==================================== */}
+          ================================================== */}
 
-          <div
-            style={styles.footer}
-          >
+          <div style={styles.footer}>
+
             VivaTrack Secretariat
+
             <br />
+
             Universiti Sains Malaysia
+
           </div>
 
         </div>
 
       </div>
-
     </div>
   );
 }
@@ -1176,19 +1222,13 @@ function InfoRow({
   value,
 }) {
   return (
-    <div
-      style={styles.infoRow}
-    >
+    <div style={styles.infoRow}>
 
-      <div
-        style={styles.infoLabel}
-      >
+      <div style={styles.infoLabel}>
         {label}
       </div>
 
-      <div
-        style={styles.infoValue}
-      >
+      <div style={styles.infoValue}>
         {value || "-"}
       </div>
 
@@ -1208,7 +1248,6 @@ const styles = {
     padding: "40px 20px",
     fontFamily:
       "Arial, Helvetica, sans-serif",
-    boxSizing: "border-box",
   },
 
   container: {
@@ -1330,6 +1369,12 @@ const styles = {
     cursor: "pointer",
   },
 
+  optionText: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "5px",
+  },
+
   suggestionBox: {
     padding: "20px",
     marginTop: "15px",
@@ -1386,7 +1431,6 @@ const styles = {
 
   success: {
     padding: "14px",
-    marginTop: "15px",
     marginBottom: "20px",
     borderRadius: "7px",
     background: "#e8f5e9",
@@ -1413,113 +1457,106 @@ const styles = {
     lineHeight: "1.8",
   },
 
-  // ============================================
-  // REPORT STYLES
-  // ============================================
+  // ====================================================
+  // REPORT
+  // ====================================================
 
   uploadBox: {
-    padding: "25px",
+    marginTop: "10px",
+    padding: "30px",
+    background: "#f8fafc",
     border:
-      "2px dashed #d5d9e0",
-    borderRadius: "10px",
-    background: "#fafbfc",
+      "2px dashed #cbd5e1",
+    borderRadius: "12px",
     textAlign: "center",
   },
 
   uploadIcon: {
-    fontSize: "40px",
+    fontSize: "36px",
     marginBottom: "10px",
   },
 
   uploadTitle: {
     margin: "5px 0",
-    fontSize: "18px",
-    color: "#333",
+    fontSize: "17px",
+    color: "#1e293b",
   },
 
   uploadDescription: {
-    color: "#666",
-    margin:
-      "8px 0 20px",
-    lineHeight: "1.5",
+    color: "#64748b",
+    fontSize: "14px",
+    marginBottom: "20px",
   },
 
   fileInput: {
     display: "block",
     width: "100%",
-    boxSizing: "border-box",
-    padding: "10px",
-    border:
-      "1px solid #ddd",
-    borderRadius: "7px",
-    background: "#fff",
-    cursor: "pointer",
+    marginBottom: "15px",
+    fontSize: "14px",
   },
 
   selectedFile: {
-    marginTop: "12px",
-    padding: "10px",
-    background: "#f1f5f9",
-    borderRadius: "6px",
+    padding: "12px",
+    background: "#eef2ff",
+    borderRadius: "7px",
+    marginTop: "10px",
+    color: "#3730a3",
     fontSize: "14px",
-    color: "#444",
     wordBreak: "break-word",
   },
 
   uploadHint: {
     display: "block",
     marginTop: "12px",
-    color: "#777",
-    lineHeight: "1.5",
+    color: "#64748b",
+    lineHeight: "1.6",
   },
 
   reportSubmittedBox: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: "20px",
+    marginTop: "10px",
     padding: "20px",
+    background: "#ecfdf5",
     border:
-      "1px solid #b7dfc0",
-    background: "#f1faf3",
+      "1px solid #a7f3d0",
     borderRadius: "10px",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: "20px",
+    flexWrap: "wrap",
   },
 
-  reportSubmittedContent: {
-    minWidth: 0,
+  reportDetails: {
+    flex: 1,
   },
 
   reportStatus: {
-    fontSize: "16px",
     fontWeight: "700",
-    color: "#1b7a36",
-    marginBottom: "7px",
+    color: "#047857",
+    marginBottom: "8px",
   },
 
   reportFileName: {
-    fontSize: "14px",
     fontWeight: "600",
-    color: "#333",
+    color: "#334155",
     wordBreak: "break-word",
   },
 
   reportDate: {
     display: "block",
     marginTop: "5px",
-    color: "#666",
+    color: "#64748b",
   },
 
   viewReportButton: {
-    flexShrink: 0,
     display: "inline-block",
-    padding:
-      "10px 16px",
-    borderRadius: "7px",
+    padding: "10px 18px",
     background: "#123c69",
     color: "#fff",
+    borderRadius: "7px",
     textDecoration: "none",
     fontWeight: "600",
-    fontSize: "14px",
+    whiteSpace: "nowrap",
   },
 
   loading: {
