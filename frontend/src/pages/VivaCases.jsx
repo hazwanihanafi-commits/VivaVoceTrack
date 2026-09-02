@@ -179,29 +179,110 @@ export default function VivaCases() {
   ====================================================== */
 
   async function loadCases() {
+  try {
+    const res = await fetch(`${API}/vivacases`);
 
-    try {
+    const data = await res.json();
 
-      const res =
-        await fetch(`${API}/vivacases`);
+    console.log("VIVA CASES API RESPONSE:", data);
 
-      const data =
-        await res.json();
-
-      setCases(
-        data.data || []
-      );
-
-    } catch (err) {
-
-      console.error(
-        "LOAD CASES ERROR:",
-        err
-      );
-
+    if (!res.ok) {
+      console.error("LOAD CASES ERROR:", data);
+      setCases([]);
+      return;
     }
 
+    const rawCases = Array.isArray(data.data)
+      ? data.data
+      : [];
+
+    console.log("RAW VIVA CASES:", rawCases);
+
+    const normalizedCases = rawCases.map((item) => ({
+      ...item,
+
+      // ============================================
+      // CASE ID
+      // ============================================
+      CaseID:
+        item.CaseID ??
+        item.caseID ??
+        item.caseId ??
+        item["Case ID"] ??
+        item["Case No"] ??
+        item["Case Number"] ??
+        "",
+
+      // ============================================
+      // STUDENT
+      // ============================================
+      StudentID:
+        item.StudentID ??
+        item.studentID ??
+        item.studentId ??
+        "",
+
+      // ============================================
+      // INTERNAL EXAMINER
+      // ============================================
+      InternalExaminer1ID:
+        item.InternalExaminer1ID ??
+        item.internalExaminer1ID ??
+        "",
+
+      InternalExaminer2ID:
+        item.InternalExaminer2ID ??
+        item.internalExaminer2ID ??
+        "",
+
+      // ============================================
+      // EXTERNAL EXAMINER
+      // ============================================
+      ExternalExaminer1ID:
+        item.ExternalExaminer1ID ??
+        item.externalExaminer1ID ??
+        "",
+
+      ExternalExaminer2ID:
+        item.ExternalExaminer2ID ??
+        item.externalExaminer2ID ??
+        "",
+
+      // ============================================
+      // DUE DATE
+      // ============================================
+      ReportDueDate:
+        item.ReportDueDate ??
+        item.reportDueDate ??
+        item["Report Due Date"] ??
+        "",
+
+      // ============================================
+      // STATUS
+      // ============================================
+      CurrentStatus:
+        item.CurrentStatus ??
+        item.currentStatus ??
+        "",
+    }));
+
+    console.log(
+      "NORMALIZED VIVA CASES:",
+      normalizedCases
+    );
+
+    setCases(normalizedCases);
+
+  } catch (err) {
+
+    console.error(
+      "LOAD CASES ERROR:",
+      err
+    );
+
+    setCases([]);
   }
+}
 
 
   /* ======================================================
@@ -616,6 +697,9 @@ export default function VivaCases() {
 
   async function deleteCase(caseID) {
 
+  const cleanCaseID =
+    String(caseID || "").trim();
+
   console.log(
     "========================================"
   );
@@ -626,19 +710,19 @@ export default function VivaCases() {
 
   console.log(
     "Case ID received:",
-    caseID
+    cleanCaseID
   );
 
   console.log(
     "Delete URL:",
-    `${API}/vivacases/${caseID}`
+    `${API}/vivacases/${encodeURIComponent(cleanCaseID)}`
   );
 
   console.log(
     "========================================"
   );
 
-  if (!caseID) {
+  if (!cleanCaseID) {
 
     alert(
       "Cannot delete Viva Case because Case ID is missing."
@@ -648,7 +732,7 @@ export default function VivaCases() {
   }
 
   const ok = window.confirm(
-    `Are you sure you want to delete Viva Case ${caseID}?`
+    `Are you sure you want to delete Viva Case ${cleanCaseID}?`
   );
 
   if (!ok) return;
@@ -656,7 +740,7 @@ export default function VivaCases() {
   try {
 
     const res = await fetch(
-      `${API}/vivacases/${encodeURIComponent(caseID)}`,
+      `${API}/vivacases/${encodeURIComponent(cleanCaseID)}`,
       {
         method: "DELETE",
       }
@@ -680,7 +764,7 @@ export default function VivaCases() {
     }
 
     alert(
-      `Viva Case ${caseID} deleted successfully.`
+      `Viva Case ${cleanCaseID} deleted successfully.`
     );
 
     // Refresh table
@@ -701,7 +785,6 @@ export default function VivaCases() {
     alert(
       "Server connection failed."
     );
-
   }
 }
 
