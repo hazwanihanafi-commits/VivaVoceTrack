@@ -41,7 +41,7 @@ async function getStaffIDByName(name) {
  * CREATE VIVA PANEL
  * ======================================================
  *
- * Automatically creates:
+ * Creates panel records for:
  *
  * 1. Student
  * 2. Chairperson
@@ -50,18 +50,23 @@ async function getStaffIDByName(name) {
  * 5. Co-Supervisor(s)
  * 6. Internal Examiner 1
  * 7. Internal Examiner 2
- * 8. External Examiner 1 (optional)
- * 9. External Examiner 2 (optional)
+ * 8. External Examiner 1
+ * 9. External Examiner 2
  *
- * Supervisor information is automatically obtained from:
+ * IMPORTANT:
  *
- * Students sheet
- *      ↓
- * Supervisor / CoSupervisor
- *      ↓
- * Staff sheet
- *      ↓
- * StaffID
+ * Student is intentionally included in Panel sheet.
+ * Therefore Student will also receive:
+ *
+ * - Viva date
+ * - Viva time
+ * - Viva mode
+ * - venue / meeting link
+ * - PanelResponseLink
+ *
+ * and can respond:
+ *
+ * Yes / No / Suggest
  *
  * ======================================================
  */
@@ -85,17 +90,15 @@ export async function createVivaPanel(caseData) {
     if (!PersonID) return;
 
     members.push({
-
       VivaID: caseData.CaseID,
 
-      PersonID,
+      PersonID: String(PersonID).trim(),
 
       PersonType,
 
       Role,
 
       Required,
-
     });
   }
 
@@ -121,6 +124,9 @@ export async function createVivaPanel(caseData) {
   /**
    * ====================================================
    * STUDENT
+   *
+   * IMPORTANT:
+   * Student MUST be in Panel.
    * ====================================================
    */
   add(
@@ -161,13 +167,13 @@ export async function createVivaPanel(caseData) {
    * ====================================================
    * MAIN SUPERVISOR
    * ====================================================
-   *
-   * Automatically obtain Supervisor name from Students.
    */
   if (student) {
 
     const supervisorName =
-      student.Supervisor;
+      String(
+        student.Supervisor || ""
+      ).trim();
 
     if (supervisorName) {
 
@@ -192,9 +198,7 @@ export async function createVivaPanel(caseData) {
         );
 
       }
-
     }
-
   }
 
 
@@ -207,10 +211,10 @@ export async function createVivaPanel(caseData) {
    *
    * Supervisor A
    *
-   * or
+   * OR
    *
    * Supervisor A, Supervisor B
-   *
+   * ====================================================
    */
   if (
     student &&
@@ -242,7 +246,6 @@ export async function createVivaPanel(caseData) {
         );
 
         continue;
-
       }
 
 
@@ -255,9 +258,7 @@ export async function createVivaPanel(caseData) {
 
 
       index++;
-
     }
-
   }
 
 
@@ -290,7 +291,6 @@ export async function createVivaPanel(caseData) {
   /**
    * ====================================================
    * EXTERNAL EXAMINER 1
-   * OPTIONAL
    * ====================================================
    */
   add(
@@ -304,7 +304,6 @@ export async function createVivaPanel(caseData) {
   /**
    * ====================================================
    * EXTERNAL EXAMINER 2
-   * OPTIONAL
    * ====================================================
    */
   add(
@@ -317,27 +316,35 @@ export async function createVivaPanel(caseData) {
 
   /**
    * ====================================================
-   * GET EXISTING PANEL RECORDS
+   * GET EXISTING PANEL
    * ====================================================
    */
   const existing =
     await getRows("Panel");
 
 
-  // ====================================================
-  // CREATE PANEL RECORDS
-  // ====================================================
-
+  /**
+   * ====================================================
+   * CREATE PANEL RECORDS
+   * ====================================================
+   */
   for (const member of members) {
 
     const alreadyExists =
       existing.find(
         (x) =>
-          x.VivaID === member.VivaID &&
-          x.PersonID === member.PersonID
+          String(x.VivaID || "").trim() ===
+            String(member.VivaID || "").trim() &&
+          String(x.PersonID || "").trim() ===
+            String(member.PersonID || "").trim()
       );
 
+
+    /**
+     * Do not duplicate panel member
+     */
     if (alreadyExists) continue;
+
 
     const PanelID =
       await generateID(
@@ -346,84 +353,148 @@ export async function createVivaPanel(caseData) {
         "PanelID"
       );
 
+
+    /**
+     * ==================================================
+     * PANEL COLUMN ORDER
+     *
+     * 1  PanelID
+     * 2  VivaID
+     * 3  PersonID
+     * 4  PersonType
+     * 5  Role
+     * 6  Required
+     * 7  InvitationSent
+     * 8  InvitationDate
+     * 9  InvitationStatus
+     * 10 Accepted
+     * 11 ResponseDate
+     * 12 ResponseDeadline
+     * 13 SuggestedDate
+     * 14 SuggestedTime
+     * 15 Remarks
+     * 16 PanelResponseLink
+     *
+     * ==================================================
+     */
+
     await addRow(
-  "Panel",
-  [
-    // 1 PanelID
-    PanelID,
+      "Panel",
+      [
+        // 1
+        PanelID,
 
-    // 2 VivaID
-    member.VivaID,
+        // 2
+        member.VivaID,
 
-    // 3 PersonID
-    member.PersonID,
+        // 3
+        member.PersonID,
 
-    // 4 PersonType
-    member.PersonType,
+        // 4
+        member.PersonType,
 
-    // 5 Role
-    member.Role,
+        // 5
+        member.Role,
 
-    // 6 Required
-    member.Required,
+        // 6
+        member.Required,
 
-    // 7 InvitationSent
-    "No",
+        // 7
+        "No",
 
-    // 8 InvitationDate
-    "",
+        // 8
+        "",
 
-    // 9 InvitationStatus
-    "Pending",
+        // 9
+        "Pending",
 
-    // 10 Accepted
-    "Pending",
+        // 10
+        "Pending",
 
-    // 11 ResponseDate
-    "",
+        // 11
+        "",
 
-    // 12 ResponseDeadline
-    caseData.ResponseDeadline || "",
+        // 12
+        caseData.ResponseDeadline || "",
 
-    // 13 SuggestedDate
-    "",
+        // 13
+        "",
 
-    // 14 SuggestedTime
-    "",
+        // 14
+        "",
 
-    // 15 Remarks
-    "",
-  ]
-);
+        // 15
+        "",
+
+        // 16
+        "",
+      ]
+    );
   }
 }
 
+
+/**
+ * ======================================================
+ * DELETE VIVA PANEL
+ * ======================================================
+ */
 export async function deleteVivaPanel(caseID) {
-  const vivaID = String(caseID || "").trim();
+
+  const vivaID =
+    String(caseID || "").trim();
 
   if (!vivaID) return 0;
 
-  const rows = await getRows("Panel");
+
+  const rows =
+    await getRows("Panel");
+
 
   const rowNumbers = [];
 
-  rows.forEach((row, index) => {
-    if (
-      String(row.VivaID || "").trim() === vivaID
-    ) {
-      rowNumbers.push(index + 2);
+
+  rows.forEach(
+    (row, index) => {
+
+      if (
+        String(row.VivaID || "").trim() ===
+        vivaID
+      ) {
+
+        // Google Sheet header = row 1
+        // Data starts = row 2
+        rowNumbers.push(index + 2);
+
+      }
     }
-  });
+  );
 
-  rowNumbers.sort((a, b) => b - a);
 
-  for (const rowNumber of rowNumbers) {
-    await deleteRow("Panel", rowNumber);
+  /**
+   * Delete from bottom to top
+   */
+  rowNumbers.sort(
+    (a, b) => b - a
+  );
+
+
+  for (
+    const rowNumber of rowNumbers
+  ) {
+
+    await deleteRow(
+      "Panel",
+      rowNumber
+    );
+
   }
+
 
   console.log(
     `Deleted ${rowNumbers.length} Panel records for ${vivaID}`
   );
+
 
   return rowNumbers.length;
 }
