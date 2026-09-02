@@ -372,6 +372,11 @@ function replaceTemplate(
     )
 
     .replaceAll(
+  "{{ResponseDeadline}}",
+  formatDate(viva.ResponseDeadline)
+)
+
+    .replaceAll(
       "{{TentativeVivaDate}}",
       formatDate(viva.TentativeVivaDate)
     )
