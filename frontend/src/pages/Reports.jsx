@@ -1,11 +1,21 @@
 import React, { useEffect, useState } from "react";
+import {
+  RefreshCw,
+  FileText,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  ExternalLink,
+} from "lucide-react";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
   "https://vivatrack-backend.onrender.com";
 
-export default function Reports() {
-  const [reports, setReports] = useState([]);
+const API_URL = `${API_BASE_URL}/api/reports`;
+
+export default function Report() {
+  const [cases, setCases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -18,367 +28,482 @@ export default function Reports() {
       setLoading(true);
       setError("");
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/reports`
-      );
+      console.log("Loading reports from:", API_URL);
 
-      const data = await response.json();
+      const response = await fetch(API_URL);
+      const result = await response.json();
 
-      if (!response.ok || !data.success) {
+      if (!response.ok || !result.success) {
         throw new Error(
-          data.message || "Unable to load reports."
+          result.message || "Unable to load reports."
         );
       }
 
-      setReports(data.data || []);
-
+      setCases(result.data || []);
     } catch (err) {
       console.error("LOAD REPORTS ERROR:", err);
 
       setError(
         err.message || "Unable to load reports."
       );
-
     } finally {
       setLoading(false);
     }
   };
 
-  const getStatus = (value) => {
-    return String(value || "")
-      .trim()
-      .toLowerCase();
+  const isSubmitted = (value) => {
+    return (
+      String(value || "").trim().toLowerCase() === "yes"
+    );
   };
 
-  const getReportStatus = (row, examiner) => {
-    const received =
-      row[`${examiner}ReportReceived`];
+  const getProgress = (item) => {
+    const submitted = [
+      item.Internal1ReportReceived,
+      item.Internal2ReportReceived,
+      item.External1ReportReceived,
+      item.External2ReportReceived,
+    ].filter(isSubmitted).length;
 
-    const date =
-      row[`${examiner}ReportDate`];
+    return submitted;
+  };
 
-    if (
-      getStatus(received) === "yes" ||
-      date
-    ) {
-      return "Submitted";
+  const getStatus = (item) => {
+    const progress = getProgress(item);
+
+    if (progress === 4) {
+      return "Completed";
+    }
+
+    if (progress > 0) {
+      return "In Progress";
     }
 
     return "Pending";
   };
 
-  const statusClass = (status) => {
-    if (status === "Submitted") {
-      return "bg-green-100 text-green-700";
+  const formatDate = (date) => {
+    if (!date) return "-";
+
+    const parsed = new Date(date);
+
+    if (isNaN(parsed.getTime())) {
+      return date;
     }
 
-    return "bg-yellow-100 text-yellow-700";
+    return parsed.toLocaleDateString("en-MY", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
   };
 
-  if (loading) {
-    return (
-      <div className="p-8">
-        <div className="rounded-xl bg-white p-10 text-center shadow">
-          Loading reports...
-        </div>
-      </div>
-    );
-  }
+  const ReportStatus = ({ value, date }) => {
+    if (isSubmitted(value)) {
+      return (
+        <div>
+          <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+            <CheckCircle size={14} />
+            Submitted
+          </span>
 
-  if (error) {
-    return (
-      <div className="p-8">
-        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-red-700">
-          {error}
+          {date && (
+            <div className="mt-1 text-xs text-gray-400">
+              {formatDate(date)}
+            </div>
+          )}
         </div>
-      </div>
+      );
+    }
+
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-yellow-700">
+        <Clock size={14} />
+        Pending
+      </span>
     );
-  }
+  };
+
+  const StatusBadge = ({ status }) => {
+    if (status === "Completed") {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+          <CheckCircle size={14} />
+          Completed
+        </span>
+      );
+    }
+
+    if (status === "In Progress") {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
+          <FileText size={14} />
+          In Progress
+        </span>
+      );
+    }
+
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-yellow-700">
+        <Clock size={14} />
+        Pending
+      </span>
+    );
+  };
+
+  const totalCases = cases.length;
+
+  const completedCases = cases.filter(
+    (item) => getProgress(item) === 4
+  ).length;
+
+  const submittedCases = cases.filter(
+    (item) => getProgress(item) > 0
+  ).length;
+
+  const pendingCases = cases.filter(
+    (item) => getProgress(item) === 0
+  ).length;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-50 p-6">
 
       {/* HEADER */}
+      <div className="mb-6 flex items-center justify-between">
 
-      <div className="mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Examiner Reports
+          </h1>
 
-        <h1 className="text-3xl font-bold text-gray-800">
-          Viva Voce Reports
-        </h1>
+          <p className="mt-1 text-gray-500">
+            Track Viva Voce report submissions from examiners.
+          </p>
+        </div>
 
-        <p className="mt-2 text-gray-500">
-          Track examiner report submissions
-          for each Viva Voce case.
-        </p>
+        <button
+          onClick={loadReports}
+          disabled={loading}
+          className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-3 font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 disabled:opacity-50"
+        >
+          <RefreshCw
+            size={18}
+            className={loading ? "animate-spin" : ""}
+          />
+
+          Refresh
+        </button>
 
       </div>
 
-      {/* SUMMARY */}
+      {/* ERROR */}
+      {error && (
+        <div className="mb-6 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
+          <AlertCircle size={20} />
 
-      <div className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-3">
+          <div>
+            <div className="font-semibold">
+              Unable to load reports
+            </div>
 
-        <div className="rounded-xl bg-white p-6 shadow-sm">
-          <p className="text-sm text-gray-500">
-            Total Cases
-          </p>
-
-          <p className="mt-2 text-3xl font-bold text-purple-700">
-            {reports.length}
-          </p>
+            <div className="text-sm">
+              {error}
+            </div>
+          </div>
         </div>
+      )}
 
-        <div className="rounded-xl bg-white p-6 shadow-sm">
+      {/* SUMMARY CARDS */}
+      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
 
-          <p className="text-sm text-gray-500">
-            Reports Received
-          </p>
+        <SummaryCard
+          title="Total Cases"
+          value={totalCases}
+          icon={<FileText size={22} />}
+        />
 
-          <p className="mt-2 text-3xl font-bold text-green-600">
-            {
-              reports.filter(
-                (row) =>
-                  getStatus(
-                    row.Internal1ReportReceived
-                  ) === "yes" ||
-                  getStatus(
-                    row.Internal2ReportReceived
-                  ) === "yes" ||
-                  getStatus(
-                    row.External1ReportReceived
-                  ) === "yes" ||
-                  getStatus(
-                    row.External2ReportReceived
-                  ) === "yes"
-              ).length
-            }
-          </p>
+        <SummaryCard
+          title="Reports Submitted"
+          value={submittedCases}
+          icon={<CheckCircle size={22} />}
+        />
 
-        </div>
+        <SummaryCard
+          title="Pending Reports"
+          value={pendingCases}
+          icon={<Clock size={22} />}
+        />
 
-        <div className="rounded-xl bg-white p-6 shadow-sm">
-
-          <p className="text-sm text-gray-500">
-            Pending Cases
-          </p>
-
-          <p className="mt-2 text-3xl font-bold text-orange-500">
-            {
-              reports.filter(
-                (row) =>
-                  getStatus(
-                    row.Internal1ReportReceived
-                  ) !== "yes" &&
-                  getStatus(
-                    row.Internal2ReportReceived
-                  ) !== "yes" &&
-                  getStatus(
-                    row.External1ReportReceived
-                  ) !== "yes" &&
-                  getStatus(
-                    row.External2ReportReceived
-                  ) !== "yes"
-              ).length
-            }
-          </p>
-
-        </div>
+        <SummaryCard
+          title="Fully Completed"
+          value={completedCases}
+          icon={<CheckCircle size={22} />}
+        />
 
       </div>
 
-      {/* REPORT TABLE */}
+      {/* TABLE */}
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
 
-      <div className="overflow-hidden rounded-xl bg-white shadow-sm">
+        <div className="border-b border-gray-200 px-6 py-5">
 
-        <div className="border-b px-6 py-5">
-
-          <h2 className="text-lg font-semibold text-gray-800">
+          <h2 className="text-xl font-bold text-gray-900">
             Examiner Report Tracking
           </h2>
 
+          <p className="mt-1 text-sm text-gray-500">
+            Monitor individual examiner report submissions.
+          </p>
+
         </div>
 
-        <div className="overflow-x-auto">
+        {loading ? (
+          <div className="flex items-center justify-center py-20 text-gray-500">
+            <RefreshCw
+              size={22}
+              className="mr-3 animate-spin"
+            />
 
-          <table className="w-full text-left">
+            Loading reports...
+          </div>
+        ) : cases.length === 0 ? (
+          <div className="py-20 text-center">
 
-            <thead className="bg-gray-50">
+            <FileText
+              size={45}
+              className="mx-auto mb-4 text-gray-300"
+            />
 
-              <tr>
+            <h3 className="font-semibold text-gray-700">
+              No Viva cases found
+            </h3>
 
-                <th className="px-6 py-4 text-sm font-semibold text-gray-600">
-                  Case ID
-                </th>
+            <p className="mt-1 text-sm text-gray-400">
+              Viva cases will appear here when available.
+            </p>
 
-                <th className="px-6 py-4 text-sm font-semibold text-gray-600">
-                  Student
-                </th>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
 
-                <th className="px-6 py-4 text-sm font-semibold text-gray-600">
-                  Internal 1
-                </th>
+            <table className="w-full min-w-[1100px]">
 
-                <th className="px-6 py-4 text-sm font-semibold text-gray-600">
-                  Internal 2
-                </th>
+              <thead className="bg-gray-50">
 
-                <th className="px-6 py-4 text-sm font-semibold text-gray-600">
-                  External 1
-                </th>
+                <tr className="border-b border-gray-200 text-left">
 
-                <th className="px-6 py-4 text-sm font-semibold text-gray-600">
-                  External 2
-                </th>
+                  <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-gray-500">
+                    Case ID
+                  </th>
 
-                <th className="px-6 py-4 text-sm font-semibold text-gray-600">
-                  Status
-                </th>
+                  <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-gray-500">
+                    Student
+                  </th>
 
-              </tr>
+                  <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-gray-500">
+                    Internal 1
+                  </th>
 
-            </thead>
+                  <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-gray-500">
+                    Internal 2
+                  </th>
 
-            <tbody className="divide-y">
+                  <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-gray-500">
+                    External 1
+                  </th>
 
-              {reports.length === 0 ? (
+                  <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-gray-500">
+                    External 2
+                  </th>
 
-                <tr>
+                  <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-gray-500">
+                    Progress
+                  </th>
 
-                  <td
-                    colSpan="7"
-                    className="px-6 py-10 text-center text-gray-500"
-                  >
-                    No Viva Voce reports found.
-                  </td>
+                  <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-gray-500">
+                    Due Date
+                  </th>
+
+                  <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-gray-500">
+                    Status
+                  </th>
 
                 </tr>
 
-              ) : (
+              </thead>
 
-                reports.map((row, index) => {
+              <tbody>
 
-                  const submitted =
-                    [
-                      row.Internal1ReportReceived,
-                      row.Internal2ReportReceived,
-                      row.External1ReportReceived,
-                      row.External2ReportReceived,
-                    ].filter(
-                      (value) =>
-                        getStatus(value) === "yes"
-                    ).length;
+                {cases.map((item, index) => {
+
+                  const progress =
+                    getProgress(item);
+
+                  const status =
+                    getStatus(item);
 
                   return (
-
                     <tr
                       key={
-                        row.CaseID ||
+                        item.CaseID ||
                         index
                       }
-                      className="hover:bg-gray-50"
+                      className="border-b border-gray-100 last:border-0 hover:bg-gray-50"
                     >
 
-                      <td className="px-6 py-4 font-semibold text-purple-700">
-                        {row.CaseID || "-"}
-                      </td>
+                      {/* CASE ID */}
+                      <td className="px-5 py-5">
 
-                      <td className="px-6 py-4">
-                        {row.StudentID || "-"}
-                      </td>
-
-                      <td className="px-6 py-4">
-
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClass(
-                            getReportStatus(
-                              row,
-                              "Internal1"
-                            )
-                          )}`}
-                        >
-                          {getReportStatus(
-                            row,
-                            "Internal1"
-                          )}
+                        <span className="font-semibold text-purple-700">
+                          {item.CaseID || "-"}
                         </span>
 
                       </td>
 
-                      <td className="px-6 py-4">
+                      {/* STUDENT */}
+                      <td className="px-5 py-5">
 
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClass(
-                            getReportStatus(
-                              row,
-                              "Internal2"
-                            )
-                          )}`}
-                        >
-                          {getReportStatus(
-                            row,
-                            "Internal2"
-                          )}
-                        </span>
+                        <div className="font-medium text-gray-800">
+                          {item.StudentID || "-"}
+                        </div>
 
                       </td>
 
-                      <td className="px-6 py-4">
+                      {/* INTERNAL 1 */}
+                      <td className="px-5 py-5">
 
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClass(
-                            getReportStatus(
-                              row,
-                              "External1"
-                            )
-                          )}`}
-                        >
-                          {getReportStatus(
-                            row,
-                            "External1"
-                          )}
-                        </span>
+                        <ReportStatus
+                          value={
+                            item.Internal1ReportReceived
+                          }
+                          date={
+                            item.Internal1ReportDate
+                          }
+                        />
 
                       </td>
 
-                      <td className="px-6 py-4">
+                      {/* INTERNAL 2 */}
+                      <td className="px-5 py-5">
 
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClass(
-                            getReportStatus(
-                              row,
-                              "External2"
-                            )
-                          )}`}
-                        >
-                          {getReportStatus(
-                            row,
-                            "External2"
-                          )}
-                        </span>
+                        <ReportStatus
+                          value={
+                            item.Internal2ReportReceived
+                          }
+                          date={
+                            item.Internal2ReportDate
+                          }
+                        />
 
                       </td>
 
-                      <td className="px-6 py-4">
+                      {/* EXTERNAL 1 */}
+                      <td className="px-5 py-5">
 
-                        <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
+                        <ReportStatus
+                          value={
+                            item.External1ReportReceived
+                          }
+                          date={
+                            item.External1ReportDate
+                          }
+                        />
 
-                          {submitted}/4 Submitted
+                      </td>
 
-                        </span>
+                      {/* EXTERNAL 2 */}
+                      <td className="px-5 py-5">
+
+                        <ReportStatus
+                          value={
+                            item.External2ReportReceived
+                          }
+                          date={
+                            item.External2ReportDate
+                          }
+                        />
+
+                      </td>
+
+                      {/* PROGRESS */}
+                      <td className="px-5 py-5">
+
+                        <div className="mb-1 text-sm font-semibold text-gray-700">
+                          {progress}/4 Submitted
+                        </div>
+
+                        <div className="h-2 w-28 overflow-hidden rounded-full bg-gray-200">
+
+                          <div
+                            className="h-full rounded-full bg-purple-600 transition-all"
+                            style={{
+                              width: `${progress * 25}%`,
+                            }}
+                          />
+
+                        </div>
+
+                      </td>
+
+                      {/* DUE DATE */}
+                      <td className="px-5 py-5 text-sm text-gray-600">
+
+                        {formatDate(
+                          item.ReportDueDate
+                        )}
+
+                      </td>
+
+                      {/* STATUS */}
+                      <td className="px-5 py-5">
+
+                        <StatusBadge
+                          status={status}
+                        />
 
                       </td>
 
                     </tr>
-
                   );
+                })}
 
-                })
+              </tbody>
 
-              )}
+            </table>
 
-            </tbody>
+          </div>
+        )}
 
-          </table>
+      </div>
 
+    </div>
+  );
+}
+
+function SummaryCard({
+  title,
+  value,
+  icon,
+}) {
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+
+      <div className="flex items-center justify-between">
+
+        <div>
+
+          <p className="text-sm font-medium text-gray-500">
+            {title}
+          </p>
+
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {value}
+          </p>
+
+        </div>
+
+        <div className="rounded-xl bg-purple-50 p-3 text-purple-600">
+          {icon}
         </div>
 
       </div>
