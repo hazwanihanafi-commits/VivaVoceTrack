@@ -7,11 +7,19 @@ import {
   sendReminderEmail,
   sendVivaSchedule,
   sendThankYouEmail,
+  getAcknowledgementData,
 } from "../controllers/emailController.js";
 
 const router = express.Router();
 
+
 router.get("/:id/preview/:type", previewEmail);
+
+router.get(
+  "/acknowledgement-data",
+  getAcknowledgementData
+);
+
 /**
  * ============================================
  * Appointment Email
