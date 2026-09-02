@@ -10,12 +10,26 @@ import Schedule from "./pages/Schedule";
 import PanelResponses from "./pages/PanelResponses";
 import Reports from "./pages/Reports";
 import Acknowledgement from "./pages/Acknowledgement";
+import PanelResponse from "./pages/PanelResponse";
 
 export default function App() {
   return (
     <Routes>
 
-      {/* ADMIN APPLICATION */}
+      {/* ==================================================
+          EXTERNAL EXAMINER RESPONSE
+          ================================================== */}
+
+      <Route
+        path="/panel-response"
+        element={<PanelResponse />}
+      />
+
+
+      {/* ==================================================
+          ADMIN APPLICATION
+          ================================================== */}
+
       <Route element={<MainLayout />}>
 
         <Route
@@ -43,21 +57,20 @@ export default function App() {
           element={<Schedule />}
         />
 
-        {/* ADMIN PANEL RESPONSES */}
         <Route
           path="/panel-responses"
           element={<PanelResponses />}
         />
 
         <Route
-  path="/reports"
-  element={<Reports />}
-/>
+          path="/reports"
+          element={<Reports />}
+        />
 
         <Route
-  path="/acknowledgement"
-  element={<Acknowledgement />}
-/>
+          path="/acknowledgement"
+          element={<Acknowledgement />}
+        />
 
       </Route>
 
