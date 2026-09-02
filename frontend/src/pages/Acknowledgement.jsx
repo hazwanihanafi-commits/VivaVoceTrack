@@ -1,716 +1,806 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
-const API = "https://vivatrack-backend.onrender.com/api";
+const API =
+  "https://vivatrack-backend.onrender.com/api";
 
 export default function Acknowledgement() {
-  const [searchParams] = useSearchParams();
 
-  const caseID = searchParams.get("caseID");
-  const examinerID = searchParams.get("examinerID");
+  const [searchParams] =
+    useSearchParams();
 
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState("");
+  const caseID =
+    searchParams.get("caseID") || "";
 
-  const [form, setForm] = useState({
-    candidateName: "",
-    school: "",
-    degree: "",
-    receivedDate: "",
-    others: "",
+  const examinerID =
+    searchParams.get("examinerID") || "";
 
-    officePhone: "",
-    mobilePhone: "",
-    email: "",
-    fax: "",
+  const [loading, setLoading] =
+    useState(true);
 
-    examinerName: "",
-    examinerID: "",
+  const [submitted, setSubmitted] =
+    useState(false);
 
-    declarationAccepted: false,
-    signature: "",
-    signatureDate: "",
-  });
+  const [error, setError] =
+    useState("");
 
-  // ======================================================
-  // LOAD ACKNOWLEDGEMENT DATA
-  // ======================================================
+  const [form, setForm] =
+    useState({
+
+      CaseID: caseID,
+
+      StudentID: "",
+
+      CandidateName: "",
+
+      School: "",
+
+      Degree: "",
+
+      DateReceived:
+        new Date()
+          .toISOString()
+          .split("T")[0],
+
+      Other: "",
+
+      ExaminerName: "",
+
+      OfficePhone: "",
+
+      MobilePhone: "",
+
+      Email: "",
+
+      Fax: "",
+
+      ConfidentialityAccepted:
+        false,
+
+      SignatureDate:
+        new Date()
+          .toISOString()
+          .split("T")[0],
+
+    });
+
+
+  // =====================================================
+  // LOAD CASE
+  // =====================================================
 
   useEffect(() => {
-    if (!caseID || !examinerID) {
-      setError(
-        "Invalid acknowledgement link. Case ID or Examiner ID is missing."
-      );
-      setLoading(false);
-      return;
-    }
 
-    loadAcknowledgement();
-  }, [caseID, examinerID]);
+    async function loadCase() {
 
-  async function loadAcknowledgement() {
-    try {
-      setLoading(true);
-      setError("");
+      if (!caseID) {
 
-      const res = await fetch(
-        `${API}/acknowledgement/${encodeURIComponent(
-          caseID
-        )}/${encodeURIComponent(examinerID)}`
-      );
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(
-          data.message ||
-            "Unable to load acknowledgement form."
+        setError(
+          "Viva Case ID is missing."
         );
-      }
 
-      const acknowledgement = data.data || {};
-
-      if (acknowledgement.alreadySubmitted) {
-        setSubmitted(true);
         setLoading(false);
+
         return;
       }
 
-      setForm({
-        candidateName:
-          acknowledgement.candidateName || "",
+      try {
 
-        school:
-          acknowledgement.school || "",
+        const res =
+          await fetch(
+            `${API}/vivacases`
+          );
 
-        degree:
-          acknowledgement.degree || "",
+        const data =
+          await res.json();
 
-        receivedDate:
-          acknowledgement.receivedDate ||
-          new Date().toISOString().split("T")[0],
+        if (!res.ok) {
 
-        others:
-          acknowledgement.others || "",
+          throw new Error(
+            "Unable to load Viva Case."
+          );
 
-        officePhone:
-          acknowledgement.officePhone || "",
+        }
 
-        mobilePhone:
-          acknowledgement.mobilePhone || "",
+        const cases =
+          Array.isArray(data.data)
+            ? data.data
+            : [];
 
-        email:
-          acknowledgement.email || "",
+        const item =
+          cases.find(
+            (x) =>
+              String(
+                x.CaseID ||
+                x.caseID ||
+                x.caseId ||
+                ""
+              ).trim() ===
+              String(caseID).trim()
+          );
 
-        fax:
-          acknowledgement.fax || "",
+        if (!item) {
 
-        examinerName:
-          acknowledgement.examinerName || "",
+          throw new Error(
+            `Viva Case ${caseID} not found.`
+          );
 
-        examinerID:
-          acknowledgement.examinerID || examinerID,
+        }
 
-        declarationAccepted: false,
+        setForm((prev) => ({
 
-        signature:
-          acknowledgement.examinerName || "",
+          ...prev,
 
-        signatureDate:
-          new Date().toISOString().split("T")[0],
-      });
+          CaseID: caseID,
 
-    } catch (err) {
-      console.error(
-        "LOAD ACKNOWLEDGEMENT ERROR:",
-        err
-      );
+          StudentID:
+            item.StudentID ||
+            item.studentID ||
+            item.studentId ||
+            "",
 
-      setError(
-        err.message ||
-          "Unable to load acknowledgement form."
-      );
-    } finally {
-      setLoading(false);
+          CandidateName:
+            item.StudentName ||
+            item.CandidateName ||
+            "",
+
+          School:
+            item.School ||
+            item.PusatPengajian ||
+            item.Centre ||
+            "",
+
+          Degree:
+            item.Degree ||
+            item.Programme ||
+            "",
+
+        }));
+
+      } catch (err) {
+
+        console.error(
+          "LOAD ACK CASE ERROR:",
+          err
+        );
+
+        setError(
+          err.message ||
+          "Unable to load case."
+        );
+
+      } finally {
+
+        setLoading(false);
+
+      }
+
     }
-  }
 
-  // ======================================================
-  // UPDATE FIELD
-  // ======================================================
+    loadCase();
+
+  }, [caseID]);
+
+
+  // =====================================================
+  // UPDATE
+  // =====================================================
 
   function updateField(e) {
-    const { name, value, type, checked } =
-      e.target;
+
+    const {
+      name,
+      value,
+      checked,
+      type
+    } = e.target;
 
     setForm((prev) => ({
+
       ...prev,
 
       [name]:
         type === "checkbox"
           ? checked
           : value,
+
     }));
+
   }
 
-  // ======================================================
+
+  // =====================================================
   // SUBMIT
-  // ======================================================
+  // =====================================================
 
   async function handleSubmit(e) {
+
     e.preventDefault();
 
-    if (!form.declarationAccepted) {
-      alert(
-        "Please confirm the confidentiality declaration before submitting."
+    setError("");
+
+    if (
+      !form.ExaminerName.trim()
+    ) {
+
+      setError(
+        "Please enter examiner name."
       );
+
       return;
     }
 
-    if (!form.signature.trim()) {
-      alert(
-        "Please enter your name as the electronic signature."
+    if (
+      !form.Email.trim()
+    ) {
+
+      setError(
+        "Please enter examiner email."
       );
+
+      return;
+    }
+
+    if (
+      !form.ConfidentialityAccepted
+    ) {
+
+      setError(
+        "Please accept the confidentiality declaration."
+      );
+
       return;
     }
 
     try {
-      setSubmitting(true);
-      setError("");
 
-      const res = await fetch(
-        `${API}/acknowledgement/${encodeURIComponent(
-          caseID
-        )}/${encodeURIComponent(examinerID)}`,
-        {
-          method: "POST",
+      setLoading(true);
 
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
+      const res =
+        await fetch(
+          `${API}/acknowledgement/submit`,
+          {
 
-          body: JSON.stringify({
-            ...form,
+            method: "POST",
 
-            caseID,
-            examinerID,
-          }),
-        }
-      );
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
 
-      const data = await res.json();
+            body:
+              JSON.stringify(
+                form
+              ),
 
-      if (!res.ok) {
+          }
+        );
+
+      const data =
+        await res.json();
+
+      if (!res.ok || !data.success) {
+
         throw new Error(
           data.message ||
-            "Unable to submit acknowledgement."
+          "Unable to submit acknowledgement."
         );
+
       }
 
       setSubmitted(true);
 
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
-
     } catch (err) {
+
       console.error(
-        "SUBMIT ACKNOWLEDGEMENT ERROR:",
+        "ACK SUBMIT ERROR:",
         err
       );
 
       setError(
         err.message ||
-          "Unable to submit acknowledgement."
+        "Unable to submit acknowledgement."
       );
+
     } finally {
-      setSubmitting(false);
+
+      setLoading(false);
+
     }
+
   }
 
-  // ======================================================
+
+  // =====================================================
   // LOADING
-  // ======================================================
+  // =====================================================
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
-        <div className="bg-white rounded-xl shadow p-8 text-center">
-          <div className="text-lg font-semibold">
-            Loading acknowledgement form...
-          </div>
 
-          <div className="text-sm text-gray-500 mt-2">
-            Please wait.
-          </div>
+    return (
+
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+
+        <div className="rounded-xl bg-white p-8 shadow">
+
+          <p className="text-gray-600">
+            Loading acknowledgement form...
+          </p>
+
         </div>
+
       </div>
+
     );
+
   }
 
-  // ======================================================
-  // ERROR
-  // ======================================================
 
-  if (error) {
+  // =====================================================
+  // ERROR
+  // =====================================================
+
+  if (error && !form.StudentID) {
+
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
-        <div className="w-full max-w-xl bg-white rounded-xl shadow p-8">
-          <h1 className="text-xl font-bold text-red-600">
-            Unable to Open Form
+
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+
+        <div className="max-w-xl rounded-xl bg-white p-8 shadow">
+
+          <h1 className="mb-3 text-xl font-bold text-red-600">
+            Unable to Load Form
           </h1>
 
-          <p className="mt-4 text-gray-700">
+          <p>
             {error}
           </p>
 
-          <p className="mt-4 text-sm text-gray-500">
-            Please contact the VivaTrack administrator
-            if you believe this link is incorrect.
-          </p>
         </div>
+
       </div>
+
     );
+
   }
 
-  // ======================================================
+
+  // =====================================================
   // SUCCESS
-  // ======================================================
+  // =====================================================
 
   if (submitted) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
-        <div className="w-full max-w-xl bg-white rounded-xl shadow-lg p-10 text-center">
 
-          <div className="text-5xl mb-5">
+    return (
+
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+
+        <div className="max-w-xl rounded-2xl bg-white p-10 text-center shadow-lg">
+
+          <div className="mb-5 text-5xl">
             ✓
           </div>
 
-          <h1 className="text-2xl font-bold text-green-700">
+          <h1 className="mb-3 text-2xl font-bold text-green-700">
+
             Acknowledgement Submitted
+
           </h1>
 
-          <p className="mt-4 text-gray-700">
-            Thank you. Your acknowledgement of
-            receipt has been successfully submitted.
+          <p className="mb-4 text-gray-600">
+
+            Thank you. Your Acknowledgement
+            of Receipt has been successfully
+            submitted.
+
           </p>
 
-          <div className="mt-6 rounded-lg bg-gray-50 p-5 text-left">
-            <div>
-              <span className="font-semibold">
-                Viva Case:
-              </span>{" "}
-              {caseID}
-            </div>
+          <div className="rounded-lg bg-gray-50 p-4">
 
-            <div className="mt-2">
-              <span className="font-semibold">
-                Examiner:
-              </span>{" "}
-              {form.examinerName}
-            </div>
+            <p className="text-sm text-gray-500">
+              Viva Case
+            </p>
 
-            <div className="mt-2">
-              <span className="font-semibold">
-                Date:
-              </span>{" "}
-              {form.signatureDate}
-            </div>
+            <p className="font-semibold">
+              {form.CaseID}
+            </p>
+
           </div>
 
           <p className="mt-6 text-sm text-gray-500">
+
             You may now close this page.
+
           </p>
 
         </div>
+
       </div>
+
     );
+
   }
 
-  // ======================================================
+
+  // =====================================================
   // FORM
-  // ======================================================
+  // =====================================================
 
   return (
-    <div className="min-h-screen bg-gray-100 py-10 px-4">
 
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gray-50 py-10 px-4">
 
-        <div className="bg-white shadow-lg rounded-xl overflow-hidden">
+      <div className="mx-auto max-w-4xl">
 
-          {/* ==================================================
-              HEADER
-          ================================================== */}
+        <div className="mb-6 rounded-xl bg-white p-8 shadow">
 
-          <div className="p-8 border-b">
+          <div className="mb-8 text-center">
 
-            <div className="text-center">
+            <h1 className="text-2xl font-bold">
 
-              <h1 className="text-xl font-bold uppercase">
-                PENGESAHAN PENERIMAAN TESIS
-              </h1>
+              PENGESAHAN PENERIMAAN TESIS
 
-              <p className="mt-2 text-sm text-gray-500">
-                VivaTrack – Universiti Sains Malaysia
-              </p>
+            </h1>
+
+            <p className="mt-2 text-sm text-gray-500">
+
+              Acknowledgement of Receipt
+
+            </p>
+
+            <p className="mt-2 text-sm font-semibold">
+
+              Viva Case: {form.CaseID}
+
+            </p>
+
+          </div>
+
+
+          {/* ADDRESS */}
+
+          <div className="mb-8 leading-relaxed">
+
+            <p className="font-bold">
+              Kepada:
+            </p>
+
+            <p>
+              Pengarah<br />
+              Pusat Kanser Tun Abdullah Ahmad Badawi<br />
+              (Sebelum ini Institut Perubatan dan Pergigian Termaju)<br />
+              Universiti Sains Malaysia<br />
+              13200 Kepala Batas<br />
+              Pulau Pinang
+            </p>
+
+            <p className="mt-3">
+              E-mel: anissyamimi@usm.my
+            </p>
+
+          </div>
+
+
+          <div className="mb-8 leading-relaxed">
+
+            <p className="font-bold">
+              Daripada:
+            </p>
+
+            <p>
+              Dr. Rohayu Hami<br />
+              Pusat Kanser Tun Abdullah Ahmad Badawi<br />
+              Universiti Sains Malaysia<br />
+              13200 Kepala Batas<br />
+              Pulau Pinang
+            </p>
+
+          </div>
+
+
+          {/* ERROR */}
+
+          {error && (
+
+            <div className="mb-6 rounded-lg bg-red-50 p-4 text-red-700">
+
+              {error}
+
+            </div>
+
+          )}
+
+
+          {/* CANDIDATE */}
+
+          <h2 className="mb-4 text-lg font-bold">
+            Maklumat Tesis
+          </h2>
+
+          <div className="grid gap-4 md:grid-cols-2">
+
+            <div>
+
+              <label className="block text-sm font-medium">
+                Nama Calon
+              </label>
+
+              <input
+                value={
+                  form.CandidateName
+                }
+                readOnly
+                className="mt-1 w-full rounded border bg-gray-100 p-3"
+              />
+
+            </div>
+
+
+            <div>
+
+              <label className="block text-sm font-medium">
+                Pusat Pengajian
+              </label>
+
+              <input
+                value={
+                  form.School
+                }
+                onChange={updateField}
+                name="School"
+                className="mt-1 w-full rounded border p-3"
+              />
+
+            </div>
+
+
+            <div>
+
+              <label className="block text-sm font-medium">
+                Ijazah
+              </label>
+
+              <input
+                value={
+                  form.Degree
+                }
+                onChange={updateField}
+                name="Degree"
+                className="mt-1 w-full rounded border p-3"
+              />
+
+            </div>
+
+
+            <div>
+
+              <label className="block text-sm font-medium">
+                Tarikh Terima
+              </label>
+
+              <input
+                type="date"
+                value={
+                  form.DateReceived
+                }
+                onChange={updateField}
+                name="DateReceived"
+                className="mt-1 w-full rounded border p-3"
+              />
 
             </div>
 
           </div>
 
-          <form onSubmit={handleSubmit}>
 
-            <div className="p-8 space-y-8">
+          {/* OTHER */}
 
-              {/* ==================================================
-                  KEPADA
-              ================================================== */}
+          <div className="mt-4">
 
-              <section>
+            <label className="block text-sm font-medium">
+              Lain-lain
+            </label>
 
-                <h2 className="font-bold mb-3">
-                  Kepada:
-                </h2>
+            <textarea
+              name="Other"
+              value={
+                form.Other
+              }
+              onChange={updateField}
+              rows="3"
+              className="mt-1 w-full rounded border p-3"
+            />
 
-                <div className="text-sm leading-6">
-                  <div>Pengarah</div>
-                  <div>
-                    Pusat Kanser Tun Abdullah Ahmad Badawi
-                  </div>
-                  <div>
-                    (Sebelum ini Institut Perubatan dan
-                    Pergigian Termaju)
-                  </div>
-                  <div>
-                    Universiti Sains Malaysia
-                  </div>
-                  <div>13200 Kepala Batas</div>
-                  <div>Pulau Pinang</div>
-                  <div className="mt-2">
-                    E-mel: anissyamimi@usm.my
-                  </div>
-                </div>
+          </div>
 
-              </section>
 
-              {/* ==================================================
-                  DARIPADA
-              ================================================== */}
+          {/* EXAMINER */}
 
-              <section>
+          <h2 className="mb-4 mt-10 text-lg font-bold">
+            Maklumat Pemeriksa
+          </h2>
 
-                <h2 className="font-bold mb-3">
-                  Daripada:
-                </h2>
+          <div className="grid gap-4 md:grid-cols-2">
 
-                <div className="text-sm leading-6">
-                  <div>Dr. Rohayu Hami</div>
-                  <div>
-                    Pusat Kanser Tun Abdullah Ahmad Badawi
-                  </div>
-                  <div>
-                    Universiti Sains Malaysia
-                  </div>
-                  <div>13200 Kepala Batas</div>
-                  <div>Pulau Pinang</div>
-                </div>
+            <div>
 
-              </section>
+              <label className="block text-sm font-medium">
+                Nama Pemeriksa
+              </label>
 
-              {/* ==================================================
-                  INTRO
-              ================================================== */}
-
-              <section>
-
-                <p className="text-sm leading-7">
-                  Saya mengesahkan penerimaan tesis
-                  seperti berikut :-
-                </p>
-
-              </section>
-
-              {/* ==================================================
-                  CANDIDATE INFORMATION
-              ================================================== */}
-
-              <section className="space-y-5">
-
-                <div>
-                  <label className="block font-semibold mb-2">
-                    Nama Calon
-                  </label>
-
-                  <input
-                    type="text"
-                    name="candidateName"
-                    value={form.candidateName}
-                    onChange={updateField}
-                    readOnly
-                    className="w-full rounded-lg border bg-gray-50 px-4 py-3"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-semibold mb-2">
-                    Pusat Pengajian
-                  </label>
-
-                  <input
-                    type="text"
-                    name="school"
-                    value={form.school}
-                    onChange={updateField}
-                    readOnly
-                    className="w-full rounded-lg border bg-gray-50 px-4 py-3"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-semibold mb-2">
-                    Ijazah
-                  </label>
-
-                  <input
-                    type="text"
-                    name="degree"
-                    value={form.degree}
-                    onChange={updateField}
-                    readOnly
-                    className="w-full rounded-lg border bg-gray-50 px-4 py-3"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-semibold mb-2">
-                    Tarikh Terima
-                  </label>
-
-                  <input
-                    type="date"
-                    name="receivedDate"
-                    value={form.receivedDate}
-                    onChange={updateField}
-                    className="w-full rounded-lg border px-4 py-3"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-semibold mb-2">
-                    Lain-lain
-                  </label>
-
-                  <textarea
-                    name="others"
-                    value={form.others}
-                    onChange={updateField}
-                    rows="3"
-                    className="w-full rounded-lg border px-4 py-3"
-                  />
-                </div>
-
-              </section>
-
-              {/* ==================================================
-                  EXAMINER
-              ================================================== */}
-
-              <section>
-
-                <h2 className="text-lg font-bold mb-5">
-                  Maklumat Pemeriksa
-                </h2>
-
-                <div className="space-y-5">
-
-                  <div>
-                    <label className="block font-semibold mb-2">
-                      Nama Pemeriksa
-                    </label>
-
-                    <input
-                      type="text"
-                      value={form.examinerName}
-                      readOnly
-                      className="w-full rounded-lg border bg-gray-50 px-4 py-3"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-semibold mb-2">
-                      Tel. No. (Pejabat)
-                    </label>
-
-                    <input
-                      type="text"
-                      name="officePhone"
-                      value={form.officePhone}
-                      onChange={updateField}
-                      className="w-full rounded-lg border px-4 py-3"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-semibold mb-2">
-                      H/P No.
-                    </label>
-
-                    <input
-                      type="text"
-                      name="mobilePhone"
-                      value={form.mobilePhone}
-                      onChange={updateField}
-                      className="w-full rounded-lg border px-4 py-3"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-semibold mb-2">
-                      Alamat Emel
-                    </label>
-
-                    <input
-                      type="email"
-                      name="email"
-                      value={form.email}
-                      onChange={updateField}
-                      className="w-full rounded-lg border px-4 py-3"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-semibold mb-2">
-                      No. Fax
-                    </label>
-
-                    <input
-                      type="text"
-                      name="fax"
-                      value={form.fax}
-                      onChange={updateField}
-                      className="w-full rounded-lg border px-4 py-3"
-                    />
-                  </div>
-
-                </div>
-
-              </section>
-
-              {/* ==================================================
-                  DECLARATION
-              ================================================== */}
-
-              <section className="rounded-lg bg-gray-50 border p-6">
-
-                <p className="text-sm leading-7">
-                  Saya seperti nama di atas membuat
-                  perakuan untuk menjaga kerahsiaan
-                  kandungan tesis berdasarkan polisi
-                  Universiti Sains Malaysia iaitu tesis
-                  adalah hak milik pelajar.
-                </p>
-
-                <label className="flex items-start gap-3 mt-6 cursor-pointer">
-
-                  <input
-                    type="checkbox"
-                    name="declarationAccepted"
-                    checked={
-                      form.declarationAccepted
-                    }
-                    onChange={updateField}
-                    className="mt-1 h-5 w-5"
-                  />
-
-                  <span className="text-sm font-medium">
-                    Saya bersetuju dengan perakuan
-                    kerahsiaan di atas.
-                  </span>
-
-                </label>
-
-              </section>
-
-              {/* ==================================================
-                  SIGNATURE
-              ================================================== */}
-
-              <section>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                  <div>
-
-                    <label className="block font-semibold mb-2">
-                      Tandatangan / Nama Digital
-                    </label>
-
-                    <input
-                      type="text"
-                      name="signature"
-                      value={form.signature}
-                      onChange={updateField}
-                      placeholder="Masukkan nama penuh"
-                      className="w-full rounded-lg border px-4 py-3"
-                    />
-
-                    <p className="text-xs text-gray-500 mt-2">
-                      Nama ini akan direkodkan sebagai
-                      tandatangan elektronik.
-                    </p>
-
-                  </div>
-
-                  <div>
-
-                    <label className="block font-semibold mb-2">
-                      Tarikh
-                    </label>
-
-                    <input
-                      type="date"
-                      name="signatureDate"
-                      value={form.signatureDate}
-                      onChange={updateField}
-                      className="w-full rounded-lg border px-4 py-3"
-                    />
-
-                  </div>
-
-                </div>
-
-              </section>
-
-              {/* ==================================================
-                  SUBMIT
-              ================================================== */}
-
-              <section className="pt-4 border-t">
-
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full rounded-lg bg-blue-600 px-6 py-4 text-white font-semibold hover:bg-blue-700 disabled:opacity-50"
-                >
-                  {submitting
-                    ? "Submitting..."
-                    : "Submit Acknowledgement"}
-                </button>
-
-              </section>
+              <input
+                name="ExaminerName"
+                value={
+                  form.ExaminerName
+                }
+                onChange={updateField}
+                required
+                className="mt-1 w-full rounded border p-3"
+              />
 
             </div>
 
-          </form>
+
+            <div>
+
+              <label className="block text-sm font-medium">
+                Tel. No. (Pejabat)
+              </label>
+
+              <input
+                name="OfficePhone"
+                value={
+                  form.OfficePhone
+                }
+                onChange={updateField}
+                className="mt-1 w-full rounded border p-3"
+              />
+
+            </div>
+
+
+            <div>
+
+              <label className="block text-sm font-medium">
+                H/P No.
+              </label>
+
+              <input
+                name="MobilePhone"
+                value={
+                  form.MobilePhone
+                }
+                onChange={updateField}
+                className="mt-1 w-full rounded border p-3"
+              />
+
+            </div>
+
+
+            <div>
+
+              <label className="block text-sm font-medium">
+                Alamat Emel
+              </label>
+
+              <input
+                type="email"
+                name="Email"
+                value={
+                  form.Email
+                }
+                onChange={updateField}
+                required
+                className="mt-1 w-full rounded border p-3"
+              />
+
+            </div>
+
+
+            <div>
+
+              <label className="block text-sm font-medium">
+                No. Fax
+              </label>
+
+              <input
+                name="Fax"
+                value={
+                  form.Fax
+                }
+                onChange={updateField}
+                className="mt-1 w-full rounded border p-3"
+              />
+
+            </div>
+
+          </div>
+
+
+          {/* DECLARATION */}
+
+          <div className="mt-10 rounded-lg border bg-gray-50 p-5">
+
+            <p className="leading-relaxed">
+
+              Saya seperti nama di atas membuat
+              perakuan untuk menjaga kerahsiaan
+              kandungan tesis berdasarkan polisi
+              Universiti Sains Malaysia iaitu tesis
+              adalah hak milik pelajar.
+
+            </p>
+
+            <label className="mt-5 flex gap-3">
+
+              <input
+                type="checkbox"
+                name="ConfidentialityAccepted"
+                checked={
+                  form.ConfidentialityAccepted
+                }
+                onChange={updateField}
+                className="mt-1 h-5 w-5"
+              />
+
+              <span className="font-medium">
+
+                Saya mengesahkan dan bersetuju
+                dengan perakuan kerahsiaan di atas.
+
+              </span>
+
+            </label>
+
+          </div>
+
+
+          {/* SIGNATURE DATE */}
+
+          <div className="mt-6 max-w-sm">
+
+            <label className="block text-sm font-medium">
+              Tarikh
+            </label>
+
+            <input
+              type="date"
+              name="SignatureDate"
+              value={
+                form.SignatureDate
+              }
+              onChange={updateField}
+              className="mt-1 w-full rounded border p-3"
+            />
+
+          </div>
+
+
+          {/* SUBMIT */}
+
+          <div className="mt-10 flex justify-end">
+
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={loading}
+              className="rounded-lg bg-purple-600 px-8 py-3 font-semibold text-white hover:bg-purple-700 disabled:opacity-50"
+            >
+
+              {loading
+                ? "Submitting..."
+                : "Submit Acknowledgement"}
+
+            </button>
+
+          </div>
 
         </div>
 
       </div>
 
     </div>
+
   );
+
 }
