@@ -19,6 +19,7 @@ export default function VivaCaseForm({
   handleStudent,
   updateField,
   saveDraft,
+  createDriveFolder,
   sendAppointment,
   sendThesis,
   sendReminder,
@@ -91,7 +92,7 @@ export default function VivaCaseForm({
                 Select Student
               </option>
 
-              {students.map((student) => (
+              {(students || []).map((student) => (
 
                 <option
                   key={student.StudentID}
@@ -327,79 +328,81 @@ export default function VivaCaseForm({
           </div>
 
 
-          {form.internalExaminers.map(
-            (examinerId, index) => (
+          {(
+            form.internalExaminers?.length
+              ? form.internalExaminers
+              : [""]
+          ).map((examinerId, index) => (
 
-              <div
-                key={index}
-                className="mb-3 flex gap-2"
+            <div
+              key={index}
+              className="mb-3 flex gap-2"
+            >
+
+              <select
+                value={examinerId}
+                onChange={(e) =>
+                  updateField({
+                    target: {
+                      name: "internalExaminer",
+                      value: e.target.value,
+                      index,
+                    },
+                  })
+                }
+                className="flex-1 rounded-xl border p-3"
               >
 
-                <select
-                  value={examinerId}
-                  onChange={(e) =>
+                <option value="">
+                  Select Internal Examiner
+                </option>
+
+                {(examiners || []).map(
+                  (examiner) => (
+
+                    <option
+                      key={
+                        examiner.ExaminerID
+                      }
+                      value={
+                        examiner.ExaminerID
+                      }
+                    >
+                      {
+                        examiner.ExaminerName
+                      }
+                    </option>
+
+                  )
+                )}
+
+              </select>
+
+
+              {index > 0 && (
+
+                <button
+                  type="button"
+                  onClick={() =>
                     updateField({
                       target: {
-                        name: "internalExaminer",
-                        value: e.target.value,
+                        name: "removeInternal",
                         index,
                       },
                     })
                   }
-                  className="flex-1 rounded-xl border p-3"
+                  className="rounded-lg bg-red-500 p-3 text-white hover:bg-red-600"
                 >
 
-                  <option value="">
-                    Select Internal Examiner
-                  </option>
+                  <Trash2 size={18} />
 
-                  {examiners.map(
-                    (examiner) => (
+                </button>
 
-                      <option
-                        key={
-                          examiner.ExaminerID
-                        }
-                        value={
-                          examiner.ExaminerID
-                        }
-                      >
-                        {
-                          examiner.ExaminerName
-                        }
-                      </option>
+              )}
 
-                    )
-                  )}
+            </div>
 
-                </select>
-
-
-                {index > 0 && (
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      updateField({
-                        target: {
-                          name: "removeInternal",
-                          index,
-                        },
-                      })
-                    }
-                    className="rounded-lg bg-red-500 p-3 text-white hover:bg-red-600"
-                  >
-
-                    <Trash2 size={18} />
-
-                  </button>
-
-                )}
-
-              </div>
-
-            )
-          )}
+          ))}
 
         </div>
 
@@ -437,119 +440,164 @@ export default function VivaCaseForm({
           </div>
 
 
-          {form.externalExaminers.map(
-            (examinerId, index) => (
+          {(
+            form.externalExaminers?.length
+              ? form.externalExaminers
+              : [""]
+          ).map((examinerId, index) => (
 
-              <div
-                key={index}
-                className="mb-3 flex gap-2"
+            <div
+              key={index}
+              className="mb-3 flex gap-2"
+            >
+
+              <select
+                value={examinerId}
+                onChange={(e) =>
+                  updateField({
+                    target: {
+                      name: "externalExaminer",
+                      value: e.target.value,
+                      index,
+                    },
+                  })
+                }
+                className="flex-1 rounded-xl border p-3"
               >
 
-                <select
-                  value={examinerId}
-                  onChange={(e) =>
+                <option value="">
+                  Select External Examiner
+                </option>
+
+                {(examiners || []).map(
+                  (examiner) => (
+
+                    <option
+                      key={
+                        examiner.ExaminerID
+                      }
+                      value={
+                        examiner.ExaminerID
+                      }
+                    >
+                      {
+                        examiner.ExaminerName
+                      }
+                    </option>
+
+                  )
+                )}
+
+              </select>
+
+
+              {index > 0 && (
+
+                <button
+                  type="button"
+                  onClick={() =>
                     updateField({
                       target: {
-                        name: "externalExaminer",
-                        value: e.target.value,
+                        name: "removeExternal",
                         index,
                       },
                     })
                   }
-                  className="flex-1 rounded-xl border p-3"
+                  className="rounded-lg bg-red-500 p-3 text-white hover:bg-red-600"
                 >
 
-                  <option value="">
-                    Select External Examiner
-                  </option>
+                  <Trash2 size={18} />
 
-                  {examiners.map(
-                    (examiner) => (
+                </button>
 
-                      <option
-                        key={
-                          examiner.ExaminerID
-                        }
-                        value={
-                          examiner.ExaminerID
-                        }
-                      >
-                        {
-                          examiner.ExaminerName
-                        }
-                      </option>
+              )}
 
-                    )
-                  )}
+            </div>
 
-                </select>
-
-
-                {index > 0 && (
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      updateField({
-                        target: {
-                          name: "removeExternal",
-                          index,
-                        },
-                      })
-                    }
-                    className="rounded-lg bg-red-500 p-3 text-white hover:bg-red-600"
-                  >
-
-                    <Trash2 size={18} />
-
-                  </button>
-
-                )}
-
-              </div>
-
-            )
-          )}
+          ))}
 
         </div>
 
 
         {/* ===================================================
-            DOCUMENTS
+            GOOGLE DRIVE DOCUMENTS
         =================================================== */}
 
-        <div>
+        <div className="md:col-span-2">
 
           <label className="mb-2 block font-medium">
-            Thesis Documents
+            Thesis & Supporting Documents
           </label>
 
           <p className="mt-1 text-xs text-gray-500">
-            Paste the Google Drive folder link shared with
-            the examiners.
+            Create a dedicated Google Drive folder for this
+            Viva Case. The folder link will be saved automatically.
           </p>
 
-          <div className="relative mt-2">
 
-            <Link
-              size={18}
-              className="absolute left-3 top-3 text-gray-400"
-            />
+          {/* =================================================
+              DRIVE LINK + CREATE FOLDER
+          ================================================= */}
 
-            <input
-              type="url"
-              name="driveLink"
-              value={form.driveLink}
-              onChange={updateField}
-              placeholder="https://drive.google.com/drive/folders/..."
-              required
-              className="w-full rounded-xl border p-3 pl-10"
-            />
+          <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+
+            {/* DRIVE LINK */}
+
+            <div className="relative flex-1">
+
+              <Link
+                size={18}
+                className="absolute left-3 top-3 text-gray-400"
+              />
+
+              <input
+                type="text"
+                value={
+                  form.driveLink || ""
+                }
+                readOnly
+                placeholder="Google Drive folder will appear here"
+                className="w-full rounded-xl border bg-gray-50 p-3 pl-10"
+              />
+
+            </div>
+
+
+            {/* CREATE FOLDER */}
+
+            <button
+              type="button"
+              onClick={createDriveFolder}
+              disabled={!selectedCase?.CaseID}
+              className="flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 py-3 font-medium text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+            >
+
+              📁 Create Folder
+
+            </button>
 
           </div>
 
 
-          <div className="mt-3 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
+          {/* =================================================
+              SAVE FIRST MESSAGE
+          ================================================= */}
+
+          {!selectedCase?.CaseID && (
+
+            <p className="mt-2 text-xs text-orange-600">
+              Please save the Viva Case first before creating
+              the Google Drive folder.
+            </p>
+
+          )}
+
+
+          {/* =================================================
+              FOLDER CONTENT
+          ================================================= */}
+
+          <div className="mt-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
 
             <p className="mb-2 font-medium">
               The folder should contain:
@@ -573,14 +621,26 @@ export default function VivaCaseForm({
                 Supplementary Documents
               </li>
 
+              <li>
+                Examiner's Report
+              </li>
+
+              <li>
+                Annotated Thesis
+              </li>
+
             </ul>
 
           </div>
 
 
+          {/* =================================================
+              OPEN / COPY LINK
+          ================================================= */}
+
           {form.driveLink && (
 
-            <div className="mt-3 flex gap-2">
+            <div className="mt-4 flex flex-wrap gap-2">
 
               <a
                 href={form.driveLink}
@@ -598,11 +658,32 @@ export default function VivaCaseForm({
 
               <button
                 type="button"
-                onClick={() =>
-                  navigator.clipboard.writeText(
-                    form.driveLink
-                  )
-                }
+                onClick={async () => {
+
+                  try {
+
+                    await navigator.clipboard.writeText(
+                      form.driveLink
+                    );
+
+                    alert(
+                      "Google Drive link copied."
+                    );
+
+                  } catch (err) {
+
+                    console.error(
+                      "COPY LINK ERROR:",
+                      err
+                    );
+
+                    alert(
+                      "Unable to copy the link."
+                    );
+
+                  }
+
+                }}
                 className="flex items-center gap-2 rounded-lg border px-4 py-2 hover:bg-gray-100"
               >
 
@@ -639,7 +720,9 @@ export default function VivaCaseForm({
             <input
               type="date"
               name="receivedDate"
-              value={form.receivedDate}
+              value={
+                form.receivedDate || ""
+              }
               onChange={updateField}
               className="w-full rounded-xl border p-3 pl-10"
             />
@@ -669,7 +752,9 @@ export default function VivaCaseForm({
             <input
               type="date"
               name="dueDate"
-              value={form.dueDate}
+              value={
+                form.dueDate || ""
+              }
               onChange={updateField}
               className="w-full rounded-xl border p-3 pl-10"
             />
@@ -694,7 +779,9 @@ export default function VivaCaseForm({
         <input
           type="text"
           name="emailSubject"
-          value={form.emailSubject}
+          value={
+            form.emailSubject || ""
+          }
           onChange={updateField}
           className="mb-5 w-full rounded-xl border p-3"
         />
@@ -711,7 +798,9 @@ export default function VivaCaseForm({
         <input
           type="checkbox"
           name="reminder"
-          checked={form.reminder}
+          checked={
+            form.reminder ?? true
+          }
           onChange={updateField}
         />
 
@@ -728,7 +817,10 @@ export default function VivaCaseForm({
 
       <div className="mt-8 flex flex-wrap gap-3">
 
-        {/* SAVE */}
+
+        {/* =================================================
+            SAVE
+        ================================================= */}
 
         <button
           type="button"
@@ -745,7 +837,9 @@ export default function VivaCaseForm({
         </button>
 
 
-        {/* APPOINTMENT */}
+        {/* =================================================
+            APPOINTMENT
+        ================================================= */}
 
         <button
           type="button"
@@ -756,11 +850,15 @@ export default function VivaCaseForm({
           }
           className="rounded-xl bg-indigo-600 px-5 py-3 text-white hover:bg-indigo-700"
         >
+
           👁 Preview Appointment
+
         </button>
 
 
-        {/* THESIS */}
+        {/* =================================================
+            THESIS
+        ================================================= */}
 
         <button
           type="button"
@@ -771,11 +869,15 @@ export default function VivaCaseForm({
           }
           className="rounded-xl bg-purple-600 px-5 py-3 text-white hover:bg-purple-700"
         >
+
           👁 Preview Thesis
+
         </button>
 
 
-        {/* REMINDER */}
+        {/* =================================================
+            REMINDER
+        ================================================= */}
 
         <button
           type="button"
@@ -786,11 +888,15 @@ export default function VivaCaseForm({
           }
           className="rounded-xl bg-orange-500 px-5 py-3 text-white hover:bg-orange-600"
         >
+
           👁 Preview Reminder
+
         </button>
 
 
-        {/* SCHEDULE */}
+        {/* =================================================
+            SCHEDULE
+        ================================================= */}
 
         <button
           type="button"
@@ -801,11 +907,15 @@ export default function VivaCaseForm({
           }
           className="rounded-xl bg-green-600 px-5 py-3 text-white hover:bg-green-700"
         >
+
           👁 Preview Schedule
+
         </button>
 
 
-        {/* THANK YOU */}
+        {/* =================================================
+            THANK YOU
+        ================================================= */}
 
         <button
           type="button"
@@ -816,7 +926,9 @@ export default function VivaCaseForm({
           }
           className="rounded-xl bg-slate-600 px-5 py-3 text-white hover:bg-slate-700"
         >
+
           👁 Preview Thank You
+
         </button>
 
       </div>
