@@ -696,98 +696,67 @@ export default function VivaCases() {
   ====================================================== */
 
   async function deleteCase(caseID) {
+  const id = String(caseID || "").trim();
 
-  const cleanCaseID =
-    String(caseID || "").trim();
+  console.log("DELETE CASE ID:", id);
 
-  console.log(
-    "========================================"
-  );
-
-  console.log(
-    "DELETE VIVA CASE"
-  );
-
-  console.log(
-    "Case ID received:",
-    cleanCaseID
-  );
-
-  console.log(
-    "Delete URL:",
-    `${API}/vivacases/${encodeURIComponent(cleanCaseID)}`
-  );
-
-  console.log(
-    "========================================"
-  );
-
-  if (!cleanCaseID) {
-
-    alert(
-      "Cannot delete Viva Case because Case ID is missing."
-    );
-
+  if (!id) {
+    alert("Case ID is missing.");
     return;
   }
 
   const ok = window.confirm(
-    `Are you sure you want to delete Viva Case ${cleanCaseID}?`
+    `Are you sure you want to delete ${id}?`
   );
 
   if (!ok) return;
 
   try {
+    const url = `${API}/vivacases/${encodeURIComponent(id)}`;
 
-    const res = await fetch(
-      `${API}/vivacases/${encodeURIComponent(cleanCaseID)}`,
-      {
-        method: "DELETE",
-      }
-    );
+    console.log("DELETE URL:", url);
+
+    const res = await fetch(url, {
+      method: "DELETE",
+    });
 
     const data = await res.json();
 
-    console.log(
-      "DELETE RESPONSE:",
-      data
-    );
+    console.log("DELETE RESPONSE:", data);
 
     if (!res.ok) {
-
-      alert(
-        data.message ||
-        "Unable to delete case."
-      );
-
+      alert(data.message || "Unable to delete case.");
       return;
     }
 
-    alert(
-      `Viva Case ${cleanCaseID} deleted successfully.`
-    );
+    alert(`Viva Case ${id} deleted successfully.`);
 
-    // Refresh table
+    // refresh table
     await loadCases();
 
-    // Clear selected case
+    // clear form
     setSelectedCase(null);
-
     setSelectedStudent(null);
 
+    setForm({
+      studentId: "",
+      chairpersonId: "",
+      secretaryId: "",
+      internalExaminers: [""],
+      externalExaminers: [""],
+      driveLink: "",
+      receivedDate: "",
+      dueDate: "",
+      emailSubject: "",
+      reminder: true,
+    });
+
   } catch (err) {
+    console.error("DELETE CASE ERROR:", err);
 
-    console.error(
-      "DELETE CASE ERROR:",
-      err
-    );
-
-    alert(
-      "Server connection failed."
-    );
+    alert("Server connection failed.");
   }
 }
-
 
   /* ======================================================
      SAVE DRAFT
