@@ -9,10 +9,10 @@ import {
 
 const router = express.Router();
 
+
 /**
  * ======================================================
  * GET ALL PANEL RESPONSES
- *
  * GET /api/panel
  * ======================================================
  */
@@ -25,7 +25,6 @@ router.get(
 /**
  * ======================================================
  * GET ALL PANEL MEMBERS FOR ONE VIVA
- *
  * GET /api/panel/viva/:vivaID
  * ======================================================
  */
@@ -37,8 +36,7 @@ router.get(
 
 /**
  * ======================================================
- * GET INDIVIDUAL PANEL MEMBER
- *
+ * GET INDIVIDUAL PANEL
  * GET /api/panel/:panelID
  * ======================================================
  */
@@ -51,7 +49,6 @@ router.get(
 /**
  * ======================================================
  * SUBMIT PANEL RESPONSE
- *
  * POST /api/panel/:panelID/respond
  * ======================================================
  */
@@ -59,5 +56,6 @@ router.post(
   "/:panelID/respond",
   respondToPanelInvitation
 );
+
 
 export default router;
