@@ -88,32 +88,192 @@ export default function VivaCases() {
      LOAD STUDENTS
   ====================================================== */
 
-  async function loadStudents() {
+  // ======================================================
+// LOAD VIVA CASES
+// ======================================================
 
-    try {
+async function loadCases() {
+  try {
+    const res = await fetch(`${API}/vivacases`);
 
-      const res =
-        await fetch(`${API}/students`);
+    const data = await res.json();
 
-      const data =
-        await res.json();
+    console.log("=================================");
+    console.log("VIVA CASES API RESPONSE:", data);
+    console.log("=================================");
 
-      setStudents(
-        data.data || []
-      );
-
-    } catch (err) {
-
-      console.error(
-        "LOAD STUDENTS ERROR:",
-        err
-      );
-
+    if (!res.ok) {
+      console.error("LOAD CASES ERROR:", data);
+      setCases([]);
+      return;
     }
 
+    const rawCases = Array.isArray(data.data)
+      ? data.data
+      : [];
+
+    console.log("RAW VIVA CASES:", rawCases);
+
+    // ==================================================
+    // NORMALISE OBJECT KEYS
+    // ==================================================
+
+    const normalizedCases = rawCases.map((item) => {
+
+      // Get all keys
+      const keys = Object.keys(item || {});
+
+      // Find CaseID regardless of capitalisation / spacing
+      const caseIDKey = keys.find((key) => {
+        const clean = String(key)
+          .replace(/[\s_-]/g, "")
+          .toLowerCase();
+
+        return (
+          clean === "caseid" ||
+          clean === "caseno" ||
+          clean === "casenumber"
+        );
+      });
+
+      const studentIDKey = keys.find((key) => {
+        const clean = String(key)
+          .replace(/[\s_-]/g, "")
+          .toLowerCase();
+
+        return clean === "studentid";
+      });
+
+      const internal1Key = keys.find((key) => {
+        const clean = String(key)
+          .replace(/[\s_-]/g, "")
+          .toLowerCase();
+
+        return clean === "internalexaminer1id";
+      });
+
+      const internal2Key = keys.find((key) => {
+        const clean = String(key)
+          .replace(/[\s_-]/g, "")
+          .toLowerCase();
+
+        return clean === "internalexaminer2id";
+      });
+
+      const external1Key = keys.find((key) => {
+        const clean = String(key)
+          .replace(/[\s_-]/g, "")
+          .toLowerCase();
+
+        return clean === "externalexaminer1id";
+      });
+
+      const external2Key = keys.find((key) => {
+        const clean = String(key)
+          .replace(/[\s_-]/g, "")
+          .toLowerCase();
+
+        return clean === "externalexaminer2id";
+      });
+
+      const dueDateKey = keys.find((key) => {
+        const clean = String(key)
+          .replace(/[\s_-]/g, "")
+          .toLowerCase();
+
+        return clean === "reportduedate";
+      });
+
+      const statusKey = keys.find((key) => {
+        const clean = String(key)
+          .replace(/[\s_-]/g, "")
+          .toLowerCase();
+
+        return clean === "currentstatus";
+      });
+
+      // ==================================================
+      // ACTUAL CASE ID
+      // ==================================================
+
+      const caseID = caseIDKey
+        ? String(item[caseIDKey] || "").trim()
+        : "";
+
+      console.log(
+        "CASE:",
+        caseID,
+        "ORIGINAL KEY:",
+        caseIDKey
+      );
+
+      return {
+        ...item,
+
+        CaseID: caseID,
+
+        StudentID: studentIDKey
+          ? item[studentIDKey] || ""
+          : "",
+
+        InternalExaminer1ID: internal1Key
+          ? item[internal1Key] || ""
+          : "",
+
+        InternalExaminer2ID: internal2Key
+          ? item[internal2Key] || ""
+          : "",
+
+        ExternalExaminer1ID: external1Key
+          ? item[external1Key] || ""
+          : "",
+
+        ExternalExaminer2ID: external2Key
+          ? item[external2Key] || ""
+          : "",
+
+        ReportDueDate: dueDateKey
+          ? item[dueDateKey] || ""
+          : "",
+
+        CurrentStatus: statusKey
+          ? item[statusKey] || ""
+          : "",
+      };
+    });
+
+    console.log(
+      "================================="
+    );
+
+    console.log(
+      "NORMALIZED VIVA CASES:",
+      normalizedCases
+    );
+
+    console.log(
+      "CASE IDS:",
+      normalizedCases.map(
+        (x) => x.CaseID
+      )
+    );
+
+    console.log(
+      "================================="
+    );
+
+    setCases(normalizedCases);
+
+  } catch (err) {
+
+    console.error(
+      "LOAD CASES ERROR:",
+      err
+    );
+
+    setCases([]);
   }
-
-
+}
   /* ======================================================
      LOAD EXAMINERS
   ====================================================== */
