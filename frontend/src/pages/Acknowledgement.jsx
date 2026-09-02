@@ -5,9 +5,7 @@ const API =
   "https://vivatrack-backend.onrender.com/api";
 
 export default function Acknowledgement() {
-
-  const [searchParams] =
-    useSearchParams();
+  const [searchParams] = useSearchParams();
 
   const caseID =
     searchParams.get("caseID") || "";
@@ -24,57 +22,54 @@ export default function Acknowledgement() {
   const [error, setError] =
     useState("");
 
-  const [form, setForm] =
-    useState({
+  const [form, setForm] = useState({
+    CaseID: caseID,
 
-      CaseID: caseID,
+    StudentID: "",
 
-      StudentID: "",
+    CandidateName: "",
 
-      CandidateName: "",
+    School: "",
 
-      School: "",
+    Degree: "",
 
-      Degree: "",
+    DateReceived:
+      new Date()
+        .toISOString()
+        .split("T")[0],
 
-      DateReceived:
-        new Date()
-          .toISOString()
-          .split("T")[0],
+    Other: "",
 
-      Other: "",
+    ExaminerID: "",
 
-      ExaminerName: "",
+    ExaminerName: "",
 
-      OfficePhone: "",
+    ExaminerAddress: "",
 
-      MobilePhone: "",
+    OfficePhone: "",
 
-      Email: "",
+    MobilePhone: "",
 
-      Fax: "",
+    Email: "",
 
-      ConfidentialityAccepted:
-        false,
+    Fax: "",
 
-      SignatureDate:
-        new Date()
-          .toISOString()
-          .split("T")[0],
+    ConfidentialityAccepted:
+      false,
 
-    });
-
+    SignatureDate:
+      new Date()
+        .toISOString()
+        .split("T")[0],
+  });
 
   // =====================================================
-  // LOAD CASE
+  // LOAD CASE + STUDENT + EXAMINER
   // =====================================================
 
   useEffect(() => {
-
-    async function loadCase() {
-
+    async function loadAcknowledgementData() {
       if (!caseID) {
-
         setError(
           "Viva Case ID is missing."
         );
@@ -84,167 +79,162 @@ export default function Acknowledgement() {
         return;
       }
 
+      if (!examinerID) {
+        setError(
+          "Examiner ID is missing. Please use the acknowledgement link provided in the email."
+        );
+
+        setLoading(false);
+
+        return;
+      }
+
       try {
+        const url =
+          `${API}/emails/acknowledgement-data` +
+          `?caseID=${encodeURIComponent(caseID)}` +
+          `&examinerID=${encodeURIComponent(examinerID)}`;
+
+        console.log(
+          "Loading acknowledgement:",
+          url
+        );
 
         const res =
-          await fetch(
-            `${API}/vivacases`
-          );
+          await fetch(url);
 
         const data =
           await res.json();
 
-        if (!res.ok) {
-
+        if (!res.ok || !data.success) {
           throw new Error(
-            "Unable to load Viva Case."
+            data.message ||
+              "Unable to load acknowledgement data."
           );
-
         }
 
-        const cases =
-          Array.isArray(data.data)
-            ? data.data
-            : [];
-
-        const item =
-          cases.find(
-            (x) =>
-              String(
-                x.CaseID ||
-                x.caseID ||
-                x.caseId ||
-                ""
-              ).trim() ===
-              String(caseID).trim()
-          );
-
-        if (!item) {
-
-          throw new Error(
-            `Viva Case ${caseID} not found.`
-          );
-
-        }
+        // =================================================
+        // AUTO POPULATE FORM
+        // =================================================
 
         setForm((prev) => ({
-
           ...prev,
 
-          CaseID: caseID,
+          CaseID:
+            data.case?.CaseID ||
+            caseID,
 
           StudentID:
-            item.StudentID ||
-            item.studentID ||
-            item.studentId ||
+            data.student?.StudentID ||
             "",
 
           CandidateName:
-            item.StudentName ||
-            item.CandidateName ||
+            data.student?.StudentName ||
             "",
 
           School:
-            item.School ||
-            item.PusatPengajian ||
-            item.Centre ||
+            data.student?.School ||
             "",
 
           Degree:
-            item.Degree ||
-            item.Programme ||
+            data.student?.Degree ||
+            data.student?.Programme ||
             "",
 
+          ExaminerID:
+            data.examiner?.ExaminerID ||
+            examinerID,
+
+          ExaminerName:
+            data.examiner?.ExaminerName ||
+            "",
+
+          ExaminerAddress:
+            data.examiner?.Address ||
+            "",
+
+          OfficePhone:
+            data.examiner?.OfficePhone ||
+            "",
+
+          MobilePhone:
+            data.examiner?.MobilePhone ||
+            "",
+
+          Email:
+            data.examiner?.Email ||
+            "",
+
+          Fax:
+            data.examiner?.Fax ||
+            "",
         }));
-
       } catch (err) {
-
         console.error(
-          "LOAD ACK CASE ERROR:",
+          "LOAD ACKNOWLEDGEMENT ERROR:",
           err
         );
 
         setError(
           err.message ||
-          "Unable to load case."
+            "Unable to load acknowledgement data."
         );
-
       } finally {
-
         setLoading(false);
-
       }
-
     }
 
-    loadCase();
-
-  }, [caseID]);
-
+    loadAcknowledgementData();
+  }, [caseID, examinerID]);
 
   // =====================================================
-  // UPDATE
+  // UPDATE FIELD
   // =====================================================
 
   function updateField(e) {
-
     const {
       name,
       value,
       checked,
-      type
+      type,
     } = e.target;
 
     setForm((prev) => ({
-
       ...prev,
 
       [name]:
         type === "checkbox"
           ? checked
           : value,
-
     }));
-
   }
-
 
   // =====================================================
   // SUBMIT
   // =====================================================
 
   async function handleSubmit(e) {
-
     e.preventDefault();
 
     setError("");
 
-    if (
-      !form.ExaminerName.trim()
-    ) {
-
+    if (!form.ExaminerName.trim()) {
       setError(
-        "Please enter examiner name."
+        "Examiner information could not be loaded."
       );
 
       return;
     }
 
-    if (
-      !form.Email.trim()
-    ) {
-
+    if (!form.Email.trim()) {
       setError(
-        "Please enter examiner email."
+        "Examiner email could not be loaded."
       );
 
       return;
     }
 
-    if (
-      !form.ConfidentialityAccepted
-    ) {
-
+    if (!form.ConfidentialityAccepted) {
       setError(
         "Please accept the confidentiality declaration."
       );
@@ -253,14 +243,12 @@ export default function Acknowledgement() {
     }
 
     try {
-
       setLoading(true);
 
       const res =
         await fetch(
           `${API}/acknowledgement/submit`,
           {
-
             method: "POST",
 
             headers: {
@@ -269,29 +257,25 @@ export default function Acknowledgement() {
             },
 
             body:
-              JSON.stringify(
-                form
-              ),
-
+              JSON.stringify(form),
           }
         );
 
       const data =
         await res.json();
 
-      if (!res.ok || !data.success) {
-
+      if (
+        !res.ok ||
+        !data.success
+      ) {
         throw new Error(
           data.message ||
-          "Unable to submit acknowledgement."
+            "Unable to submit acknowledgement."
         );
-
       }
 
       setSubmitted(true);
-
     } catch (err) {
-
       console.error(
         "ACK SUBMIT ERROR:",
         err
@@ -299,80 +283,66 @@ export default function Acknowledgement() {
 
       setError(
         err.message ||
-        "Unable to submit acknowledgement."
+          "Unable to submit acknowledgement."
       );
-
     } finally {
-
       setLoading(false);
-
     }
-
   }
-
 
   // =====================================================
   // LOADING
   // =====================================================
 
   if (loading) {
-
     return (
-
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-
         <div className="rounded-xl bg-white p-8 shadow">
-
           <p className="text-gray-600">
             Loading acknowledgement form...
           </p>
-
         </div>
-
       </div>
-
     );
-
   }
 
-
   // =====================================================
-  // ERROR
+  // ERROR WHEN DATA CANNOT LOAD
   // =====================================================
 
-  if (error && !form.StudentID) {
-
+  if (
+    error &&
+    !form.StudentID
+  ) {
     return (
-
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-
         <div className="max-w-xl rounded-xl bg-white p-8 shadow">
 
           <h1 className="mb-3 text-xl font-bold text-red-600">
             Unable to Load Form
           </h1>
 
-          <p>
+          <p className="text-gray-700">
             {error}
           </p>
 
+          <p className="mt-4 text-sm text-gray-500">
+            Please use the acknowledgement
+            link provided in your thesis
+            examination email.
+          </p>
+
         </div>
-
       </div>
-
     );
-
   }
-
 
   // =====================================================
   // SUCCESS
   // =====================================================
 
   if (submitted) {
-
     return (
-
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
 
         <div className="max-w-xl rounded-2xl bg-white p-10 text-center shadow-lg">
@@ -382,17 +352,13 @@ export default function Acknowledgement() {
           </div>
 
           <h1 className="mb-3 text-2xl font-bold text-green-700">
-
             Acknowledgement Submitted
-
           </h1>
 
           <p className="mb-4 text-gray-600">
-
             Thank you. Your Acknowledgement
             of Receipt has been successfully
             submitted.
-
           </p>
 
           <div className="rounded-lg bg-gray-50 p-4">
@@ -408,56 +374,49 @@ export default function Acknowledgement() {
           </div>
 
           <p className="mt-6 text-sm text-gray-500">
-
             You may now close this page.
-
           </p>
 
         </div>
 
       </div>
-
     );
-
   }
-
 
   // =====================================================
   // FORM
   // =====================================================
 
   return (
-
     <div className="min-h-screen bg-gray-50 py-10 px-4">
 
       <div className="mx-auto max-w-4xl">
 
         <div className="mb-6 rounded-xl bg-white p-8 shadow">
 
+          {/* ===========================================
+              TITLE
+          =========================================== */}
+
           <div className="mb-8 text-center">
 
             <h1 className="text-2xl font-bold">
-
               PENGESAHAN PENERIMAAN TESIS
-
             </h1>
 
             <p className="mt-2 text-sm text-gray-500">
-
               Acknowledgement of Receipt
-
             </p>
 
             <p className="mt-2 text-sm font-semibold">
-
               Viva Case: {form.CaseID}
-
             </p>
 
           </div>
 
-
-          {/* ADDRESS */}
+          {/* ===========================================
+              TO
+          =========================================== */}
 
           <div className="mb-8 leading-relaxed">
 
@@ -466,11 +425,17 @@ export default function Acknowledgement() {
             </p>
 
             <p>
-              Pengarah<br />
-              Pusat Kanser Tun Abdullah Ahmad Badawi<br />
-              (Sebelum ini Institut Perubatan dan Pergigian Termaju)<br />
-              Universiti Sains Malaysia<br />
-              13200 Kepala Batas<br />
+              Pengarah
+              <br />
+              Pusat Kanser Tun Abdullah Ahmad Badawi
+              <br />
+              (Sebelum ini Institut Perubatan dan
+              Pergigian Termaju)
+              <br />
+              Universiti Sains Malaysia
+              <br />
+              13200 Kepala Batas
+              <br />
               Pulau Pinang
             </p>
 
@@ -480,6 +445,9 @@ export default function Acknowledgement() {
 
           </div>
 
+          {/* ===========================================
+              FROM — EXAMINER
+          =========================================== */}
 
           <div className="mb-8 leading-relaxed">
 
@@ -487,37 +455,73 @@ export default function Acknowledgement() {
               Daripada:
             </p>
 
-            <p>
-              Dr. Rohayu Hami<br />
-              Pusat Kanser Tun Abdullah Ahmad Badawi<br />
-              Universiti Sains Malaysia<br />
-              13200 Kepala Batas<br />
-              Pulau Pinang
+            <p className="mt-2">
+
+              {form.ExaminerName ? (
+                <>
+                  <strong>
+                    {form.ExaminerName}
+                  </strong>
+
+                  <br />
+
+                  {form.ExaminerAddress
+                    ? form.ExaminerAddress
+                        .split("\n")
+                        .map(
+                          (
+                            line,
+                            index
+                          ) => (
+                            <span
+                              key={index}
+                            >
+                              {line}
+                              <br />
+                            </span>
+                          )
+                        )
+                    : (
+                      <>
+                        __________________________________
+                        <br />
+                        __________________________________
+                      </>
+                    )}
+                </>
+              ) : (
+                <>
+                  __________________________________
+                  <br />
+                  __________________________________
+                </>
+              )}
+
             </p>
 
           </div>
 
-
-          {/* ERROR */}
+          {/* ===========================================
+              ERROR
+          =========================================== */}
 
           {error && (
-
             <div className="mb-6 rounded-lg bg-red-50 p-4 text-red-700">
-
               {error}
-
             </div>
-
           )}
 
-
-          {/* CANDIDATE */}
+          {/* ===========================================
+              THESIS INFORMATION
+          =========================================== */}
 
           <h2 className="mb-4 text-lg font-bold">
             Maklumat Tesis
           </h2>
 
           <div className="grid gap-4 md:grid-cols-2">
+
+            {/* CANDIDATE NAME */}
 
             <div>
 
@@ -535,6 +539,7 @@ export default function Acknowledgement() {
 
             </div>
 
+            {/* SCHOOL */}
 
             <div>
 
@@ -546,13 +551,13 @@ export default function Acknowledgement() {
                 value={
                   form.School
                 }
-                onChange={updateField}
-                name="School"
-                className="mt-1 w-full rounded border p-3"
+                readOnly
+                className="mt-1 w-full rounded border bg-gray-100 p-3"
               />
 
             </div>
 
+            {/* DEGREE */}
 
             <div>
 
@@ -564,13 +569,13 @@ export default function Acknowledgement() {
                 value={
                   form.Degree
                 }
-                onChange={updateField}
-                name="Degree"
-                className="mt-1 w-full rounded border p-3"
+                readOnly
+                className="mt-1 w-full rounded border bg-gray-100 p-3"
               />
 
             </div>
 
+            {/* DATE RECEIVED */}
 
             <div>
 
@@ -583,7 +588,9 @@ export default function Acknowledgement() {
                 value={
                   form.DateReceived
                 }
-                onChange={updateField}
+                onChange={
+                  updateField
+                }
                 name="DateReceived"
                 className="mt-1 w-full rounded border p-3"
               />
@@ -592,8 +599,9 @@ export default function Acknowledgement() {
 
           </div>
 
-
-          {/* OTHER */}
+          {/* ===========================================
+              OTHER
+          =========================================== */}
 
           <div className="mt-4">
 
@@ -606,21 +614,26 @@ export default function Acknowledgement() {
               value={
                 form.Other
               }
-              onChange={updateField}
+              onChange={
+                updateField
+              }
               rows="3"
               className="mt-1 w-full rounded border p-3"
             />
 
           </div>
 
-
-          {/* EXAMINER */}
+          {/* ===========================================
+              EXAMINER INFORMATION
+          =========================================== */}
 
           <h2 className="mb-4 mt-10 text-lg font-bold">
             Maklumat Pemeriksa
           </h2>
 
           <div className="grid gap-4 md:grid-cols-2">
+
+            {/* NAME */}
 
             <div>
 
@@ -633,13 +646,13 @@ export default function Acknowledgement() {
                 value={
                   form.ExaminerName
                 }
-                onChange={updateField}
-                required
-                className="mt-1 w-full rounded border p-3"
+                readOnly
+                className="mt-1 w-full rounded border bg-gray-100 p-3"
               />
 
             </div>
 
+            {/* OFFICE PHONE */}
 
             <div>
 
@@ -652,12 +665,15 @@ export default function Acknowledgement() {
                 value={
                   form.OfficePhone
                 }
-                onChange={updateField}
+                onChange={
+                  updateField
+                }
                 className="mt-1 w-full rounded border p-3"
               />
 
             </div>
 
+            {/* MOBILE */}
 
             <div>
 
@@ -670,12 +686,15 @@ export default function Acknowledgement() {
                 value={
                   form.MobilePhone
                 }
-                onChange={updateField}
+                onChange={
+                  updateField
+                }
                 className="mt-1 w-full rounded border p-3"
               />
 
             </div>
 
+            {/* EMAIL */}
 
             <div>
 
@@ -689,13 +708,13 @@ export default function Acknowledgement() {
                 value={
                   form.Email
                 }
-                onChange={updateField}
-                required
-                className="mt-1 w-full rounded border p-3"
+                readOnly
+                className="mt-1 w-full rounded border bg-gray-100 p-3"
               />
 
             </div>
 
+            {/* FAX */}
 
             <div>
 
@@ -708,7 +727,9 @@ export default function Acknowledgement() {
                 value={
                   form.Fax
                 }
-                onChange={updateField}
+                onChange={
+                  updateField
+                }
                 className="mt-1 w-full rounded border p-3"
               />
 
@@ -716,8 +737,9 @@ export default function Acknowledgement() {
 
           </div>
 
-
-          {/* DECLARATION */}
+          {/* ===========================================
+              CONFIDENTIALITY
+          =========================================== */}
 
           <div className="mt-10 rounded-lg border bg-gray-50 p-5">
 
@@ -739,7 +761,9 @@ export default function Acknowledgement() {
                 checked={
                   form.ConfidentialityAccepted
                 }
-                onChange={updateField}
+                onChange={
+                  updateField
+                }
                 className="mt-1 h-5 w-5"
               />
 
@@ -754,8 +778,9 @@ export default function Acknowledgement() {
 
           </div>
 
-
-          {/* SIGNATURE DATE */}
+          {/* ===========================================
+              SIGNATURE DATE
+          =========================================== */}
 
           <div className="mt-6 max-w-sm">
 
@@ -769,20 +794,25 @@ export default function Acknowledgement() {
               value={
                 form.SignatureDate
               }
-              onChange={updateField}
+              onChange={
+                updateField
+              }
               className="mt-1 w-full rounded border p-3"
             />
 
           </div>
 
-
-          {/* SUBMIT */}
+          {/* ===========================================
+              SUBMIT
+          =========================================== */}
 
           <div className="mt-10 flex justify-end">
 
             <button
               type="button"
-              onClick={handleSubmit}
+              onClick={
+                handleSubmit
+              }
               disabled={loading}
               className="rounded-lg bg-purple-600 px-8 py-3 font-semibold text-white hover:bg-purple-700 disabled:opacity-50"
             >
@@ -800,7 +830,5 @@ export default function Acknowledgement() {
       </div>
 
     </div>
-
   );
-
 }
