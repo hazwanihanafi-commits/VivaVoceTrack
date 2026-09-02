@@ -128,11 +128,15 @@ export const createSchedule = async (req, res, next) => {
   }
 };
 
-
 /**
  * ======================================================
  * GET ONE SCHEDULE
  * GET /api/schedule/:id
+ *
+ * Returns:
+ * - VivaCases schedule information
+ * - Panel response deadline
+ * - Panel response records
  * ======================================================
  */
 export const getSchedule = async (
@@ -141,10 +145,25 @@ export const getSchedule = async (
   next
 ) => {
   try {
+    const caseID = String(
+      req.params.id || ""
+    ).trim();
+
+    if (!caseID) {
+      return res.status(400).json({
+        success: false,
+        message: "Case ID is required.",
+      });
+    }
+
+    // ==================================================
+    // GET VIVA CASE
+    // ==================================================
+
     const viva = await findRow(
       SHEET,
       "CaseID",
-      req.params.id
+      caseID
     );
 
     if (!viva) {
@@ -154,9 +173,46 @@ export const getSchedule = async (
       });
     }
 
-    res.json({
+    // ==================================================
+    // GET PANEL RECORDS
+    // ==================================================
+
+    const panelRows = await getRows("Panel");
+
+    const panel = panelRows.filter(
+      (row) =>
+        String(row.VivaID || "").trim() ===
+        caseID
+    );
+
+    // ==================================================
+    // RESPONSE DEADLINE
+    // ==================================================
+
+    const responseDeadline =
+      panel.find(
+        (row) =>
+          String(
+            row.ResponseDeadline || ""
+          ).trim() !== ""
+      )?.ResponseDeadline || "";
+
+    // ==================================================
+    // RETURN COMBINED DATA
+    // ==================================================
+
+    return res.json({
       success: true,
-      data: viva,
+
+      data: {
+        ...viva,
+
+        ResponseDeadline:
+          responseDeadline,
+
+        PanelResponses:
+          panel,
+      },
     });
 
   } catch (err) {
@@ -168,7 +224,6 @@ export const getSchedule = async (
     next(err);
   }
 };
-
 
 /**
  * ======================================================
