@@ -274,6 +274,39 @@ async function loadCases() {
     setCases([]);
   }
 }
+
+  // ======================================================
+// LOAD STUDENTS
+// ======================================================
+
+async function loadStudents() {
+  try {
+    const res = await fetch(`${API}/students`);
+    const data = await res.json();
+
+    console.log("STUDENTS API RESPONSE:", data);
+
+    if (!res.ok) {
+      console.error("LOAD STUDENTS ERROR:", data);
+      setStudents([]);
+      return;
+    }
+
+    setStudents(
+      Array.isArray(data.data)
+        ? data.data
+        : []
+    );
+
+  } catch (err) {
+    console.error(
+      "LOAD STUDENTS ERROR:",
+      err
+    );
+
+    setStudents([]);
+  }
+}
   /* ======================================================
      LOAD EXAMINERS
   ====================================================== */
