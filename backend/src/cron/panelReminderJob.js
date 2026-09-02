@@ -33,7 +33,7 @@ const STAFF_SHEET = "Staff";
  * ======================================================
  */
 
-cron.schedule("0 8 * * *", async () => {
+cron.schedule("* * * * *", async () => {
 
   console.log("Running Panel Response Reminder Job...");
 
