@@ -9,6 +9,7 @@ import Examiners from "./pages/Examiners";
 import Schedule from "./pages/Schedule";
 import PanelResponses from "./pages/PanelResponses";
 import Reports from "./pages/Reports";
+import Acknowledgement from "./pages/Acknowledgement";
 
 export default function App() {
   return (
@@ -51,6 +52,11 @@ export default function App() {
         <Route
   path="/reports"
   element={<Reports />}
+/>
+
+        <Route
+  path="/acknowledgement"
+  element={<Acknowledgement />}
 />
 
       </Route>
