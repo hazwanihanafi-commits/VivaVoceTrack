@@ -426,25 +426,25 @@ export default function VivaCaseTable({
 
                         </button>
 
-                        {/* DELETE */}
-
                         <button
-                          type="button"
-                          onClick={() =>
-                            handleDelete(item)
-                          }
-                          disabled={!caseID}
-                          className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-gray-400"
-                        >
+  type="button"
+  onClick={() => {
+    console.log("DELETE CLICKED");
+    console.log("FULL ITEM:", item);
+    console.log("CASE ID:", item?.CaseID);
 
-                          <Trash2
-                            size={16}
-                          />
+    if (!item?.CaseID) {
+      alert("Case ID tidak dijumpai dalam data table.");
+      return;
+    }
 
-                          Delete
-
-                        </button>
-
+    onDelete(item.CaseID);
+  }}
+  className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
+>
+  <Trash2 size={16} />
+  Delete
+</button>
                       </div>
 
                     </td>
