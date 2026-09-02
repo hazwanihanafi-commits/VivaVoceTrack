@@ -23,10 +23,15 @@ const API =
   import.meta.env.VITE_API_URL ||
   "https://vivatrack-backend.onrender.com";
 
+/* ======================================================
+   EMPTY FORM
+====================================================== */
+
 const emptyForm = {
   caseID: "",
   TentativeVivaDate: "",
   ConfirmedVivaDate: "",
+  ResponseDeadline: "",
   VivaTime: "",
   Venue: "",
   VivaMode: "Physical",
@@ -34,6 +39,10 @@ const emptyForm = {
   Chairperson: "",
   Secretary: "",
 };
+
+/* ======================================================
+   STATUS CLASS
+====================================================== */
 
 function statusClass(status) {
   const map = {
@@ -47,6 +56,10 @@ function statusClass(status) {
 
   return map[status] || "bg-gray-100 text-gray-600";
 }
+
+/* ======================================================
+   DISPLAY DATE
+====================================================== */
 
 function displayDate(value) {
   if (!value) return "—";
@@ -64,6 +77,10 @@ function displayDate(value) {
   });
 }
 
+/* ======================================================
+   DATE INPUT
+====================================================== */
+
 function dateInput(value) {
   if (!value) return "";
 
@@ -75,6 +92,10 @@ function dateInput(value) {
 
   return date.toISOString().slice(0, 10);
 }
+
+/* ======================================================
+   FORMAT DATE TIME
+====================================================== */
 
 function formatDateTime(value) {
   if (!value) return "—";
@@ -94,9 +115,15 @@ function formatDateTime(value) {
   });
 }
 
+/* ======================================================
+   MAIN COMPONENT
+====================================================== */
+
 export default function Schedule() {
   const [searchParams] = useSearchParams();
-  const requestedCaseID = searchParams.get("caseID");
+
+  const requestedCaseID =
+    searchParams.get("caseID");
 
   const [cases, setCases] = useState([]);
   const [students, setStudents] = useState([]);
@@ -111,32 +138,64 @@ export default function Schedule() {
   const [error, setError] = useState("");
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [responseModalOpen, setResponseModalOpen] = useState(false);
 
-  const [form, setForm] = useState(emptyForm);
+  const [responseModalOpen, setResponseModalOpen] =
+    useState(false);
 
-  const [selectedCase, setSelectedCase] = useState(null);
-  const [panelResponses, setPanelResponses] = useState([]);
-  const [loadingResponses, setLoadingResponses] = useState(false);
+  const [form, setForm] =
+    useState(emptyForm);
 
-  const [selectedPanel, setSelectedPanel] = useState(null);
-  const [previewOpen, setPreviewOpen] = useState(false);
+  const [selectedCase, setSelectedCase] =
+    useState(null);
+
+  const [panelResponses, setPanelResponses] =
+    useState([]);
+
+  const [loadingResponses, setLoadingResponses] =
+    useState(false);
+
+  const [selectedPanel, setSelectedPanel] =
+    useState(null);
+
+  const [previewOpen, setPreviewOpen] =
+    useState(false);
+
+  /* ====================================================
+     LOAD
+  ==================================================== */
 
   useEffect(() => {
     loadAll();
   }, [requestedCaseID]);
 
-  async function getJson(url, options) {
-    const res = await fetch(url, options);
+  /* ====================================================
+     GET JSON
+  ==================================================== */
 
-    const data = await res.json().catch(() => ({}));
+  async function getJson(url, options) {
+    const res = await fetch(
+      url,
+      options
+    );
+
+    const data =
+      await res.json().catch(
+        () => ({})
+      );
 
     if (!res.ok) {
-      throw new Error(data.message || "Request failed.");
+      throw new Error(
+        data.message ||
+          "Request failed."
+      );
     }
 
     return data;
   }
+
+  /* ====================================================
+     LOAD ALL DATA
+  ==================================================== */
 
   async function loadAll() {
     try {
@@ -149,44 +208,67 @@ export default function Schedule() {
         examinerData,
         staffData,
       ] = await Promise.all([
-        getJson(`${API}/api/schedule`),
-        getJson(`${API}/api/students`),
-        getJson(`${API}/api/examiners`),
-        getJson(`${API}/api/staff`),
+        getJson(
+          `${API}/api/schedule`
+        ),
+        getJson(
+          `${API}/api/students`
+        ),
+        getJson(
+          `${API}/api/examiners`
+        ),
+        getJson(
+          `${API}/api/staff`
+        ),
       ]);
 
       setCases(
-        Array.isArray(scheduleData.data)
+        Array.isArray(
+          scheduleData.data
+        )
           ? scheduleData.data
           : []
       );
 
       setStudents(
-        Array.isArray(studentData.data)
+        Array.isArray(
+          studentData.data
+        )
           ? studentData.data
           : []
       );
 
       setExaminers(
-        Array.isArray(examinerData.data)
+        Array.isArray(
+          examinerData.data
+        )
           ? examinerData.data
           : []
       );
 
       setStaff(
-        Array.isArray(staffData.data)
+        Array.isArray(
+          staffData.data
+        )
           ? staffData.data
           : []
       );
 
+      /* ================================================
+         OPEN REQUESTED CASE
+      ================================================= */
+
       if (requestedCaseID) {
         try {
-          const caseData = await getJson(
-            `${API}/api/schedule/${requestedCaseID}`
-          );
+          const caseData =
+            await getJson(
+              `${API}/api/schedule/${requestedCaseID}`
+            );
 
           if (caseData?.data) {
-            openCreate(caseData.data);
+            openCreate(
+              caseData.data
+            );
           }
         } catch (err) {
           console.error(
@@ -196,7 +278,10 @@ export default function Schedule() {
         }
       }
     } catch (err) {
-      console.error("LOAD SCHEDULE ERROR:", err);
+      console.error(
+        "LOAD SCHEDULE ERROR:",
+        err
+      );
 
       setError(
         err.message ||
@@ -207,10 +292,17 @@ export default function Schedule() {
     }
   }
 
+  /* ====================================================
+     MAPS
+  ==================================================== */
+
   const studentMap = useMemo(
     () =>
       Object.fromEntries(
-        students.map((s) => [s.StudentID, s])
+        students.map((s) => [
+          s.StudentID,
+          s,
+        ])
       ),
     [students]
   );
@@ -218,7 +310,10 @@ export default function Schedule() {
   const examinerMap = useMemo(
     () =>
       Object.fromEntries(
-        examiners.map((e) => [e.ExaminerID, e])
+        examiners.map((e) => [
+          e.ExaminerID,
+          e,
+        ])
       ),
     [examiners]
   );
@@ -226,59 +321,102 @@ export default function Schedule() {
   const staffMap = useMemo(
     () =>
       Object.fromEntries(
-        staff.map((s) => [s.StaffID, s])
+        staff.map((s) => [
+          s.StaffID,
+          s,
+        ])
       ),
     [staff]
   );
 
+  /* ====================================================
+     STUDENT NAME
+  ==================================================== */
+
   function studentName(item) {
     return (
-      studentMap[item.StudentID]?.StudentName ||
+      studentMap[item.StudentID]
+        ?.StudentName ||
       item.StudentID ||
       "Unknown student"
     );
   }
 
+  /* ====================================================
+     EXAMINER NAME
+  ==================================================== */
+
   function examinerName(value) {
     if (!value) return "—";
 
     return (
-      examinerMap[value]?.ExaminerName ||
+      examinerMap[value]
+        ?.ExaminerName ||
       value
     );
   }
+
+  /* ====================================================
+     STAFF NAME
+  ==================================================== */
 
   function staffName(value) {
     if (!value) return "—";
 
     return (
-      staffMap[value]?.StaffName ||
+      staffMap[value]
+        ?.StaffName ||
       value
     );
   }
 
+  /* ====================================================
+     OPEN CREATE / EDIT
+  ==================================================== */
+
   function openCreate(item = null) {
     if (!item) {
-      setForm({ ...emptyForm });
+      setForm({
+        ...emptyForm,
+      });
+
       setModalOpen(true);
+
       return;
     }
 
     setForm({
-      caseID: item.CaseID || "",
+      caseID:
+        item.CaseID || "",
 
       TentativeVivaDate:
-        dateInput(item.TentativeVivaDate),
+        dateInput(
+          item.TentativeVivaDate
+        ),
 
       ConfirmedVivaDate:
-        dateInput(item.ConfirmedVivaDate),
+        dateInput(
+          item.ConfirmedVivaDate
+        ),
 
-      VivaTime: item.VivaTime || "",
+      /* ==============================================
+         RESPONSE DEADLINE
+      ============================================== */
 
-      Venue: item.Venue || "",
+      ResponseDeadline:
+        dateInput(
+          item.ResponseDeadline
+        ),
+
+      VivaTime:
+        item.VivaTime || "",
+
+      Venue:
+        item.Venue || "",
 
       VivaMode:
-        item.VivaMode || "Physical",
+        item.VivaMode ||
+        "Physical",
 
       MeetingLink:
         item.MeetingLink || "",
@@ -297,8 +435,15 @@ export default function Schedule() {
     setModalOpen(true);
   }
 
+  /* ====================================================
+     UPDATE FORM FIELD
+  ==================================================== */
+
   function updateField(event) {
-    const { name, value } = event.target;
+    const {
+      name,
+      value,
+    } = event.target;
 
     setForm((prev) => ({
       ...prev,
@@ -306,11 +451,18 @@ export default function Schedule() {
     }));
   }
 
+  /* ====================================================
+     SAVE SCHEDULE
+  ==================================================== */
+
   async function saveSchedule(event) {
     event.preventDefault();
 
     if (!form.caseID) {
-      alert("Please select a Viva Case.");
+      alert(
+        "Please select a Viva Case."
+      );
+
       return;
     }
 
@@ -318,17 +470,22 @@ export default function Schedule() {
       !form.TentativeVivaDate &&
       !form.ConfirmedVivaDate
     ) {
-      alert("Please select a Viva date.");
+      alert(
+        "Please select a Viva date."
+      );
+
       return;
     }
 
     try {
       setSaving(true);
 
-      const existing = cases.find(
-        (item) =>
-          item.CaseID === form.caseID
-      );
+      const existing =
+        cases.find(
+          (item) =>
+            item.CaseID ===
+            form.caseID
+        );
 
       const hasExistingSchedule =
         existing?.TentativeVivaDate ||
@@ -336,13 +493,26 @@ export default function Schedule() {
         existing?.VivaTime ||
         existing?.Venue;
 
+      /* ==============================================
+         PAYLOAD
+      ============================================== */
+
       const payload = {
         TentativeVivaDate:
-          form.TentativeVivaDate || "",
+          form.TentativeVivaDate ||
+          "",
 
         ConfirmedVivaDate:
           form.ConfirmedVivaDate ||
           form.TentativeVivaDate ||
+          "",
+
+        /* ============================================
+           RESPONSE DEADLINE
+        ============================================ */
+
+        ResponseDeadline:
+          form.ResponseDeadline ||
           "",
 
         VivaTime:
@@ -352,16 +522,20 @@ export default function Schedule() {
           form.Venue || "",
 
         VivaMode:
-          form.VivaMode || "Physical",
+          form.VivaMode ||
+          "Physical",
 
         MeetingLink:
-          form.MeetingLink || "",
+          form.MeetingLink ||
+          "",
 
         ChairpersonID:
-          form.Chairperson || "",
+          form.Chairperson ||
+          "",
 
         SecretaryID:
-          form.Secretary || "",
+          form.Secretary ||
+          "",
 
         CurrentStatus:
           "Scheduled",
@@ -376,11 +550,15 @@ export default function Schedule() {
         `${API}/api/schedule/${form.caseID}`,
         {
           method,
+
           headers: {
             "Content-Type":
               "application/json",
           },
-          body: JSON.stringify(payload),
+
+          body: JSON.stringify(
+            payload
+          ),
         }
       );
 
@@ -406,39 +584,35 @@ export default function Schedule() {
     }
   }
 
-  /*
-   * ==========================================
-   * LOAD PANEL RESPONSES
-   * ==========================================
-   */
+  /* ====================================================
+     LOAD PANEL RESPONSES
+  ==================================================== */
 
-  async function openPanelResponses(item) {
+  async function openPanelResponses(
+    item
+  ) {
     try {
       setSelectedCase(item);
+
       setResponseModalOpen(true);
+
       setLoadingResponses(true);
+
       setPanelResponses([]);
+
       setSelectedPanel(null);
 
-      /*
-       * IMPORTANT:
-       *
-       * This assumes your backend supports:
-       *
-       * GET /api/panel/viva/:caseID
-       *
-       * If your backend uses another endpoint,
-       * change ONLY this URL.
-       */
-
-      const result = await getJson(
-        `${API}/api/panel/viva/${encodeURIComponent(
-          item.CaseID
-        )}`
-      );
+      const result =
+        await getJson(
+          `${API}/api/panel/viva/${encodeURIComponent(
+            item.CaseID
+          )}`
+        );
 
       setPanelResponses(
-        Array.isArray(result.data)
+        Array.isArray(
+          result.data
+        )
           ? result.data
           : []
       );
@@ -457,11 +631,9 @@ export default function Schedule() {
     }
   }
 
-  /*
-   * ==========================================
-   * PANEL RESPONSE STATUS
-   * ==========================================
-   */
+  /* ====================================================
+     RESPONSE VALUE
+  ==================================================== */
 
   function responseValue(panel) {
     const value =
@@ -475,8 +647,13 @@ export default function Schedule() {
       .toLowerCase();
   }
 
+  /* ====================================================
+     RESPONSE LABEL
+  ==================================================== */
+
   function responseLabel(panel) {
-    const value = responseValue(panel);
+    const value =
+      responseValue(panel);
 
     if (
       value === "yes" ||
@@ -504,10 +681,17 @@ export default function Schedule() {
     return "Pending";
   }
 
-  function responseIcon(panel) {
-    const status = responseLabel(panel);
+  /* ====================================================
+     RESPONSE ICON
+  ==================================================== */
 
-    if (status === "Accepted") {
+  function responseIcon(panel) {
+    const status =
+      responseLabel(panel);
+
+    if (
+      status === "Accepted"
+    ) {
       return (
         <CheckCircle2
           size={18}
@@ -516,7 +700,9 @@ export default function Schedule() {
       );
     }
 
-    if (status === "Unable") {
+    if (
+      status === "Unable"
+    ) {
       return (
         <XCircle
           size={18}
@@ -525,7 +711,9 @@ export default function Schedule() {
       );
     }
 
-    if (status === "Suggested") {
+    if (
+      status === "Suggested"
+    ) {
       return (
         <Clock4
           size={18}
@@ -542,6 +730,10 @@ export default function Schedule() {
     );
   }
 
+  /* ====================================================
+     RESPONSE BADGE
+  ==================================================== */
+
   function responseBadge(panel) {
     const status =
       responseLabel(panel);
@@ -549,10 +741,13 @@ export default function Schedule() {
     const classes = {
       Accepted:
         "bg-emerald-100 text-emerald-700",
+
       Unable:
         "bg-red-100 text-red-700",
+
       Suggested:
         "bg-orange-100 text-orange-700",
+
       Pending:
         "bg-gray-100 text-gray-600",
     };
@@ -568,8 +763,14 @@ export default function Schedule() {
     );
   }
 
+  /* ====================================================
+     PANEL NAME
+  ==================================================== */
+
   function getPanelName(panel) {
-    if (!panel) return "Unknown Panel";
+    if (!panel) {
+      return "Unknown Panel";
+    }
 
     if (panel.PanelName) {
       return panel.PanelName;
@@ -593,47 +794,68 @@ export default function Schedule() {
       panel.ExaminerID ||
       panel.PanelID;
 
-    if (panel.PersonType === "Staff") {
+    if (
+      panel.PersonType ===
+      "Staff"
+    ) {
       return staffName(id);
     }
 
-    if (panel.PersonType === "Examiner") {
+    if (
+      panel.PersonType ===
+      "Examiner"
+    ) {
       return examinerName(id);
     }
 
-    return id || "Unknown Panel";
+    return (
+      id || "Unknown Panel"
+    );
   }
 
-  function getResponseCounts(item) {
-    /*
-     * This uses response fields already loaded
-     * into the case if your backend provides them.
-     *
-     * Otherwise the button will load the detailed
-     * responses when clicked.
-     */
+  /* ====================================================
+     RESPONSE COUNTS
+  ==================================================== */
 
+  function getResponseCounts(item) {
     return {
       accepted:
-        Number(item.PanelAccepted || 0),
+        Number(
+          item.PanelAccepted || 0
+        ),
 
       suggested:
-        Number(item.PanelSuggested || 0),
+        Number(
+          item.PanelSuggested || 0
+        ),
 
       pending:
-        Number(item.PanelPending || 0),
+        Number(
+          item.PanelPending || 0
+        ),
 
       unable:
-        Number(item.PanelUnable || 0),
+        Number(
+          item.PanelUnable || 0
+        ),
     };
   }
 
-  async function action(caseID, type) {
+  /* ====================================================
+     SCHEDULE ACTION
+  ==================================================== */
+
+  async function action(
+    caseID,
+    type
+  ) {
     const labels = {
       confirm:
         "confirm this Viva schedule",
+
       postpone:
         "postpone this Viva",
+
       cancel:
         "cancel this Viva",
     };
@@ -647,9 +869,11 @@ export default function Schedule() {
     }
 
     try {
-      const item = cases.find(
-        (x) => x.CaseID === caseID
-      );
+      const item =
+        cases.find(
+          (x) =>
+            x.CaseID === caseID
+        );
 
       const payload =
         type === "confirm"
@@ -669,6 +893,11 @@ export default function Schedule() {
 
               MeetingLink:
                 item?.MeetingLink || "",
+
+              /* Preserve deadline */
+              ResponseDeadline:
+                item?.ResponseDeadline ||
+                "",
             }
           : {
               Remarks:
@@ -681,11 +910,15 @@ export default function Schedule() {
         `${API}/api/schedule/${caseID}/${type}`,
         {
           method: "PUT",
+
           headers: {
             "Content-Type":
               "application/json",
           },
-          body: JSON.stringify(payload),
+
+          body: JSON.stringify(
+            payload
+          ),
         }
       );
 
@@ -699,6 +932,10 @@ export default function Schedule() {
       );
     }
   }
+
+  /* ====================================================
+     COUNTS
+  ==================================================== */
 
   const counts = useMemo(() => {
     const scheduled =
@@ -717,13 +954,17 @@ export default function Schedule() {
 
     const upcoming =
       cases.filter((x) => {
-        const date = new Date(
-          x.ConfirmedVivaDate ||
-            x.TentativeVivaDate
-        );
+        const date =
+          new Date(
+            x.ConfirmedVivaDate ||
+              x.TentativeVivaDate
+          );
 
         return (
-          ["Scheduled", "Confirmed"].includes(
+          [
+            "Scheduled",
+            "Confirmed",
+          ].includes(
             x.CurrentStatus
           ) &&
           !Number.isNaN(
@@ -740,43 +981,53 @@ export default function Schedule() {
     };
   }, [cases]);
 
+  /* ====================================================
+     FILTERED CASES
+  ==================================================== */
+
   const filtered = useMemo(() => {
     const q =
-      search.trim().toLowerCase();
+      search
+        .trim()
+        .toLowerCase();
 
     return cases
       .filter((item) => {
         if (
           tab === "scheduled"
-        )
+        ) {
           return (
             item.CurrentStatus ===
             "Scheduled"
           );
+        }
 
         if (
           tab === "confirmed"
-        )
+        ) {
           return (
             item.CurrentStatus ===
             "Confirmed"
           );
+        }
 
         if (
           tab === "postponed"
-        )
+        ) {
           return (
             item.CurrentStatus ===
             "Postponed"
           );
+        }
 
         if (
           tab === "cancelled"
-        )
+        ) {
           return (
             item.CurrentStatus ===
             "Cancelled"
           );
+        }
 
         return [
           "Scheduled",
@@ -798,6 +1049,7 @@ export default function Schedule() {
           item.Venue,
           item.VivaMode,
           item.VivaTime,
+          item.ResponseDeadline,
           item.CurrentStatus,
         ]
           .join(" ")
@@ -805,17 +1057,19 @@ export default function Schedule() {
           .includes(q);
       })
       .sort((a, b) => {
-        const da = new Date(
-          a.ConfirmedVivaDate ||
-            a.TentativeVivaDate ||
-            "2999-12-31"
-        );
+        const da =
+          new Date(
+            a.ConfirmedVivaDate ||
+              a.TentativeVivaDate ||
+              "2999-12-31"
+          );
 
-        const db = new Date(
-          b.ConfirmedVivaDate ||
-            b.TentativeVivaDate ||
-            "2999-12-31"
-        );
+        const db =
+          new Date(
+            b.ConfirmedVivaDate ||
+              b.TentativeVivaDate ||
+              "2999-12-31"
+          );
 
         return da - db;
       });
@@ -826,10 +1080,16 @@ export default function Schedule() {
     studentMap,
   ]);
 
+  /* ====================================================
+     RENDER
+  ==================================================== */
+
   return (
     <div className="space-y-6">
 
-      {/* HEADER */}
+      {/* =================================================
+          HEADER
+      ================================================= */}
 
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 
@@ -851,6 +1111,7 @@ export default function Schedule() {
             className="flex items-center gap-2 rounded-xl border bg-white px-4 py-3 font-medium text-gray-700 hover:bg-gray-50"
           >
             <RefreshCw size={18} />
+
             Refresh
           </button>
 
@@ -861,35 +1122,48 @@ export default function Schedule() {
             className="flex items-center gap-2 rounded-xl bg-purple-600 px-5 py-3 font-medium text-white shadow-sm hover:bg-purple-700"
           >
             <Plus size={18} />
+
             Schedule Viva
           </button>
 
         </div>
       </div>
 
-      {/* STATISTICS */}
+      {/* =================================================
+          STATISTICS
+      ================================================= */}
 
       <div className="grid gap-4 md:grid-cols-3">
 
         <StatCard
           icon={CalendarDays}
           label="Scheduled"
-          value={counts.scheduled}
+          value={
+            counts.scheduled
+          }
         />
 
         <StatCard
           icon={Check}
           label="Confirmed"
-          value={counts.confirmed}
+          value={
+            counts.confirmed
+          }
         />
 
         <StatCard
           icon={Clock3}
           label="Upcoming"
-          value={counts.upcoming}
+          value={
+            counts.upcoming
+          }
         />
 
       </div>
+
+      {/* =================================================
+          ERROR
+      ================================================= */}
 
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">
@@ -897,7 +1171,9 @@ export default function Schedule() {
         </div>
       )}
 
-      {/* TABLE */}
+      {/* =================================================
+          TABLE
+      ================================================= */}
 
       <div className="rounded-2xl border bg-white shadow-sm">
 
@@ -913,9 +1189,11 @@ export default function Schedule() {
             <input
               value={search}
               onChange={(e) =>
-                setSearch(e.target.value)
+                setSearch(
+                  e.target.value
+                )
               }
-              placeholder="Search student, Case ID, venue, status..."
+              placeholder="Search student, Case ID, venue, deadline, status..."
               className="w-full rounded-xl border py-3 pl-11 pr-4 outline-none focus:border-purple-500"
             />
 
@@ -925,10 +1203,22 @@ export default function Schedule() {
 
             {[
               ["all", "All"],
-              ["scheduled", "Scheduled"],
-              ["confirmed", "Confirmed"],
-              ["postponed", "Postponed"],
-              ["cancelled", "Cancelled"],
+              [
+                "scheduled",
+                "Scheduled",
+              ],
+              [
+                "confirmed",
+                "Confirmed",
+              ],
+              [
+                "postponed",
+                "Postponed",
+              ],
+              [
+                "cancelled",
+                "Cancelled",
+              ],
             ].map(
               ([key, label]) => (
                 <button
@@ -956,7 +1246,8 @@ export default function Schedule() {
             <div className="py-14 text-center text-gray-500">
               Loading Viva schedules...
             </div>
-          ) : filtered.length === 0 ? (
+          ) : filtered.length ===
+            0 ? (
             <div className="py-14 text-center">
 
               <CalendarDays
@@ -975,7 +1266,7 @@ export default function Schedule() {
 
             </div>
           ) : (
-            <table className="w-full min-w-[1300px]">
+            <table className="w-full min-w-[1500px]">
 
               <thead>
 
@@ -985,17 +1276,33 @@ export default function Schedule() {
                     Student / Case
                   </th>
 
-                  <th>Date</th>
+                  <th>
+                    Date
+                  </th>
 
-                  <th>Time</th>
+                  <th>
+                    Response Deadline
+                  </th>
 
-                  <th>Mode / Venue</th>
+                  <th>
+                    Time
+                  </th>
 
-                  <th>Chairperson</th>
+                  <th>
+                    Mode / Venue
+                  </th>
 
-                  <th>Panel Responses</th>
+                  <th>
+                    Chairperson
+                  </th>
 
-                  <th>Status</th>
+                  <th>
+                    Panel Responses
+                  </th>
+
+                  <th>
+                    Status
+                  </th>
 
                   <th className="px-5 text-center">
                     Actions
@@ -1009,7 +1316,6 @@ export default function Schedule() {
 
                 {filtered.map(
                   (item) => {
-
                     const date =
                       item.ConfirmedVivaDate ||
                       item.TentativeVivaDate;
@@ -1021,9 +1327,13 @@ export default function Schedule() {
 
                     return (
                       <tr
-                        key={item.CaseID}
+                        key={
+                          item.CaseID
+                        }
                         className="border-b last:border-0 hover:bg-gray-50"
                       >
+
+                        {/* STUDENT */}
 
                         <td className="px-5 py-4">
 
@@ -1039,16 +1349,49 @@ export default function Schedule() {
 
                         </td>
 
+                        {/* VIVA DATE */}
+
                         <td className="font-medium text-gray-700">
                           {displayDate(
                             date
                           )}
                         </td>
 
+                        {/* RESPONSE DEADLINE */}
+
+                        <td>
+
+                          <div className="flex items-center gap-2">
+
+                            <Clock4
+                              size={15}
+                              className="text-red-500"
+                            />
+
+                            <span
+                              className={`font-semibold ${
+                                item.ResponseDeadline
+                                  ? "text-red-600"
+                                  : "text-gray-400"
+                              }`}
+                            >
+                              {displayDate(
+                                item.ResponseDeadline
+                              )}
+                            </span>
+
+                          </div>
+
+                        </td>
+
+                        {/* TIME */}
+
                         <td className="text-gray-600">
                           {item.VivaTime ||
                             "—"}
                         </td>
+
+                        {/* MODE / VENUE */}
 
                         <td>
 
@@ -1081,6 +1424,8 @@ export default function Schedule() {
                           </div>
 
                         </td>
+
+                        {/* CHAIRPERSON */}
 
                         <td className="text-gray-600">
                           {staffName(
@@ -1124,6 +1469,8 @@ export default function Schedule() {
 
                         </td>
 
+                        {/* STATUS */}
+
                         <td>
 
                           <span
@@ -1136,6 +1483,8 @@ export default function Schedule() {
                           </span>
 
                         </td>
+
+                        {/* ACTIONS */}
 
                         <td className="px-5">
 
@@ -1235,19 +1584,25 @@ export default function Schedule() {
         </div>
       </div>
 
-      {/* ==========================================
+      {/* =================================================
           SCHEDULE MODAL
-          ========================================== */}
+      ================================================= */}
 
       {modalOpen && (
         <ScheduleModal
           form={form}
           setForm={setForm}
-          updateField={updateField}
-          saveSchedule={saveSchedule}
+          updateField={
+            updateField
+          }
+          saveSchedule={
+            saveSchedule
+          }
           saving={saving}
           cases={cases}
-          studentName={studentName}
+          studentName={
+            studentName
+          }
           staff={staff}
           close={() =>
             setModalOpen(false)
@@ -1255,41 +1610,73 @@ export default function Schedule() {
         />
       )}
 
-      {/* ==========================================
+      {/* =================================================
           PANEL RESPONSE MODAL
-          ========================================== */}
+      ================================================= */}
 
       {responseModalOpen && (
         <PanelResponseModal
-          selectedCase={selectedCase}
-          panelResponses={panelResponses}
-          loading={loadingResponses}
-          responseLabel={responseLabel}
-          responseBadge={responseBadge}
-          responseIcon={responseIcon}
-          getPanelName={getPanelName}
-          formatDateTime={formatDateTime}
+          selectedCase={
+            selectedCase
+          }
+          panelResponses={
+            panelResponses
+          }
+          loading={
+            loadingResponses
+          }
+          responseLabel={
+            responseLabel
+          }
+          responseBadge={
+            responseBadge
+          }
+          responseIcon={
+            responseIcon
+          }
+          getPanelName={
+            getPanelName
+          }
+          formatDateTime={
+            formatDateTime
+          }
           onPreview={(panel) => {
-            setSelectedPanel(panel);
+            setSelectedPanel(
+              panel
+            );
+
             setPreviewOpen(true);
           }}
           close={() => {
-            setResponseModalOpen(false);
-            setSelectedPanel(null);
+            setResponseModalOpen(
+              false
+            );
+
+            setSelectedPanel(
+              null
+            );
           }}
         />
       )}
 
-      {/* ==========================================
+      {/* =================================================
           RESPONSE PREVIEW
-          ========================================== */}
+      ================================================= */}
 
       {previewOpen && (
         <ResponsePreview
-          panel={selectedPanel}
-          selectedCase={selectedCase}
-          responseLabel={responseLabel}
-          formatDateTime={formatDateTime}
+          panel={
+            selectedPanel
+          }
+          selectedCase={
+            selectedCase
+          }
+          responseLabel={
+            responseLabel
+          }
+          formatDateTime={
+            formatDateTime
+          }
           close={() =>
             setPreviewOpen(false)
           }
@@ -1356,6 +1743,8 @@ function ScheduleModal({
 
       <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
 
+        {/* HEADER */}
+
         <div className="flex items-center justify-between border-b p-5">
 
           <div>
@@ -1368,6 +1757,7 @@ function ScheduleModal({
 
             <p className="text-sm text-gray-500">
               Enter the examination date,
+              panel response deadline,
               time and venue details.
             </p>
 
@@ -1382,10 +1772,16 @@ function ScheduleModal({
 
         </div>
 
+        {/* FORM */}
+
         <form
-          onSubmit={saveSchedule}
+          onSubmit={
+            saveSchedule
+          }
           className="space-y-5 p-6"
         >
+
+          {/* CASE */}
 
           {!form.caseID ? (
             <label className="block">
@@ -1396,8 +1792,12 @@ function ScheduleModal({
 
               <select
                 name="caseID"
-                value={form.caseID}
-                onChange={updateField}
+                value={
+                  form.caseID
+                }
+                onChange={
+                  updateField
+                }
                 required
                 className="w-full rounded-xl border px-4 py-3 outline-none focus:border-purple-500"
               >
@@ -1416,15 +1816,23 @@ function ScheduleModal({
                         x.CurrentStatus
                       )
                   )
-                  .map((item) => (
-                    <option
-                      key={item.CaseID}
-                      value={item.CaseID}
-                    >
-                      {item.CaseID} —{" "}
-                      {studentName(item)}
-                    </option>
-                  ))}
+                  .map(
+                    (item) => (
+                      <option
+                        key={
+                          item.CaseID
+                        }
+                        value={
+                          item.CaseID
+                        }
+                      >
+                        {item.CaseID} —{" "}
+                        {studentName(
+                          item
+                        )}
+                      </option>
+                    )
+                  )}
 
               </select>
 
@@ -1450,6 +1858,8 @@ function ScheduleModal({
             </div>
           )}
 
+          {/* DATE / DEADLINE */}
+
           <div className="grid gap-4 md:grid-cols-2">
 
             <Field
@@ -1459,7 +1869,21 @@ function ScheduleModal({
               value={
                 form.TentativeVivaDate
               }
-              onChange={updateField}
+              onChange={
+                updateField
+              }
+            />
+
+            <Field
+              label="Panel Response Deadline"
+              name="ResponseDeadline"
+              type="date"
+              value={
+                form.ResponseDeadline
+              }
+              onChange={
+                updateField
+              }
             />
 
             <Field
@@ -1469,16 +1893,24 @@ function ScheduleModal({
               value={
                 form.ConfirmedVivaDate
               }
-              onChange={updateField}
+              onChange={
+                updateField
+              }
             />
 
             <Field
               label="Viva Time"
               name="VivaTime"
               type="time"
-              value={form.VivaTime}
-              onChange={updateField}
+              value={
+                form.VivaTime
+              }
+              onChange={
+                updateField
+              }
             />
+
+            {/* MODE */}
 
             <label className="block">
 
@@ -1488,8 +1920,12 @@ function ScheduleModal({
 
               <select
                 name="VivaMode"
-                value={form.VivaMode}
-                onChange={updateField}
+                value={
+                  form.VivaMode
+                }
+                onChange={
+                  updateField
+                }
                 className="w-full rounded-xl border px-4 py-3 outline-none focus:border-purple-500"
               >
 
@@ -1509,13 +1945,21 @@ function ScheduleModal({
 
             </label>
 
+            {/* VENUE */}
+
             <Field
               label="Venue"
               name="Venue"
-              value={form.Venue}
-              onChange={updateField}
+              value={
+                form.Venue
+              }
+              onChange={
+                updateField
+              }
               placeholder="e.g. DK 1, PPS"
             />
+
+            {/* MEETING LINK */}
 
             <Field
               label="Meeting Link"
@@ -1523,27 +1967,43 @@ function ScheduleModal({
               value={
                 form.MeetingLink
               }
-              onChange={updateField}
+              onChange={
+                updateField
+              }
               placeholder="https://..."
             />
+
+            {/* CHAIRPERSON */}
 
             <PersonField
               label="Chairperson"
               name="Chairperson"
-              value={form.Chairperson}
-              onChange={updateField}
+              value={
+                form.Chairperson
+              }
+              onChange={
+                updateField
+              }
               staff={staff}
             />
+
+            {/* SECRETARY */}
 
             <PersonField
               label="Secretary"
               name="Secretary"
-              value={form.Secretary}
-              onChange={updateField}
+              value={
+                form.Secretary
+              }
+              onChange={
+                updateField
+              }
               staff={staff}
             />
 
           </div>
+
+          {/* FOOTER */}
 
           <div className="flex justify-end gap-3 border-t pt-5">
 
@@ -1556,7 +2016,9 @@ function ScheduleModal({
             </button>
 
             <button
-              disabled={saving}
+              disabled={
+                saving
+              }
               type="submit"
               className="rounded-xl bg-purple-600 px-6 py-3 font-semibold text-white hover:bg-purple-700 disabled:opacity-50"
             >
@@ -1594,7 +2056,7 @@ function PanelResponseModal({
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
 
-      <div className="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
+      <div className="max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
 
         {/* HEADER */}
 
@@ -1608,9 +2070,7 @@ function PanelResponseModal({
 
             <p className="mt-1 text-sm text-gray-500">
               {selectedCase?.CaseID} —{" "}
-              {selectedCase
-                ? "Viva panel response status"
-                : ""}
+              Viva panel response status
             </p>
 
           </div>
@@ -1626,7 +2086,7 @@ function PanelResponseModal({
 
         {/* SCHEDULE SUMMARY */}
 
-        <div className="grid gap-4 border-b bg-gray-50 p-6 md:grid-cols-4">
+        <div className="grid gap-4 border-b bg-gray-50 p-6 md:grid-cols-5">
 
           <SummaryBox
             label="Viva Date"
@@ -1634,7 +2094,21 @@ function PanelResponseModal({
               selectedCase?.ConfirmedVivaDate ||
                 selectedCase?.TentativeVivaDate
             )}
-            icon={CalendarDays}
+            icon={
+              CalendarDays
+            }
+          />
+
+          {/* RESPONSE DEADLINE */}
+
+          <SummaryBox
+            label="Response Deadline"
+            value={displayDate(
+              selectedCase?.ResponseDeadline
+            )}
+            icon={
+              Clock4
+            }
           />
 
           <SummaryBox
@@ -1704,10 +2178,14 @@ function PanelResponseModal({
             <div className="space-y-3">
 
               {panelResponses.map(
-                (panel, index) => {
-
+                (
+                  panel,
+                  index
+                ) => {
                   const status =
-                    responseLabel(panel);
+                    responseLabel(
+                      panel
+                    );
 
                   return (
                     <div
@@ -1720,6 +2198,8 @@ function PanelResponseModal({
                     >
 
                       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+
+                        {/* PANEL INFO */}
 
                         <div className="flex items-center gap-4">
 
@@ -1742,6 +2222,7 @@ function PanelResponseModal({
                             <p className="text-sm text-gray-500">
                               {panel.Role ||
                                 "Panel Member"}
+
                               {panel.PanelID
                                 ? ` · ${panel.PanelID}`
                                 : ""}
@@ -1750,6 +2231,8 @@ function PanelResponseModal({
                           </div>
 
                         </div>
+
+                        {/* RESPONSE */}
 
                         <div className="flex items-center gap-3">
 
@@ -1776,12 +2259,15 @@ function PanelResponseModal({
                             <Eye
                               size={16}
                             />
+
                             Preview
                           </button>
 
                         </div>
 
                       </div>
+
+                      {/* SUGGESTED SCHEDULE */}
 
                       {status ===
                         "Suggested" && (
@@ -1801,6 +2287,7 @@ function PanelResponseModal({
                           <div className="mt-2 grid gap-3 text-sm md:grid-cols-3">
 
                             <div>
+
                               <span className="text-orange-600">
                                 Date
                               </span>
@@ -1810,9 +2297,11 @@ function PanelResponseModal({
                                   panel.SuggestedDate
                                 )}
                               </div>
+
                             </div>
 
                             <div>
+
                               <span className="text-orange-600">
                                 Time
                               </span>
@@ -1821,9 +2310,11 @@ function PanelResponseModal({
                                 {panel.SuggestedTime ||
                                   "—"}
                               </div>
+
                             </div>
 
                             <div>
+
                               <span className="text-orange-600">
                                 Remarks
                               </span>
@@ -1832,12 +2323,15 @@ function PanelResponseModal({
                                 {panel.Remarks ||
                                   "—"}
                               </div>
+
                             </div>
 
                           </div>
 
                         </div>
                       )}
+
+                      {/* RESPONSE DATE */}
 
                       {panel.ResponseDate && (
                         <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
@@ -1881,7 +2375,9 @@ function ResponsePreview({
   formatDateTime,
   close,
 }) {
-  if (!panel) return null;
+  if (!panel) {
+    return null;
+  }
 
   const status =
     responseLabel(panel);
@@ -1916,7 +2412,7 @@ function ResponsePreview({
 
         </div>
 
-        {/* FORM PREVIEW */}
+        {/* BODY */}
 
         <div className="p-6">
 
@@ -1932,6 +2428,8 @@ function ResponsePreview({
             </div>
 
           </div>
+
+          {/* TITLE */}
 
           <div className="rounded-2xl border bg-gray-50 p-5">
 
@@ -2018,6 +2516,16 @@ function ResponsePreview({
                 )}
               />
 
+              {/* RESPONSE DEADLINE */}
+
+              <PreviewInfo
+                label="Panel Response Deadline"
+                value={displayDate(
+                  panel.ResponseDeadline ||
+                    selectedCase?.ResponseDeadline
+                )}
+              />
+
               <PreviewInfo
                 label="Time"
                 value={
@@ -2036,6 +2544,15 @@ function ResponsePreview({
                 }
               />
 
+              <PreviewInfo
+                label="Mode"
+                value={
+                  panel.VivaMode ||
+                  selectedCase?.VivaMode ||
+                  "—"
+                }
+              />
+
             </div>
 
           </div>
@@ -2050,11 +2567,14 @@ function ResponsePreview({
 
             <div
               className={`rounded-2xl border p-5 ${
-                status === "Accepted"
+                status ===
+                "Accepted"
                   ? "border-emerald-200 bg-emerald-50"
-                  : status === "Unable"
+                  : status ===
+                    "Unable"
                   ? "border-red-200 bg-red-50"
-                  : status === "Suggested"
+                  : status ===
+                    "Suggested"
                   ? "border-orange-200 bg-orange-50"
                   : "border-gray-200 bg-gray-50"
               }`}
@@ -2180,7 +2700,7 @@ function ResponsePreview({
 }
 
 /* ======================================================
-   COMPONENTS
+   SUMMARY BOX
 ====================================================== */
 
 function SummaryBox({
@@ -2215,6 +2735,10 @@ function SummaryBox({
   );
 }
 
+/* ======================================================
+   PREVIEW INFO
+====================================================== */
+
 function PreviewInfo({
   label,
   value,
@@ -2233,6 +2757,10 @@ function PreviewInfo({
     </div>
   );
 }
+
+/* ======================================================
+   FIELD
+====================================================== */
 
 function Field({
   label,
@@ -2254,13 +2782,19 @@ function Field({
         type={type}
         value={value}
         onChange={onChange}
-        placeholder={placeholder}
+        placeholder={
+          placeholder
+        }
         className="w-full rounded-xl border px-4 py-3 outline-none focus:border-purple-500"
       />
 
     </label>
   );
 }
+
+/* ======================================================
+   PERSON FIELD
+====================================================== */
 
 function PersonField({
   label,
@@ -2289,8 +2823,12 @@ function PersonField({
 
         {staff.map((s) => (
           <option
-            key={s.StaffID}
-            value={s.StaffID}
+            key={
+              s.StaffID
+            }
+            value={
+              s.StaffID
+            }
           >
             {s.StaffName} —{" "}
             {s.Role}
