@@ -9,6 +9,9 @@ import {
 } from "../services/sheetsService.js";
 
 import { createVivaPanel } from "../services/vivaPanelService.js";
+import {
+  createVivaCaseFolders,
+} from "../services/driveService.js";
 
 const SHEET = "VivaCases";
 
@@ -633,7 +636,125 @@ export const updateVivaCase = async (
     // ============================================
     // ENSURE PANEL EXISTS / UPDATE PANEL
     // ============================================
+/**
+ * ======================================================
+ * CREATE GOOGLE DRIVE FOLDER FOR VIVA CASE
+ * POST /api/vivacases/:id/create-drive-folder
+ * ======================================================
+ */
+export const createDriveFolderForCase = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const caseID = req.params.id;
 
+    // --------------------------------------------------
+    // GET VIVA CASE
+    // --------------------------------------------------
+    const viva = await findRow(
+      VIVA_SHEET,
+      "CaseID",
+      caseID
+    );
+
+    if (!viva) {
+      return res.status(404).json({
+        success: false,
+        message: "Viva case not found.",
+      });
+    }
+
+    // --------------------------------------------------
+    // GET STUDENT
+    // --------------------------------------------------
+    const student = await findRow(
+      STUDENT_SHEET,
+      "StudentID",
+      viva.StudentID
+    );
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found.",
+      });
+    }
+
+    // --------------------------------------------------
+    // CREATE GOOGLE DRIVE FOLDER STRUCTURE
+    // --------------------------------------------------
+    const folders =
+      await createVivaCaseFolders({
+        caseID: caseID,
+        studentName:
+          student.StudentName ||
+          viva.StudentID ||
+          "Unknown Student",
+      });
+
+    // --------------------------------------------------
+    // UPDATE VIVA CASE
+    // --------------------------------------------------
+    const rowNumber =
+      await findRowNumber(
+        VIVA_SHEET,
+        "CaseID",
+        caseID
+      );
+
+    if (rowNumber === -1) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Viva case row could not be found.",
+      });
+    }
+
+    await updateRow(
+      VIVA_SHEET,
+      rowNumber,
+      {
+        ...viva,
+
+        GoogleDriveLink:
+          folders.caseFolder.webViewLink,
+
+        LastUpdated:
+          new Date().toISOString(),
+      }
+    );
+
+    // --------------------------------------------------
+    // RESPONSE
+    // --------------------------------------------------
+    return res.json({
+      success: true,
+
+      caseID,
+
+      studentName:
+        student.StudentName,
+
+      googleDriveLink:
+        folders.caseFolder.webViewLink,
+
+      folders,
+
+      message:
+        "Google Drive folder structure created successfully.",
+    });
+
+  } catch (err) {
+    console.error(
+      "CREATE DRIVE FOLDER ERROR:",
+      err
+    );
+
+    next(err);
+  }
+};
     // ============================================
 // LOAD CURRENT STUDENT RECORD
 // ============================================
