@@ -39,6 +39,28 @@ function formatDate(dateString) {
   });
 }
 
+function getExaminerAddress(examiner) {
+  // If your Google Sheet has one Address column
+  if (examiner.Address) {
+    return String(examiner.Address).trim();
+  }
+
+  // If your Google Sheet uses multiple address columns
+  return [
+    examiner.Address1,
+    examiner.Address2,
+    examiner.Address3,
+    examiner.Postcode,
+    examiner.City,
+    examiner.State,
+    examiner.Country,
+  ]
+    .filter(Boolean)
+    .map((value) =>
+      String(value).trim()
+    )
+    .join("\n");
+}
 /* ======================================================
    GET ASSIGNED EXAMINERS
 ====================================================== */
