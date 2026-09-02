@@ -5,114 +5,246 @@ import {
   getRows,
 } from "../services/sheetsService.js";
 
-const SHEET = "VivaCases";
+import {
+  uploadFileToDrive,
+} from "../services/googleDriveService.js";
+
+const SHEET = "Panel";
+
 /**
  * ======================================================
- * Get All Reports
+ * GET ALL PANEL REPORTS
+ *
  * GET /api/reports
  * ======================================================
  */
-export const getReports = async (req, res, next) => {
-
+export const getReports = async (
+  req,
+  res,
+  next
+) => {
   try {
-
     const rows = await getRows(SHEET);
 
-    res.json({
-      success: true,
-      total: rows.length,
-      data: rows,
-    });
+    const reports = rows.map((row) => ({
+      PanelID: row.PanelID || "",
+      VivaID: row.VivaID || "",
+      PersonID: row.PersonID || "",
+      PersonType: row.PersonType || "",
+      Role: row.Role || "",
 
+      Accepted:
+        row.Accepted || "",
+
+      ResponseDate:
+        row.ResponseDate || "",
+
+      ReportReceived:
+        row.ReportReceived || "",
+
+      ReportReceivedDate:
+        row.ReportReceivedDate || "",
+
+      ReportFileName:
+        row.ReportFileName || "",
+
+      ReportFileID:
+        row.ReportFileID || "",
+
+      ReportFileURL:
+        row.ReportFileURL || "",
+
+      ReportUploadedBy:
+        row.ReportUploadedBy || "",
+
+      ReportUploadedDate:
+        row.ReportUploadedDate || "",
+
+      ReportApproved:
+        row.ReportApproved || "",
+
+      ReportApprovedDate:
+        row.ReportApprovedDate || "",
+
+      Remarks:
+        row.Remarks || "",
+    }));
+
+    return res.json({
+      success: true,
+      total: reports.length,
+      data: reports,
+    });
   } catch (err) {
+    console.error(
+      "GET REPORTS ERROR:",
+      err
+    );
 
     next(err);
-
   }
-
 };
+
 /**
  * ======================================================
- * Get Report
+ * GET ONE REPORT
+ *
  * GET /api/reports/:id
  * ======================================================
  */
-export const getReport = async (req, res, next) => {
-
+export const getReport = async (
+  req,
+  res,
+  next
+) => {
   try {
-
     const report = await findRow(
       SHEET,
-      "CaseID",
+      "PanelID",
       req.params.id
     );
 
     if (!report) {
       return res.status(404).json({
         success: false,
-        message: "Report not found.",
+        message: "Panel report not found.",
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: report,
     });
-
   } catch (err) {
+    console.error(
+      "GET REPORT ERROR:",
+      err
+    );
 
     next(err);
-
   }
-
 };
 
 /**
  * ======================================================
- * Submit Report
- * PUT /api/reports/:id/submit
+ * UPLOAD PANEL REPORT
+ *
+ * POST /api/reports/panel/:panelID/upload
+ *
+ * multipart/form-data
+ * field = report
  * ======================================================
  */
-export const submitReport = async (req, res, next) => {
-
+export const uploadPanelReport = async (
+  req,
+  res,
+  next
+) => {
   try {
+    const panelID = req.params.panelID;
 
-    const caseID = req.params.id;
-
-    const viva = await findRow(
-      SHEET,
-      "CaseID",
-      caseID
-    );
-
-    if (!viva) {
-      return res.status(404).json({
+    if (!req.file) {
+      return res.status(400).json({
         success: false,
-        message: "Viva case not found.",
+        message:
+          "Please select a report file.",
       });
     }
 
-    const rowNumber = await findRowNumber(
+    const panel = await findRow(
       SHEET,
-      "CaseID",
-      caseID
+      "PanelID",
+      panelID
     );
 
-    const updated = {
+    if (!panel) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Panel invitation not found.",
+      });
+    }
 
-      ...viva,
+    // --------------------------------------------------
+    // Only PDF / DOCX
+    // --------------------------------------------------
+
+    const allowedTypes = [
+      "application/pdf",
+
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+
+    if (
+      !allowedTypes.includes(
+        req.file.mimetype
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Only PDF and DOCX files are allowed.",
+      });
+    }
+
+    // --------------------------------------------------
+    // Upload to Google Drive
+    // --------------------------------------------------
+
+    const driveFile =
+      await uploadFileToDrive({
+        buffer: req.file.buffer,
+
+        originalName:
+          `${panel.VivaID || "Viva"}_${panel.PanelID || "Panel"}_${req.file.originalname}`,
+
+        mimeType:
+          req.file.mimetype,
+      });
+
+    // --------------------------------------------------
+    // Update Panel row
+    // --------------------------------------------------
+
+    const rowNumber =
+      await findRowNumber(
+        SHEET,
+        "PanelID",
+        panelID
+      );
+
+    const now =
+      new Date().toISOString();
+
+    const updated = {
+      ...panel,
 
       ReportReceived: "Yes",
 
-      ReportReceivedDate:
-        new Date().toISOString(),
+      ReportReceivedDate: now,
 
-      CurrentStatus:
-        "Report Submitted",
+      ReportFileName:
+        driveFile.name,
 
-      LastUpdated:
-        new Date().toISOString(),
+      ReportFileID:
+        driveFile.id,
 
+      ReportFileURL:
+        driveFile.webViewLink,
+
+      ReportUploadedBy:
+        panel.PersonID || "",
+
+      ReportUploadedDate:
+        now,
+
+      ReportApproved:
+        panel.ReportApproved || "",
+
+      ReportApprovedDate:
+        panel.ReportApprovedDate || "",
+
+      LastUpdated: now,
     };
 
     await updateRow(
@@ -121,66 +253,98 @@ export const submitReport = async (req, res, next) => {
       updated
     );
 
-    res.json({
+    return res.json({
       success: true,
-      message: "Report submitted successfully.",
-      data: updated,
-    });
 
+      message:
+        "Your report has been uploaded successfully.",
+
+      data: {
+        PanelID: updated.PanelID,
+        VivaID: updated.VivaID,
+
+        ReportReceived:
+          updated.ReportReceived,
+
+        ReportFileName:
+          updated.ReportFileName,
+
+        ReportFileURL:
+          updated.ReportFileURL,
+
+        ReportUploadedDate:
+          updated.ReportUploadedDate,
+      },
+    });
   } catch (err) {
+    console.error(
+      "UPLOAD PANEL REPORT ERROR:",
+      err
+    );
 
     next(err);
-
   }
-
 };
 
 /**
  * ======================================================
- * Approve Report
+ * APPROVE REPORT
+ *
  * PUT /api/reports/:id/approve
  * ======================================================
  */
-export const approveReport = async (req, res, next) => {
-
+export const approveReport = async (
+  req,
+  res,
+  next
+) => {
   try {
+    const panelID = req.params.id;
 
-    const caseID = req.params.id;
-
-    const viva = await findRow(
+    const panel = await findRow(
       SHEET,
-      "CaseID",
-      caseID
+      "PanelID",
+      panelID
     );
 
-    if (!viva) {
+    if (!panel) {
       return res.status(404).json({
         success: false,
-        message: "Viva case not found.",
+        message:
+          "Panel report not found.",
       });
     }
 
-    const rowNumber = await findRowNumber(
-      SHEET,
-      "CaseID",
-      caseID
-    );
+    if (
+      String(panel.ReportReceived)
+        .trim()
+        .toLowerCase() !== "yes"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "This panel has not submitted a report.",
+      });
+    }
+
+    const rowNumber =
+      await findRowNumber(
+        SHEET,
+        "PanelID",
+        panelID
+      );
+
+    const now =
+      new Date().toISOString();
 
     const updated = {
-
-      ...viva,
+      ...panel,
 
       ReportApproved: "Yes",
 
-      ReportApprovedDate:
-        new Date().toISOString(),
+      ReportApprovedDate: now,
 
-      CurrentStatus:
-        "Completed",
-
-      LastUpdated:
-        new Date().toISOString(),
-
+      LastUpdated: now,
     };
 
     await updateRow(
@@ -189,16 +353,20 @@ export const approveReport = async (req, res, next) => {
       updated
     );
 
-    res.json({
+    return res.json({
       success: true,
-      message: "Report approved.",
+
+      message:
+        "Report approved successfully.",
+
       data: updated,
     });
-
   } catch (err) {
+    console.error(
+      "APPROVE REPORT ERROR:",
+      err
+    );
 
     next(err);
-
   }
-
 };
