@@ -10,22 +10,56 @@ export default function VivaCaseTable({
   onSchedule,
   onDelete,
 }) {
+
   const [search, setSearch] = useState("");
+
+  // =========================================================
+  // GET CASE ID
+  // =========================================================
+
+  function getCaseID(item) {
+
+    const id =
+      item?.CaseID ??
+      item?.caseID ??
+      item?.caseId ??
+      item?.["Case ID"] ??
+      item?.["Case No"] ??
+      item?.["Case Number"] ??
+      "";
+
+    return String(id).trim();
+  }
+
+  // =========================================================
+  // GET STUDENT ID
+  // =========================================================
+
+  function getStudentID(item) {
+
+    return String(
+      item?.StudentID ??
+      item?.studentID ??
+      item?.studentId ??
+      ""
+    ).trim();
+  }
 
   // =========================================================
   // GET STUDENT NAME
   // =========================================================
 
   function studentName(id) {
+
     if (!id) return "-";
 
-    const s = students.find(
+    const student = (students || []).find(
       (x) =>
         String(x.StudentID || "").trim() ===
         String(id).trim()
     );
 
-    return s?.StudentName || "-";
+    return student?.StudentName || "-";
   }
 
   // =========================================================
@@ -33,94 +67,112 @@ export default function VivaCaseTable({
   // =========================================================
 
   function examinerName(id) {
+
     if (!id) return "-";
 
-    const e = examiners.find(
+    const examiner = (examiners || []).find(
       (x) =>
         String(x.ExaminerID || "").trim() ===
         String(id).trim()
     );
 
-    return e?.ExaminerName || "-";
+    return examiner?.ExaminerName || "-";
   }
 
   // =========================================================
-  // GET INTERNAL EXAMINERS
+  // INTERNAL EXAMINERS
   // =========================================================
 
   function internalExaminers(item) {
-    return [
-      examinerName(item.InternalExaminer1ID),
-      examinerName(item.InternalExaminer2ID),
-    ]
-      .filter((name) => name && name !== "-")
-      .join("\n");
+
+    const names = [
+
+      examinerName(
+        item?.InternalExaminer1ID
+      ),
+
+      examinerName(
+        item?.InternalExaminer2ID
+      ),
+
+    ].filter(
+      (name) =>
+        name &&
+        name !== "-"
+    );
+
+    return names.join("\n");
   }
 
   // =========================================================
-  // GET EXTERNAL EXAMINERS
+  // EXTERNAL EXAMINERS
   // =========================================================
 
   function externalExaminers(item) {
-    return [
-      examinerName(item.ExternalExaminer1ID),
-      examinerName(item.ExternalExaminer2ID),
-    ]
-      .filter((name) => name && name !== "-")
-      .join("\n");
-  }
 
-  // =========================================================
-  // NORMALISE CASE ID
-  //
-  // This handles different possible API field names.
-  // =========================================================
+    const names = [
 
-  function getCaseID(item) {
-    return (
-      item?.CaseID ??
-      item?.caseID ??
-      item?.caseId ??
-      item?.case_id ??
-      item?.ID ??
-      item?.id ??
-      ""
+      examinerName(
+        item?.ExternalExaminer1ID
+      ),
+
+      examinerName(
+        item?.ExternalExaminer2ID
+      ),
+
+    ].filter(
+      (name) =>
+        name &&
+        name !== "-"
     );
+
+    return names.join("\n");
   }
 
   // =========================================================
-  // FILTER CASES
+  // FILTER
   // =========================================================
 
   const filteredCases = useMemo(() => {
+
+    const list = Array.isArray(cases)
+      ? cases
+      : [];
+
     if (!search.trim()) {
-      return cases || [];
+      return list;
     }
 
-    const keyword = search
-      .toLowerCase()
-      .trim();
+    const keyword =
+      search
+        .toLowerCase()
+        .trim();
 
-    return (cases || []).filter((item) => {
-      const caseID = String(
+    return list.filter((item) => {
+
+      const caseID =
         getCaseID(item)
-      ).toLowerCase();
+          .toLowerCase();
 
-      const student = studentName(
-        item.StudentID
-      ).toLowerCase();
+      const student =
+        studentName(
+          getStudentID(item)
+        ).toLowerCase();
 
-      const internal = internalExaminers(
-        item
-      ).toLowerCase();
+      const internal =
+        internalExaminers(item)
+          .toLowerCase();
 
-      const external = externalExaminers(
-        item
-      ).toLowerCase();
+      const external =
+        externalExaminers(item)
+          .toLowerCase();
 
-      const status = String(
-        item.CurrentStatus || ""
-      ).toLowerCase();
+      const status =
+        String(
+          item?.CurrentStatus ||
+          item?.currentStatus ||
+          ""
+        ).toLowerCase();
 
       return (
         caseID.includes(keyword) ||
@@ -129,29 +181,39 @@ export default function VivaCaseTable({
         external.includes(keyword) ||
         status.includes(keyword)
       );
+
     });
-  }, [cases, students, examiners, search]);
+
+  }, [
+    cases,
+    students,
+    examiners,
+    search,
+  ]);
 
   // =========================================================
-  // DELETE HANDLER
+  // DELETE
   // =========================================================
 
   function handleDelete(item) {
-    const caseID = getCaseID(item);
 
     console.log(
-      "DELETE CASE ITEM:",
+      "DELETE TABLE ITEM:",
       item
     );
 
+    const caseID =
+      getCaseID(item);
+
     console.log(
-      "DELETE CASE ID:",
+      "CASE ID FROM TABLE:",
       caseID
     );
 
     if (!caseID) {
+
       alert(
-        "Unable to delete this case because the Case ID is missing."
+        "Case ID is missing from this record."
       );
 
       return;
@@ -165,11 +227,10 @@ export default function VivaCaseTable({
   // =========================================================
 
   return (
+
     <div className="rounded-2xl bg-white p-4 shadow md:p-8">
 
-      {/* =====================================================
-          HEADER
-      ===================================================== */}
+      {/* HEADER */}
 
       <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 
@@ -188,9 +249,7 @@ export default function VivaCaseTable({
 
       </div>
 
-      {/* =====================================================
-          TABLE
-      ===================================================== */}
+      {/* TABLE */}
 
       <div className="overflow-x-auto">
 
@@ -234,177 +293,170 @@ export default function VivaCaseTable({
 
           <tbody>
 
-            {filteredCases.map((item, index) => {
+            {filteredCases.map(
+              (item, index) => {
 
-              const caseID =
-                getCaseID(item);
+                const caseID =
+                  getCaseID(item);
 
-              return (
+                const studentID =
+                  getStudentID(item);
 
-                <tr
-                  key={
-                    caseID ||
-                    item.StudentID ||
-                    index
-                  }
-                  className="border-b hover:bg-gray-50"
-                >
+                const status =
+                  item?.CurrentStatus ||
+                  item?.currentStatus ||
+                  "";
 
-                  {/* =================================================
-                      CASE ID
-                  ================================================= */}
+                const dueDate =
+                  item?.ReportDueDate ||
+                  item?.reportDueDate ||
+                  item?.["Report Due Date"] ||
+                  "";
 
-                  <td className="whitespace-nowrap p-3 font-semibold">
+                return (
 
-                    {caseID || "-"}
+                  <tr
+                    key={
+                      caseID ||
+                      studentID ||
+                      index
+                    }
+                    className="border-b hover:bg-gray-50"
+                  >
 
-                  </td>
+                    {/* CASE ID */}
 
-                  {/* =================================================
-                      STUDENT
-                  ================================================= */}
+                    <td className="whitespace-nowrap p-3 font-semibold">
 
-                  <td className="whitespace-nowrap p-3">
+                      {caseID || "-"}
 
-                    {studentName(
-                      item.StudentID
-                    )}
+                    </td>
 
-                  </td>
+                    {/* STUDENT */}
 
-                  {/* =================================================
-                      INTERNAL EXAMINER
-                  ================================================= */}
+                    <td className="whitespace-nowrap p-3">
 
-                  <td className="whitespace-pre-line p-3">
+                      {studentName(
+                        studentID
+                      )}
 
-                    {internalExaminers(
-                      item
-                    ) || "-"}
+                    </td>
 
-                  </td>
+                    {/* INTERNAL */}
 
-                  {/* =================================================
-                      EXTERNAL EXAMINER
-                  ================================================= */}
+                    <td className="whitespace-pre-line p-3">
 
-                  <td className="whitespace-pre-line p-3">
+                      {internalExaminers(
+                        item
+                      ) || "-"}
 
-                    {externalExaminers(
-                      item
-                    ) || "-"}
+                    </td>
 
-                  </td>
+                    {/* EXTERNAL */}
 
-                  {/* =================================================
-                      DUE DATE
-                  ================================================= */}
+                    <td className="whitespace-pre-line p-3">
 
-                  <td className="whitespace-nowrap p-3">
+                      {externalExaminers(
+                        item
+                      ) || "-"}
 
-                    {item.ReportDueDate ||
-                      item.reportDueDate ||
-                      "-"}
+                    </td>
 
-                  </td>
+                    {/* DUE DATE */}
 
-                  {/* =================================================
-                      STATUS
-                  ================================================= */}
+                    <td className="whitespace-nowrap p-3">
 
-                  <td className="p-3">
+                      {dueDate || "-"}
 
-                    {item.CurrentStatus ||
-                    item.currentStatus ? (
-                      <StatusBadge
-                        status={
-                          item.CurrentStatus ||
-                          item.currentStatus
-                        }
-                      />
-                    ) : (
-                      "-"
-                    )}
+                    </td>
 
-                  </td>
+                    {/* STATUS */}
 
-                  {/* =================================================
-                      ACTION
-                  ================================================= */}
+                    <td className="p-3">
 
-                  <td className="p-3">
+                      {status ? (
 
-                    <div className="flex justify-center gap-2">
-
-                      {/* ===========================================
-                          MANAGE
-                      =========================================== */}
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          onManage(item)
-                        }
-                        className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-                      >
-
-                        <Settings
-                          size={16}
+                        <StatusBadge
+                          status={status}
                         />
 
-                        Manage
+                      ) : (
 
-                      </button>
+                        "-"
 
-                      {/* ===========================================
-                          SCHEDULE
-                      =========================================== */}
+                      )}
 
-                      <button
-                        type="button"
-                        onClick={() =>
-                          onSchedule(item)
-                        }
-                        className="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-3 py-2 text-sm font-medium text-white hover:bg-purple-700"
-                      >
+                    </td>
 
-                        Schedule
+                    {/* ACTION */}
 
-                      </button>
+                    <td className="p-3">
 
-                      {/* ===========================================
-                          DELETE
-                      =========================================== */}
+                      <div className="flex justify-center gap-2">
 
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleDelete(item)
-                        }
-                        disabled={!caseID}
-                        className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-gray-400"
-                      >
+                        {/* MANAGE */}
 
-                        <Trash2
-                          size={16}
-                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onManage(item)
+                          }
+                          className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                        >
 
-                        Delete
+                          <Settings
+                            size={16}
+                          />
 
-                      </button>
+                          Manage
 
-                    </div>
+                        </button>
 
-                  </td>
+                        {/* SCHEDULE */}
 
-                </tr>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onSchedule(item)
+                          }
+                          className="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-3 py-2 text-sm font-medium text-white hover:bg-purple-700"
+                        >
 
-              );
-            })}
+                          Schedule
 
-            {/* =====================================================
-                NO CASES
-            ===================================================== */}
+                        </button>
+
+                        {/* DELETE */}
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleDelete(item)
+                          }
+                          disabled={!caseID}
+                          className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+                        >
+
+                          <Trash2
+                            size={16}
+                          />
+
+                          Delete
+
+                        </button>
+
+                      </div>
+
+                    </td>
+
+                  </tr>
+
+                );
+
+              }
+            )}
+
+            {/* EMPTY */}
 
             {filteredCases.length === 0 && (
 
@@ -414,7 +466,9 @@ export default function VivaCaseTable({
                   colSpan={7}
                   className="py-10 text-center text-gray-500"
                 >
+
                   No viva cases found.
+
                 </td>
 
               </tr>
