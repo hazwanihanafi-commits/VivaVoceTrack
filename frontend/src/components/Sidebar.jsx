@@ -40,11 +40,6 @@ const menus = [
     path: "/schedule",
   },
   {
-    title: "Panel Responses",
-    icon: FileCheck,
-    path: "/panel-responses",
-  },
-  {
     title: "Reports",
     icon: BarChart3,
     path: "/reports",
