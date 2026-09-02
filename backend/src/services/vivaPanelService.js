@@ -3,6 +3,7 @@ import {
   addRow,
   generateID,
   findRow,
+  deleteRow,
 } from "./sheetsService.js";
 
 
@@ -372,24 +373,57 @@ export async function createVivaPanel(caseData) {
     // 8 InvitationDate
     "",
 
-    // 9 Accepted
+    // 9 InvitationStatus
     "Pending",
 
-    // 10 ResponseDate
+    // 10 Accepted
+    "Pending",
+
+    // 11 ResponseDate
     "",
 
-    // 11 ResponseDeadline
+    // 12 ResponseDeadline
     caseData.ResponseDeadline || "",
 
-    // 12 SuggestedDate
+    // 13 SuggestedDate
     "",
 
-    // 13 SuggestedTime
+    // 14 SuggestedTime
     "",
 
-    // 14 Remarks
+    // 15 Remarks
     "",
   ]
 );
   }
+}
+
+export async function deleteVivaPanel(caseID) {
+  const vivaID = String(caseID || "").trim();
+
+  if (!vivaID) return 0;
+
+  const rows = await getRows("Panel");
+
+  const rowNumbers = [];
+
+  rows.forEach((row, index) => {
+    if (
+      String(row.VivaID || "").trim() === vivaID
+    ) {
+      rowNumbers.push(index + 2);
+    }
+  });
+
+  rowNumbers.sort((a, b) => b - a);
+
+  for (const rowNumber of rowNumbers) {
+    await deleteRow("Panel", rowNumber);
+  }
+
+  console.log(
+    `Deleted ${rowNumbers.length} Panel records for ${vivaID}`
+  );
+
+  return rowNumbers.length;
 }
