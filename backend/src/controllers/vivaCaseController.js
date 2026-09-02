@@ -1008,6 +1008,10 @@ MainSupervisorID:
  * ======================================================
  * DELETE VIVA CASE
  * DELETE /api/vivacases/:id
+ *
+ * Deletes:
+ * 1. VivaCases record
+ * 2. All related Panel records
  * ======================================================
  */
 export const deleteVivaCase =
@@ -1018,11 +1022,39 @@ export const deleteVivaCase =
   ) => {
     try {
       const caseID =
-        req.params.id;
+        String(req.params.id || "").trim();
+
+      if (!caseID) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Case ID is required.",
+        });
+      }
 
       /**
        * ==============================================
-       * FIND ROW
+       * FIND VIVA CASE
+       * ==============================================
+       */
+      const viva =
+        await findRow(
+          SHEET,
+          "CaseID",
+          caseID
+        );
+
+      if (!viva) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Viva case not found.",
+        });
+      }
+
+      /**
+       * ==============================================
+       * FIND VIVA CASE ROW
        * ==============================================
        */
       const rowNumber =
@@ -1036,13 +1068,77 @@ export const deleteVivaCase =
         return res.status(404).json({
           success: false,
           message:
-            "Viva case not found.",
+            "Viva case row not found.",
         });
       }
 
       /**
        * ==============================================
-       * DELETE
+       * DELETE RELATED PANEL RECORDS
+       *
+       * Panel sheet uses VivaID.
+       * We delete ALL panel records belonging
+       * to this Viva Case.
+       * ==============================================
+       */
+      const panelRows =
+        await getRows("Panel");
+
+      const relatedPanels =
+        panelRows.filter(
+          (panel) =>
+            String(
+              panel.VivaID || ""
+            ).trim() === caseID
+        );
+
+      console.log(
+        "DELETE VIVA CASE:",
+        caseID
+      );
+
+      console.log(
+        "RELATED PANEL RECORDS:",
+        relatedPanels.length
+      );
+
+      /**
+       * Delete panel rows from bottom
+       * to top so row numbers don't shift.
+       */
+      for (
+        let i = relatedPanels.length - 1;
+        i >= 0;
+        i--
+      ) {
+        const panel =
+          relatedPanels[i];
+
+        const panelRowNumber =
+          await findRowNumber(
+            "Panel",
+            "PanelID",
+            panel.PanelID
+          );
+
+        if (
+          panelRowNumber !== -1
+        ) {
+          await deleteRow(
+            "Panel",
+            panelRowNumber
+          );
+
+          console.log(
+            "Deleted Panel:",
+            panel.PanelID
+          );
+        }
+      }
+
+      /**
+       * ==============================================
+       * DELETE VIVA CASE
        * ==============================================
        */
       await deleteRow(
@@ -1050,10 +1146,18 @@ export const deleteVivaCase =
         rowNumber
       );
 
+      console.log(
+        "Deleted VivaCase:",
+        caseID
+      );
+
       return res.json({
         success: true,
         message:
-          "Viva case deleted successfully.",
+          "Viva case and all related panel records deleted successfully.",
+        caseID,
+        deletedPanelRecords:
+          relatedPanels.length,
       });
 
     } catch (err) {
