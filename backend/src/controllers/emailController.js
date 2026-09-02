@@ -131,10 +131,20 @@ function replaceTemplate(
   viva,
   panel = null
 ) {
+
+  /* ======================================================
+     VIVA MODE
+  ====================================================== */
+
   const vivaMode =
     viva.VivaMode ||
     viva.Mode ||
     "Physical";
+
+
+  /* ======================================================
+     MEETING LINK
+  ====================================================== */
 
   let meetingLinkSection = "";
 
@@ -142,19 +152,99 @@ function replaceTemplate(
     vivaMode !== "Physical" &&
     viva.MeetingLink
   ) {
+
     meetingLinkSection = `
       <p>
         <strong>Meeting Link:</strong>
-        <a href="${viva.MeetingLink}" target="_blank">
+        <a
+          href="${viva.MeetingLink}"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           Join Viva Meeting
         </a>
       </p>
     `;
+
   }
+
+
+  /* ======================================================
+     FRONTEND URL
+  ====================================================== */
+
+  const frontendURL =
+    process.env.FRONTEND_URL ||
+    "https://vivavocetrack.onrender.com";
+
+
+  /* ======================================================
+     ACKNOWLEDGEMENT LINK
+     
+     UNIQUE:
+     CaseID + ExaminerID
+     
+     Example:
+     /acknowledgement?caseID=VC001&examinerID=EX001
+  ====================================================== */
+
+  const acknowledgementLink =
+    `${frontendURL}/acknowledgement?caseID=${encodeURIComponent(
+      viva.CaseID || ""
+    )}&examinerID=${encodeURIComponent(
+      examiner?.ExaminerID || ""
+    )}`;
+
+
+  /* ======================================================
+     EXAMINER REPORT TEMPLATE
+
+     Google Docs template
+  ====================================================== */
+
+  const examinerReportLink =
+    process.env.EXAMINER_REPORT_LINK ||
+    "https://docs.google.com/document/d/1xiAJnOCRz_ZGdrZdPaAcsQkwE78oiJix/edit";
+
+
+  /* ======================================================
+     REPORT SUBMISSION
+
+     CASE-SPECIFIC IF AVAILABLE
+
+     Otherwise ENV is used.
+  ====================================================== */
+
+  const reportSubmissionLink =
+    viva.ReportSubmissionLink ||
+    process.env.REPORT_SUBMISSION_LINK ||
+    "";
+
+
+  /* ======================================================
+     ANNOTATED THESIS
+
+     CASE-SPECIFIC IF AVAILABLE
+
+     Otherwise ENV is used.
+  ====================================================== */
+
+  const annotatedThesisUploadLink =
+    viva.AnnotatedThesisUploadLink ||
+    process.env.ANNOTATED_THESIS_UPLOAD_LINK ||
+    "";
+
+
+  /* ======================================================
+     REPLACE TEMPLATE
+  ====================================================== */
 
   return template
 
-    /* Examiner */
+    /* ====================================================
+       EXAMINER
+    ==================================================== */
+
     .replaceAll(
       "{{ExaminerTitle}}",
       examiner?.Title || ""
@@ -170,7 +260,11 @@ function replaceTemplate(
       examiner?.ExaminerType || ""
     )
 
-    /* Student */
+
+    /* ====================================================
+       STUDENT
+    ==================================================== */
+
     .replaceAll(
       "{{StudentID}}",
       student?.StudentID || ""
@@ -251,7 +345,11 @@ function replaceTemplate(
       student?.ThesisTitle || ""
     )
 
-    /* Panel */
+
+    /* ====================================================
+       PANEL
+    ==================================================== */
+
     .replaceAll(
       "{{PanelID}}",
       panel?.PanelID || ""
@@ -262,7 +360,11 @@ function replaceTemplate(
       panel?.Role || ""
     )
 
-    /* Viva */
+
+    /* ====================================================
+       VIVA
+    ==================================================== */
+
     .replaceAll(
       "{{ReportDueDate}}",
       formatDate(viva.ReportDueDate)
@@ -314,54 +416,103 @@ function replaceTemplate(
       meetingLinkSection
     )
 
-        .replaceAll(
+
+    /* ====================================================
+       THESIS GOOGLE DRIVE
+    ==================================================== */
+
+    .replaceAll(
       "{{DriveLink}}",
       viva.GoogleDriveLink || ""
     )
 
-    /* ======================================================
-       SYSTEM LINKS
-    ====================================================== */
+
+    /* ====================================================
+       EXAMINER REPORT
+
+       Google Docs template
+    ==================================================== */
 
     .replaceAll(
       "{{ExaminerReportLink}}",
-      process.env.EXAMINER_REPORT_LINK ||
-      "https://docs.google.com/document/d/1xiAJnOCRz_ZGdrZdPaAcsQkwE78oiJix/edit"
+      examinerReportLink
     )
+
+
+    /* ====================================================
+       ACKNOWLEDGEMENT
+
+       Dynamic CaseID + ExaminerID
+    ==================================================== */
 
     .replaceAll(
       "{{AcknowledgementLink}}",
-      `${process.env.FRONTEND_URL || "https://vivavocetrack.onrender.com"}/acknowledgement?caseID=${encodeURIComponent(
-        viva.CaseID || ""
-      )}&examinerID=${encodeURIComponent(
-        examiner?.ExaminerID || ""
-      )}`
+      acknowledgementLink
     )
+
+
+    /* ====================================================
+       REPORT SUBMISSION
+
+       Google Drive folder
+    ==================================================== */
 
     .replaceAll(
       "{{ReportSubmissionLink}}",
-      viva.ReportSubmissionLink ||
-      process.env.REPORT_SUBMISSION_LINK ||
-      ""
+      reportSubmissionLink
     )
+
+
+    /* ====================================================
+       ANNOTATED THESIS
+
+       Google Drive folder
+    ==================================================== */
 
     .replaceAll(
       "{{AnnotatedThesisUploadLink}}",
-      viva.AnnotatedThesisUploadLink ||
-      process.env.ANNOTATED_THESIS_UPLOAD_LINK ||
-      ""
+      annotatedThesisUploadLink
     )
 
-    
-    /* Panel response */
+
+    /* ====================================================
+       PANEL RESPONSE
+    ==================================================== */
+
     .replaceAll(
       "{{PanelResponseLink}}",
       panel?.PanelResponseLink || ""
     )
 
+
+    /* ====================================================
+       EXTRA SCHEDULE PLACEHOLDERS
+    ==================================================== */
+
+    .replaceAll(
+      "{{ProposedDate}}",
+      formatDate(
+        viva.TentativeVivaDate ||
+        viva.VivaDate ||
+        ""
+      )
+    )
+
+    .replaceAll(
+      "{{ProposedTime}}",
+      viva.VivaTime || ""
+    )
+
+
+    /* ====================================================
+       YEAR
+    ==================================================== */
+
     .replaceAll(
       "{{Year}}",
-      String(new Date().getFullYear())
+      String(
+        new Date().getFullYear()
+      )
     );
 }
 
