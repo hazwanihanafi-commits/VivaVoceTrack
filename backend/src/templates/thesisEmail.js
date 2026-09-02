@@ -18,25 +18,19 @@ The candidate has now submitted the thesis for examination. The thesis and suppo
 documents are now available for your review.
 </p>
 
-
-<!-- ======================================================
-     CANDIDATE INFORMATION
-====================================================== -->
-
 <h3 style="color:#5B2C90;margin:30px 0 15px;">
 Candidate Information
 </h3>
 
 <table
-  width="100%"
-  cellpadding="0"
-  cellspacing="0"
-  style="
-    border-collapse:collapse;
-    border:1px solid #d9d9d9;
-    font-size:14px;
-  "
->
+width="100%"
+cellpadding="0"
+cellspacing="0"
+style="
+border-collapse:collapse;
+border:1px solid #d9d9d9;
+font-size:14px;
+">
 
 <tr style="background:#f7f7f7;">
 <td style="padding:8px 10px;border:1px solid #d9d9d9;width:35%;font-weight:bold;">
@@ -122,43 +116,44 @@ Report Due Date
 </table>
 
 
-<!-- ======================================================
+<!-- =====================================================
      THESIS & SUPPORTING DOCUMENTS
-====================================================== -->
+===================================================== -->
 
 <div style="
-  margin-top:30px;
-  padding:20px;
-  background:#F7F4FC;
-  border-left:6px solid #5B2C90;
+margin-top:30px;
+padding:20px;
+background:#F7F4FC;
+border-left:6px solid #5B2C90;
 ">
 
 <h3 style="margin-top:0;color:#5B2C90;">
 📂 Thesis &amp; Supporting Documents
 </h3>
 
-<p style="line-height:1.7;">
+<p style="line-height:1.8;">
 Please click the button below to access the thesis and supporting documents.
 </p>
 
 <p style="text-align:center;margin:30px 0;">
 
 <a
-  href="{{DriveLink}}"
-  target="_blank"
-  rel="noopener noreferrer"
-  style="
-    display:inline-block;
-    background:#5B2C90;
-    color:#ffffff;
-    padding:12px 24px;
-    border-radius:8px;
-    font-weight:bold;
-    text-decoration:none;
-    font-size:15px;
-  "
->
+href="{{DriveLink}}"
+target="_blank"
+rel="noopener noreferrer"
+style="
+display:inline-block;
+background:#5B2C90;
+color:#ffffff;
+padding:12px 24px;
+border-radius:8px;
+font-weight:bold;
+text-decoration:none;
+font-size:15px;
+">
+
 📄 View Thesis &amp; Supporting Documents
+
 </a>
 
 </p>
@@ -166,19 +161,19 @@ Please click the button below to access the thesis and supporting documents.
 </div>
 
 
-<!-- ======================================================
-     PDF PASSWORD
-====================================================== -->
+<!-- =====================================================
+     PASSWORD
+===================================================== -->
 
 <div style="
-  margin-top:25px;
-  padding:20px;
-  background:#FFF8E8;
-  border-left:6px solid #F39C12;
+margin-top:25px;
+padding:20px;
+background:#FFF8E8;
+border-left:6px solid #F39C12;
 ">
 
 <h3 style="margin-top:0;color:#8A5A00;">
-Password to Open PDF
+🔐 Password to Open PDF
 </h3>
 
 <p>
@@ -186,12 +181,12 @@ The password to open the thesis PDF is:
 </p>
 
 <p style="
-  font-size:20px;
-  font-weight:bold;
-  color:#5B2C90;
-  text-align:center;
-  letter-spacing:1px;
-  margin:20px 0;
+font-size:20px;
+font-weight:bold;
+color:#5B2C90;
+text-align:center;
+letter-spacing:1px;
+margin:20px 0;
 ">
 
 {{MatricNo}}
@@ -205,9 +200,9 @@ Please treat this password as confidential and do not share it with others.
 </div>
 
 
-<!-- ======================================================
+<!-- =====================================================
      IMPORTANT INFORMATION
-====================================================== -->
+===================================================== -->
 
 <h3 style="color:#5B2C90;margin-top:35px;">
 Important Information
@@ -215,47 +210,71 @@ Important Information
 
 <ol style="line-height:1.9;">
 
-<!-- 1 -->
+<!-- 1. EXAMINER REPORT -->
+
 <li>
+
+<strong>Thesis Examiner's Report</strong>
+
+<br><br>
 
 Please download the
 <strong>Thesis Examiner's Report</strong>
-form using the following link:
+using the following link:
 
 <br><br>
 
 <a
-  href="{{ExaminerReportFormLink}}"
-  target="_blank"
-  rel="noopener noreferrer"
->
-{{ExaminerReportFormLink}}
+href="{{ExaminerReportLink}}"
+target="_blank"
+rel="noopener noreferrer"
+style="
+color:#5B2C90;
+font-weight:bold;
+">
+
+Download Thesis Examiner's Report
+
 </a>
 
 </li>
 
 
-<!-- 2 -->
-<li>
+<!-- 2. ACKNOWLEDGEMENT -->
 
-Kindly acknowledge receipt of the thesis by completing
-the online acknowledgement form:
+<li style="margin-top:15px;">
+
+<strong>Acknowledgement of Receipt</strong>
+
+<br><br>
+
+Kindly acknowledge receipt of the thesis by completing the online acknowledgement form:
 
 <br><br>
 
 <a
-  href="{{AcknowledgementLink}}"
-  target="_blank"
-  rel="noopener noreferrer"
->
-{{AcknowledgementLink}}
+href="{{AcknowledgementLink}}"
+target="_blank"
+rel="noopener noreferrer"
+style="
+color:#5B2C90;
+font-weight:bold;
+">
+
+Complete Acknowledgement Form
+
 </a>
 
 </li>
 
 
-<!-- 3 -->
-<li>
+<!-- 3. REPORT SUBMISSION -->
+
+<li style="margin-top:15px;">
+
+<strong>Submission of Examiner's Report</strong>
+
+<br><br>
 
 Please submit your completed examiner report
 on or before
@@ -263,108 +282,188 @@ on or before
 
 <br><br>
 
-<strong>Report Submission:</strong>
+<div style="
+margin:20px 0;
+padding:20px;
+background:#F3F8FF;
+border:1px solid #C7D9F2;
+border-radius:8px;
+">
 
-<br><br>
+<p style="
+margin-top:0;
+font-weight:bold;
+color:#1E4E79;
+">
+
+📤 Submit Your Examiner's Report
+
+</p>
+
+<p style="line-height:1.7;">
+Please click the button below to upload your completed
+Thesis Examiner's Report.
+</p>
+
+<p style="text-align:center;margin:25px 0;">
 
 <a
-  href="{{ExaminerReportSubmissionLink}}"
-  target="_blank"
-  rel="noopener noreferrer"
-  style="
-    display:inline-block;
-    background:#5B2C90;
-    color:#ffffff;
-    padding:12px 24px;
-    border-radius:8px;
-    font-weight:bold;
-    text-decoration:none;
-    font-size:15px;
-  "
->
-📤 Upload Examiner Report
+href="{{ReportSubmissionLink}}"
+target="_blank"
+rel="noopener noreferrer"
+style="
+display:inline-block;
+background:#1E4E79;
+color:#ffffff;
+padding:13px 26px;
+border-radius:8px;
+font-weight:bold;
+text-decoration:none;
+font-size:15px;
+">
+
+📤 Upload Examiner's Report
+
 </a>
 
-<br><br>
+</p>
 
-<span style="font-size:13px;color:#666;">
-Please use the button above to upload your completed
-examiner report. The submission link is assigned specifically
-to you for this examination.
-</span>
+<p style="
+font-size:12px;
+color:#666;
+margin-bottom:0;
+">
+
+Please ensure that the report is submitted before
+<strong>{{ReportDueDate}}</strong>.
+
+</p>
+
+</div>
 
 </li>
 
 
-<!-- 4 -->
-<li>
+<!-- 4. ANNOTATED THESIS -->
+
+<li style="margin-top:15px;">
+
+<strong>Annotated Thesis</strong>
+
+<br><br>
 
 Please upload the annotated thesis
-(PDF with comments) using the following link:
+<strong>(PDF with comments)</strong>
+using the following link:
 
 <br><br>
 
+<div style="
+margin:20px 0;
+padding:20px;
+background:#F7F4FC;
+border:1px solid #D8C9EA;
+border-radius:8px;
+">
+
+<p style="
+margin-top:0;
+font-weight:bold;
+color:#5B2C90;
+">
+
+📝 Upload Annotated Thesis
+
+</p>
+
+<p style="line-height:1.7;">
+Please upload the thesis PDF containing your comments and annotations.
+</p>
+
+<p style="text-align:center;margin:25px 0;">
+
 <a
-  href="{{AnnotatedThesisUploadLink}}"
-  target="_blank"
-  rel="noopener noreferrer"
->
-{{AnnotatedThesisUploadLink}}
+href="{{AnnotatedThesisUploadLink}}"
+target="_blank"
+rel="noopener noreferrer"
+style="
+display:inline-block;
+background:#5B2C90;
+color:#ffffff;
+padding:13px 26px;
+border-radius:8px;
+font-weight:bold;
+text-decoration:none;
+font-size:15px;
+">
+
+📝 Upload Annotated Thesis
+
 </a>
+
+</p>
+
+</div>
 
 </li>
 
 
-<!-- 5 -->
-<li>
+<!-- 5. VIVA -->
 
-You are kindly requested to attend the Viva Voce examination
-when scheduled. The session may be conducted either in person
+<li style="margin-top:15px;">
+
+You are kindly requested to attend the
+<strong>Viva Voce examination</strong>
+when scheduled.
+
+The session may be conducted either in person
 or via Microsoft Teams.
 
 </li>
 
 
-<!-- 6 -->
-<li>
+<!-- 6. CONFIDENTIALITY -->
 
-All thesis documents are strictly confidential and should not
-be shared with any third party.
+<li style="margin-top:15px;">
+
+All thesis documents are strictly confidential
+and should not be shared with any third party.
 
 </li>
 
 </ol>
 
 
-<!-- ======================================================
-     APPRECIATION
-====================================================== -->
+<!-- =====================================================
+     CLOSING
+===================================================== -->
 
 <p style="margin-top:35px;line-height:1.8;">
-We sincerely appreciate your valuable contribution towards
-maintaining the quality of postgraduate education at
-Universiti Sains Malaysia.
+
+We sincerely appreciate your valuable contribution
+towards maintaining the quality of postgraduate education
+at Universiti Sains Malaysia.
+
 </p>
 
 
-<!-- ======================================================
-     CONTACT
-====================================================== -->
-
 <p style="line-height:1.8;">
+
 Should you require any assistance regarding the examination
-process, please contact
-<strong>Mrs Nur Anis Syamimi</strong>
+process, please contact Mrs Nur Anis Syamimi
 (<a href="mailto:anissyamimi@usm.my">
 anissyamimi@usm.my
 </a>),
-Assistant Registrar, Academic &amp; International Division, PKTAAB.
+Assistant Registrar, Academic &amp; International Division,
+PKTAAB.
+
 </p>
 
 
 <p>
 Yours sincerely,
 </p>
+
 
 <p>
 
@@ -379,17 +478,14 @@ Universiti Sains Malaysia
 </p>
 
 
-<!-- ======================================================
-     AUTOMATED EMAIL NOTICE
-====================================================== -->
-
 <p style="
-  margin-top:30px;
-  padding-top:15px;
-  border-top:1px solid #eeeeee;
-  color:#777;
-  font-size:12px;
-  line-height:1.6;
+margin-top:35px;
+padding-top:15px;
+border-top:1px solid #eeeeee;
+font-size:12px;
+color:#777;
+text-align:center;
+line-height:1.6;
 ">
 
 This is an automatically generated email from
