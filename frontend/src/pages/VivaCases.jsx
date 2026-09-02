@@ -614,77 +614,96 @@ export default function VivaCases() {
      DELETE CASE
   ====================================================== */
 
-  async function deleteCase(
+  async function deleteCase(caseID) {
+
+  console.log(
+    "========================================"
+  );
+
+  console.log(
+    "DELETE VIVA CASE"
+  );
+
+  console.log(
+    "Case ID received:",
     caseID
-  ) {
+  );
 
-    const ok =
-      window.confirm(
-        "Are you sure you want to delete this viva case?"
-      );
+  console.log(
+    "Delete URL:",
+    `${API}/vivacases/${caseID}`
+  );
 
+  console.log(
+    "========================================"
+  );
 
-    if (!ok) return;
+  if (!caseID) {
 
+    alert(
+      "Cannot delete Viva Case because Case ID is missing."
+    );
 
-    try {
+    return;
+  }
 
-      const res =
-        await fetch(
-          `${API}/vivacases/${caseID}`,
-          {
-            method:
-              "DELETE",
-          }
-        );
+  const ok = window.confirm(
+    `Are you sure you want to delete Viva Case ${caseID}?`
+  );
 
+  if (!ok) return;
 
-      const data =
-        await res.json();
+  try {
 
-
-      if (!res.ok) {
-
-        alert(
-          data.message ||
-            "Unable to delete case."
-        );
-
-        return;
-
+    const res = await fetch(
+      `${API}/vivacases/${encodeURIComponent(caseID)}`,
+      {
+        method: "DELETE",
       }
+    );
 
+    const data = await res.json();
 
-      alert(
-        "Viva case deleted successfully."
-      );
+    console.log(
+      "DELETE RESPONSE:",
+      data
+    );
 
-
-      await loadCases();
-
-
-      setSelectedCase(
-        null
-      );
-
-      setSelectedStudent(
-        null
-      );
-
-
-    } catch (err) {
-
-      console.error(
-        err
-      );
+    if (!res.ok) {
 
       alert(
-        "Server connection failed."
+        data.message ||
+        "Unable to delete case."
       );
 
+      return;
     }
 
+    alert(
+      `Viva Case ${caseID} deleted successfully.`
+    );
+
+    // Refresh table
+    await loadCases();
+
+    // Clear selected case
+    setSelectedCase(null);
+
+    setSelectedStudent(null);
+
+  } catch (err) {
+
+    console.error(
+      "DELETE CASE ERROR:",
+      err
+    );
+
+    alert(
+      "Server connection failed."
+    );
+
   }
+}
 
 
   /* ======================================================
