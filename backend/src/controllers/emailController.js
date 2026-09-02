@@ -297,26 +297,25 @@ function replaceTemplate(
       viva.GoogleDriveLink || ""
     )
 
-    /* System links */
     .replaceAll(
-      "{{ExaminerReportLink}}",
-      process.env.EXAMINER_REPORT_LINK || ""
-    )
+  "{{ExaminerReportLink}}",
+  process.env.EXAMINER_REPORT_LINK || ""
+)
 
-    .replaceAll(
-      "{{AcknowledgementLink}}",
-      process.env.ACKNOWLEDGEMENT_LINK || ""
-    )
+.replaceAll(
+  "{{AcknowledgementLink}}",
+  viva.AcknowledgementLink || ""
+)
 
-    .replaceAll(
-      "{{ReportSubmissionLink}}",
-      process.env.REPORT_SUBMISSION_LINK || ""
-    )
+.replaceAll(
+  "{{ReportSubmissionLink}}",
+  viva.ReportSubmissionLink || ""
+)
 
-    .replaceAll(
-      "{{AnnotatedThesisUploadLink}}",
-      process.env.ANNOTATED_THESIS_UPLOAD_LINK || ""
-    )
+.replaceAll(
+  "{{AnnotatedThesisUploadLink}}",
+  viva.AnnotatedThesisUploadLink || ""
+)
 
     /* Panel response */
     .replaceAll(
@@ -366,20 +365,71 @@ async function sendToAllExaminers({
   subject,
   body,
 }) {
-  const examiners =
-    await getAssignedExaminers(viva);
+  const examiners = await getAssignedExaminers(viva);
 
   const recipients = [];
 
+  const frontendURL =
+    process.env.FRONTEND_URL ||
+    "https://vivavocetrack.onrender.com";
+
   for (const examiner of examiners) {
+
+    // ==========================================
+    // UNIQUE LINKS FOR THIS EXAMINER
+    // ==========================================
+
+    const acknowledgementLink =
+      `${frontendURL}/acknowledgement?caseID=${encodeURIComponent(
+        viva.CaseID
+      )}&examinerID=${encodeURIComponent(
+        examiner.ExaminerID
+      )}`;
+
+    const reportSubmissionLink =
+      `${frontendURL}/report-submission?caseID=${encodeURIComponent(
+        viva.CaseID
+      )}&examinerID=${encodeURIComponent(
+        examiner.ExaminerID
+      )}`;
+
+    const annotatedThesisUploadLink =
+      `${frontendURL}/annotated-thesis?caseID=${encodeURIComponent(
+        viva.CaseID
+      )}&examinerID=${encodeURIComponent(
+        examiner.ExaminerID
+      )}`;
+
+    // ==========================================
+    // CREATE VIVA DATA FOR THIS EXAMINER
+    // ==========================================
+
+    const examinerViva = {
+      ...viva,
+
+      AcknowledgementLink:
+        acknowledgementLink,
+
+      ReportSubmissionLink:
+        reportSubmissionLink,
+
+      AnnotatedThesisUploadLink:
+        annotatedThesisUploadLink,
+    };
+
+    // ==========================================
+    // CREATE EMAIL HTML
+    // ==========================================
+
     const html = replaceTemplate(
       body,
       student,
       examiner,
-      viva
+      examinerViva
     );
 
     try {
+
       await sendEmail({
         to: examiner.Email,
         subject,
@@ -391,8 +441,14 @@ async function sendToAllExaminers({
         email: examiner.Email,
         type: examiner.ExaminerType,
         status: "Sent",
+
+        acknowledgementLink,
+        reportSubmissionLink,
+        annotatedThesisUploadLink,
       });
+
     } catch (err) {
+
       console.error(
         `Failed to send email to ${examiner.Email}`,
         err
@@ -405,11 +461,184 @@ async function sendToAllExaminers({
         status: "Failed",
         error: err.message,
       });
+
     }
   }
 
   return recipients;
 }
+
+export const getAcknowledgementData = async (
+  req,
+  res,
+  next
+) => {
+  try {
+
+    const { caseID, examinerID } = req.query;
+
+    if (!caseID) {
+      return res.status(400).json({
+        success: false,
+        message: "Case ID is required.",
+      });
+    }
+
+    if (!examinerID) {
+      return res.status(400).json({
+        success: false,
+        message: "Examiner ID is required.",
+      });
+    }
+
+    // ==========================================
+    // GET VIVA CASE
+    // ==========================================
+
+    const viva = await findRow(
+      VIVA_SHEET,
+      "CaseID",
+      caseID
+    );
+
+    if (!viva) {
+      return res.status(404).json({
+        success: false,
+        message: `Viva Case ${caseID} not found.`,
+      });
+    }
+
+    // ==========================================
+    // GET STUDENT
+    // ==========================================
+
+    const student = await findRow(
+      STUDENT_SHEET,
+      "StudentID",
+      viva.StudentID
+    );
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found.",
+      });
+    }
+
+    // ==========================================
+    // GET EXAMINER
+    // ==========================================
+
+    const examiner = await findRow(
+      EXAMINER_SHEET,
+      "ExaminerID",
+      examinerID
+    );
+
+    if (!examiner) {
+      return res.status(404).json({
+        success: false,
+        message: "Examiner not found.",
+      });
+    }
+
+    // ==========================================
+    // CHECK EXAMINER IS ASSIGNED TO THIS CASE
+    // ==========================================
+
+    const assignedExaminerIDs = [
+      viva.InternalExaminer1ID,
+      viva.InternalExaminer2ID,
+      viva.ExternalExaminer1ID,
+      viva.ExternalExaminer2ID,
+    ]
+      .filter(Boolean)
+      .map(id => String(id).trim());
+
+    if (
+      !assignedExaminerIDs.includes(
+        String(examinerID).trim()
+      )
+    ) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "This examiner is not assigned to this Viva case.",
+      });
+    }
+
+    // ==========================================
+    // RETURN DATA
+    // ==========================================
+
+    return res.json({
+      success: true,
+
+      case: {
+        CaseID: viva.CaseID,
+        StudentID: viva.StudentID,
+      },
+
+      student: {
+        StudentID:
+          student.StudentID || "",
+
+        StudentName:
+          student.StudentName || "",
+
+        School:
+          student.School || "",
+
+        Programme:
+          student.Programme || "",
+
+        Degree:
+          student.Degree || student.Programme || "",
+
+        Email:
+          student.Email || "",
+      },
+
+      examiner: {
+        ExaminerID:
+          examiner.ExaminerID || "",
+
+        ExaminerName:
+          examiner.ExaminerName || "",
+
+        Title:
+          examiner.Title || "",
+
+        Email:
+          examiner.Email || "",
+
+        OfficePhone:
+          examiner.OfficePhone ||
+          examiner.OfficeTel ||
+          "",
+
+        MobilePhone:
+          examiner.MobilePhone ||
+          examiner.Mobile ||
+          "",
+
+        Fax:
+          examiner.Fax || "",
+      },
+    });
+
+  } catch (err) {
+
+    console.error(
+      "GET ACKNOWLEDGEMENT DATA ERROR:",
+      err
+    );
+
+    next(err);
+  }
+};
+
+
 
 /* ======================================================
    PREVIEW EMAIL
