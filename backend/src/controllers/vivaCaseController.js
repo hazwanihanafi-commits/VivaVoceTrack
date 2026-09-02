@@ -853,11 +853,16 @@ export const updateVivaCase =
           row.ChairpersonID,
 
         SecretaryID:
-          body.SecretaryID ??
-          row.SecretaryID,
+  body.SecretaryID ??
+  row.SecretaryID,
 
-        MainSupervisorID:
-          mainSupervisorID,
+ResponseDeadline:
+  body.ResponseDeadline ??
+  row.ResponseDeadline ??
+  "",
+
+MainSupervisorID:
+  mainSupervisorID,
 
         CoSupervisorID:
           body.CoSupervisorID ??
