@@ -7,9 +7,10 @@ import {
   deleteRow,
   generateID,
 } from "../services/sheetsService.js";
-
-import { createVivaPanel } from "../services/vivaPanelService.js";
-
+import {
+  createVivaPanel,
+  deleteVivaPanel,
+} from "../services/vivaPanelService.js";
 import {
   createVivaCaseFolders,
 } from "../services/driveService.js";
