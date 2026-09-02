@@ -13,10 +13,10 @@ const FOLDER_ID =
 const getGoogleAuth = () => {
   let credentials = null;
 
-  // ----------------------------------------------------
+  // ====================================================
   // OPTION 1:
   // GOOGLE_SERVICE_ACCOUNT contains full JSON
-  // ----------------------------------------------------
+  // ====================================================
 
   if (process.env.GOOGLE_SERVICE_ACCOUNT) {
     try {
@@ -31,10 +31,10 @@ const getGoogleAuth = () => {
     }
   }
 
-  // ----------------------------------------------------
+  // ====================================================
   // OPTION 2:
   // Separate environment variables
-  // ----------------------------------------------------
+  // ====================================================
 
   if (!credentials) {
     credentials = {
@@ -52,9 +52,9 @@ const getGoogleAuth = () => {
     };
   }
 
-  // ----------------------------------------------------
-  // VALIDATE CREDENTIALS
-  // ----------------------------------------------------
+  // ====================================================
+  // VALIDATE
+  // ====================================================
 
   if (
     !credentials?.client_email ||
@@ -67,7 +67,6 @@ const getGoogleAuth = () => {
 
   return new google.auth.GoogleAuth({
     credentials,
-
     scopes: [
       "https://www.googleapis.com/auth/drive",
     ],
@@ -87,6 +86,46 @@ const getDrive = async () => {
     version: "v3",
     auth,
   });
+};
+
+/**
+ * ======================================================
+ * ESCAPE GOOGLE DRIVE QUERY STRING
+ * ======================================================
+ *
+ * Google Drive query strings use single quotes.
+ *
+ * Example:
+ *
+ * name = 'VC001 - Ahmad'
+ *
+ * If the name contains:
+ *
+ * '
+ *
+ * it must be escaped.
+ *
+ * ======================================================
+ */
+
+const escapeDriveQuery = (value) => {
+  return String(value || "")
+    .replace(/\\/g, "\\\\")
+    .replace(/'/g, "\\'");
+};
+
+/**
+ * ======================================================
+ * BUILD DRIVE FOLDER URL
+ * ======================================================
+ */
+
+export const getDriveFolderUrl = (folderId) => {
+  if (!folderId) {
+    return "";
+  }
+
+  return `https://drive.google.com/drive/folders/${folderId}`;
 };
 
 /**
@@ -113,21 +152,21 @@ export const createDriveFolder = async ({
 
   const drive = await getDrive();
 
-  // ----------------------------------------------------
-  // Check whether folder already exists
-  // ----------------------------------------------------
+  // ====================================================
+  // CHECK EXISTING FOLDER
+  // ====================================================
 
   const existing =
     await drive.files.list({
       q: `
         name = '${escapeDriveQuery(name)}'
-        and '${parentId}' in parents
+        and '${escapeDriveQuery(parentId)}' in parents
         and mimeType = 'application/vnd.google-apps.folder'
         and trashed = false
       `,
 
       fields:
-        "files(id,name,webViewLink)",
+        "files(id,name,mimeType,parents,webViewLink)",
 
       supportsAllDrives: true,
 
@@ -146,27 +185,26 @@ export const createDriveFolder = async ({
       {
         id: folder.id,
         name: folder.name,
+        parents: folder.parents,
       }
     );
 
     return {
-      id:
-        folder.id,
+      id: folder.id,
 
-      name:
-        folder.name,
+      name: folder.name,
 
       webViewLink:
         folder.webViewLink ||
-        `https://drive.google.com/drive/folders/${folder.id}`,
+        getDriveFolderUrl(folder.id),
 
       existing: true,
     };
   }
 
-  // ----------------------------------------------------
-  // Create new folder
-  // ----------------------------------------------------
+  // ====================================================
+  // CREATE NEW FOLDER
+  // ====================================================
 
   const response =
     await drive.files.create({
@@ -180,7 +218,7 @@ export const createDriveFolder = async ({
       },
 
       fields:
-        "id,name,webViewLink",
+        "id,name,mimeType,parents,webViewLink",
 
       supportsAllDrives: true,
     });
@@ -199,19 +237,21 @@ export const createDriveFolder = async ({
     {
       id: folder.id,
       name: folder.name,
+      parents: folder.parents,
+      webViewLink:
+        folder.webViewLink ||
+        getDriveFolderUrl(folder.id),
     }
   );
 
   return {
-    id:
-      folder.id,
+    id: folder.id,
 
-    name:
-      folder.name,
+    name: folder.name,
 
     webViewLink:
       folder.webViewLink ||
-      `https://drive.google.com/drive/folders/${folder.id}`,
+      getDriveFolderUrl(folder.id),
 
     existing: false,
   };
@@ -220,17 +260,6 @@ export const createDriveFolder = async ({
 /**
  * ======================================================
  * SHARE GOOGLE DRIVE FOLDER
- * ======================================================
- *
- * Shares the folder with the Google account specified
- * in:
- *
- * GOOGLE_DRIVE_SHARE_EMAIL
- *
- * Default role:
- *
- * writer
- *
  * ======================================================
  */
 
@@ -263,9 +292,9 @@ export const shareDriveFolder = async ({
     }
   );
 
-  // ----------------------------------------------------
-  // Get existing permissions
-  // ----------------------------------------------------
+  // ====================================================
+  // GET EXISTING PERMISSIONS
+  // ====================================================
 
   const permissions =
     await drive.permissions.list({
@@ -294,9 +323,9 @@ export const shareDriveFolder = async ({
             .toLowerCase()
     );
 
-  // ----------------------------------------------------
-  // Already shared
-  // ----------------------------------------------------
+  // ====================================================
+  // ALREADY SHARED
+  // ====================================================
 
   if (existingPermission) {
     console.log(
@@ -311,7 +340,10 @@ export const shareDriveFolder = async ({
       }
     );
 
-    // If existing role is not writer, upgrade it
+    // --------------------------------------------------
+    // UPGRADE ROLE IF NECESSARY
+    // --------------------------------------------------
+
     if (
       role === "writer" &&
       existingPermission.role !==
@@ -343,6 +375,7 @@ export const shareDriveFolder = async ({
 
       return {
         success: true,
+
         existing: true,
 
         permissionId:
@@ -357,6 +390,7 @@ export const shareDriveFolder = async ({
 
     return {
       success: true,
+
       existing: true,
 
       permissionId:
@@ -370,9 +404,9 @@ export const shareDriveFolder = async ({
     };
   }
 
-  // ----------------------------------------------------
-  // Create permission
-  // ----------------------------------------------------
+  // ====================================================
+  // CREATE PERMISSION
+  // ====================================================
 
   const response =
     await drive.permissions.create({
@@ -386,10 +420,10 @@ export const shareDriveFolder = async ({
         emailAddress,
       },
 
-      // Do not send email notification
       sendNotificationEmail: false,
 
-      fields: "id",
+      fields:
+        "id,type,emailAddress,role",
 
       supportsAllDrives: true,
     });
@@ -425,6 +459,7 @@ export const shareDriveFolder = async ({
  * ======================================================
  *
  * VivaTrack
+ *
  * └── VC001 - Student Name
  *     ├── 01 - Thesis
  *     ├── 02 - Supporting Documents
@@ -446,15 +481,19 @@ export const createVivaCaseFolders =
       );
     }
 
+    if (!FOLDER_ID) {
+      throw new Error(
+        "GOOGLE_DRIVE_FOLDER_ID is not configured."
+      );
+    }
+
     const safeStudentName =
       String(
         studentName ||
           "Unknown Student"
-      ).trim();
-
-    // --------------------------------------------------
-    // Email that should receive access
-    // --------------------------------------------------
+      )
+        .trim()
+        .replace(/[<>:"/\\|?*]/g, "_");
 
     const shareEmail =
       process.env.GOOGLE_DRIVE_SHARE_EMAIL;
@@ -484,6 +523,11 @@ export const createVivaCaseFolders =
     );
 
     console.log(
+      "PARENT FOLDER ID:",
+      FOLDER_ID
+    );
+
+    console.log(
       "SHARE EMAIL:",
       shareEmail
     );
@@ -492,9 +536,9 @@ export const createVivaCaseFolders =
       "=========================================="
     );
 
-    // --------------------------------------------------
-    // Main case folder
-    // --------------------------------------------------
+    // ==================================================
+    // MAIN CASE FOLDER
+    // ==================================================
 
     const caseFolderName =
       `${caseID} - ${safeStudentName}`;
@@ -513,9 +557,9 @@ export const createVivaCaseFolders =
       caseFolder
     );
 
-    // --------------------------------------------------
-    // Subfolder 01 - Thesis
-    // --------------------------------------------------
+    // ==================================================
+    // THESIS
+    // ==================================================
 
     const thesisFolder =
       await createDriveFolder({
@@ -526,9 +570,9 @@ export const createVivaCaseFolders =
           caseFolder.id,
       });
 
-    // --------------------------------------------------
-    // Subfolder 02 - Supporting Documents
-    // --------------------------------------------------
+    // ==================================================
+    // SUPPORTING DOCUMENTS
+    // ==================================================
 
     const supportingFolder =
       await createDriveFolder({
@@ -539,9 +583,9 @@ export const createVivaCaseFolders =
           caseFolder.id,
       });
 
-    // --------------------------------------------------
-    // Subfolder 03 - Examiner Reports
-    // --------------------------------------------------
+    // ==================================================
+    // EXAMINER REPORTS
+    // ==================================================
 
     const reportsFolder =
       await createDriveFolder({
@@ -552,9 +596,9 @@ export const createVivaCaseFolders =
           caseFolder.id,
       });
 
-    // --------------------------------------------------
-    // Subfolder 04 - Annotated Thesis
-    // --------------------------------------------------
+    // ==================================================
+    // ANNOTATED THESIS
+    // ==================================================
 
     const annotatedFolder =
       await createDriveFolder({
@@ -565,19 +609,13 @@ export const createVivaCaseFolders =
           caseFolder.id,
       });
 
-    // --------------------------------------------------
-    // Share MAIN CASE FOLDER
-    // --------------------------------------------------
-    //
-    // Sharing the parent folder gives access to the
-    // files/folders inside it.
-    //
-    // --------------------------------------------------
+    // ==================================================
+    // SHARE MAIN CASE FOLDER
+    // ==================================================
 
     let shareResult;
 
     try {
-
       shareResult =
         await shareDriveFolder({
           folderId:
@@ -602,9 +640,9 @@ export const createVivaCaseFolders =
       );
     }
 
-    // --------------------------------------------------
-    // Return complete structure
-    // --------------------------------------------------
+    // ==================================================
+    // RETURN COMPLETE STRUCTURE
+    // ==================================================
 
     return {
 
@@ -618,8 +656,9 @@ export const createVivaCaseFolders =
 
         webViewLink:
           caseFolder.webViewLink ||
-          `https://drive.google.com/drive/folders/${caseFolder.id}`,
-
+          getDriveFolderUrl(
+            caseFolder.id
+          ),
       },
 
       thesisFolder: {
@@ -632,8 +671,9 @@ export const createVivaCaseFolders =
 
         webViewLink:
           thesisFolder.webViewLink ||
-          `https://drive.google.com/drive/folders/${thesisFolder.id}`,
-
+          getDriveFolderUrl(
+            thesisFolder.id
+          ),
       },
 
       supportingFolder: {
@@ -646,8 +686,9 @@ export const createVivaCaseFolders =
 
         webViewLink:
           supportingFolder.webViewLink ||
-          `https://drive.google.com/drive/folders/${supportingFolder.id}`,
-
+          getDriveFolderUrl(
+            supportingFolder.id
+          ),
       },
 
       reportsFolder: {
@@ -660,8 +701,9 @@ export const createVivaCaseFolders =
 
         webViewLink:
           reportsFolder.webViewLink ||
-          `https://drive.google.com/drive/folders/${reportsFolder.id}`,
-
+          getDriveFolderUrl(
+            reportsFolder.id
+          ),
       },
 
       annotatedFolder: {
@@ -674,32 +716,16 @@ export const createVivaCaseFolders =
 
         webViewLink:
           annotatedFolder.webViewLink ||
-          `https://drive.google.com/drive/folders/${annotatedFolder.id}`,
-
+          getDriveFolderUrl(
+            annotatedFolder.id
+          ),
       },
 
       sharedWith:
         shareEmail,
 
       shareResult,
-
     };
-  };
-
-/**
- * ======================================================
- * GET FOLDER URL
- * ======================================================
- */
-
-export const getDriveFolderUrl =
-  (folderId) => {
-
-    if (!folderId) {
-      return "";
-    }
-
-    return `https://drive.google.com/drive/folders/${folderId}`;
   };
 
 /**
@@ -719,6 +745,12 @@ export const uploadFileToDrive =
     if (!buffer) {
       throw new Error(
         "No file buffer received."
+      );
+    }
+
+    if (!originalName) {
+      throw new Error(
+        "Original file name is required."
       );
     }
 
@@ -759,7 +791,7 @@ export const uploadFileToDrive =
         media,
 
         fields:
-          "id,name,mimeType,size,webViewLink,webContentLink",
+          "id,name,mimeType,size,parents,webViewLink,webContentLink",
 
         supportsAllDrives:
           true,
