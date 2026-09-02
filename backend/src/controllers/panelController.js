@@ -37,14 +37,20 @@ export const getAllPanelResponses = async (req, res, next) => {
  */
 export const getVivaPanel = async (req, res, next) => {
   try {
-    const vivaID = req.params.vivaID;
+    const vivaID = String(req.params.vivaID || "").trim();
+
+    if (!vivaID) {
+      return res.status(400).json({
+        success: false,
+        message: "Viva ID is required.",
+      });
+    }
 
     const rows = await getRows(SHEET);
 
     const panel = rows.filter(
       (row) =>
-        String(row.VivaID || "").trim() ===
-        String(vivaID || "").trim()
+        String(row.VivaID || "").trim() === vivaID
     );
 
     return res.json({
@@ -62,12 +68,18 @@ export const getVivaPanel = async (req, res, next) => {
 /**
  * ======================================================
  * GET ONE PANEL MEMBER
+ *
  * GET /api/panel/:panelID
+ *
+ * Example:
+ * /api/panel/VP001
  * ======================================================
  */
 export const getPanelMember = async (req, res, next) => {
   try {
-    const panelID = req.params.panelID;
+    const panelID = String(
+      req.params.panelID || ""
+    ).trim();
 
     if (!panelID) {
       return res.status(400).json({
@@ -105,6 +117,11 @@ export const getPanelMember = async (req, res, next) => {
  * RESPOND TO PANEL INVITATION
  *
  * POST /api/panel/:panelID/respond
+ *
+ * Example:
+ * POST /api/panel/VP001/respond
+ *
+ * This updates ONLY the Panel sheet.
  * ======================================================
  */
 export const respondToPanelInvitation = async (
@@ -113,14 +130,13 @@ export const respondToPanelInvitation = async (
   next
 ) => {
   try {
-    const panelID = req.params.panelID;
+    // ====================================================
+    // PANEL ID
+    // ====================================================
 
-    const {
-      response,
-      suggestedDate,
-      suggestedTime,
-      remarks,
-    } = req.body;
+    const panelID = String(
+      req.params.panelID || ""
+    ).trim();
 
     if (!panelID) {
       return res.status(400).json({
@@ -129,11 +145,22 @@ export const respondToPanelInvitation = async (
       });
     }
 
-    /**
-     * --------------------------------------------------
-     * FIND PANEL
-     * --------------------------------------------------
-     */
+
+    // ====================================================
+    // REQUEST BODY
+    // ====================================================
+
+    const {
+      response,
+      suggestedDate,
+      suggestedTime,
+      remarks,
+    } = req.body;
+
+
+    // ====================================================
+    // FIND PANEL
+    // ====================================================
 
     const panel = await findRow(
       SHEET,
@@ -149,11 +176,9 @@ export const respondToPanelInvitation = async (
     }
 
 
-    /**
-     * --------------------------------------------------
-     * CHECK RESPONSE DEADLINE
-     * --------------------------------------------------
-     */
+    // ====================================================
+    // CHECK RESPONSE DEADLINE
+    // ====================================================
 
     if (panel.ResponseDeadline) {
       const deadline = new Date(
@@ -175,15 +200,17 @@ export const respondToPanelInvitation = async (
     }
 
 
-    /**
-     * --------------------------------------------------
-     * VALIDATE RESPONSE
-     * --------------------------------------------------
-     */
+    // ====================================================
+    // VALIDATE RESPONSE
+    // ====================================================
 
-    if (
-      !["Yes", "No", "Suggest"].includes(response)
-    ) {
+    const validResponses = [
+      "Yes",
+      "No",
+      "Suggest",
+    ];
+
+    if (!validResponses.includes(response)) {
       return res.status(400).json({
         success: false,
         message:
@@ -192,11 +219,9 @@ export const respondToPanelInvitation = async (
     }
 
 
-    /**
-     * --------------------------------------------------
-     * VALIDATE SUGGESTED DATE/TIME
-     * --------------------------------------------------
-     */
+    // ====================================================
+    // VALIDATE SUGGESTED DATE/TIME
+    // ====================================================
 
     if (
       response === "Suggest" &&
@@ -210,11 +235,9 @@ export const respondToPanelInvitation = async (
     }
 
 
-    /**
-     * --------------------------------------------------
-     * FIND SHEET ROW
-     * --------------------------------------------------
-     */
+    // ====================================================
+    // FIND EXACT SHEET ROW
+    // ====================================================
 
     const rowNumber = await findRowNumber(
       SHEET,
@@ -222,7 +245,18 @@ export const respondToPanelInvitation = async (
       panelID
     );
 
-    if (!rowNumber) {
+    // IMPORTANT:
+    // Do NOT use:
+    // if (!rowNumber)
+    //
+    // because row number 0 can be treated as false.
+    // ====================================================
+
+    if (
+      rowNumber === -1 ||
+      rowNumber === null ||
+      rowNumber === undefined
+    ) {
       return res.status(404).json({
         success: false,
         message:
@@ -231,20 +265,21 @@ export const respondToPanelInvitation = async (
     }
 
 
-    /**
-     * --------------------------------------------------
-     * UPDATE PANEL RESPONSE
-     * --------------------------------------------------
-     */
+    // ====================================================
+    // UPDATE PANEL RESPONSE
+    // ====================================================
 
     const updated = {
       ...panel,
 
+      // Student / Examiner response
       Accepted: response,
 
+      // Response date
       ResponseDate:
         new Date().toISOString(),
 
+      // Suggested schedule
       SuggestedDate:
         response === "Suggest"
           ? suggestedDate
@@ -255,16 +290,15 @@ export const respondToPanelInvitation = async (
           ? suggestedTime
           : "",
 
+      // Remarks
       Remarks:
         remarks || "",
     };
 
 
-    /**
-     * --------------------------------------------------
-     * SAVE
-     * --------------------------------------------------
-     */
+    // ====================================================
+    // SAVE TO PANEL SHEET
+    // ====================================================
 
     await updateRow(
       SHEET,
@@ -273,13 +307,12 @@ export const respondToPanelInvitation = async (
     );
 
 
-    /**
-     * --------------------------------------------------
-     * RESPONSE MESSAGE
-     * --------------------------------------------------
-     */
+    // ====================================================
+    // RESPONSE MESSAGE
+    // ====================================================
 
-    let message;
+    let message =
+      "Your response has been recorded successfully.";
 
     if (response === "Yes") {
       message =
@@ -296,6 +329,10 @@ export const respondToPanelInvitation = async (
         "Your suggested date and time have been recorded successfully.";
     }
 
+
+    // ====================================================
+    // RETURN UPDATED PANEL RECORD
+    // ====================================================
 
     return res.json({
       success: true,
