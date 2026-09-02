@@ -50,40 +50,47 @@ export default function StudentModal({
   }
 
   async function save() {
-    try {
-      setSaving(true);
+  try {
+    setSaving(true);
 
-      const url = student
-        ? `${API}/students/${student.StudentID}`
-        : `${API}/students`;
+    const url = student
+      ? `${API}/api/students/${student.StudentID}`
+      : `${API}/api/students`;
 
-      const method = student ? "PUT" : "POST";
+    const method = student ? "PUT" : "POST";
 
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(form),
-      });
+    console.log("SAVE STUDENT:", {
+      url,
+      method,
+      studentID: student?.StudentID,
+      form,
+    });
 
-      const json = await res.json();
+    const res = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(form),
+    });
 
-      if (!json.success) {
-        alert(json.message);
-        return;
-      }
+    const json = await res.json();
 
-      onSaved();
-      onClose();
-    } catch (err) {
-      console.error(err);
-      alert("Unable to save student.");
-    } finally {
-      setSaving(false);
+    if (!json.success) {
+      alert(json.message || "Unable to save student.");
+      return;
     }
-  }
 
+    onSaved();
+    onClose();
+
+  } catch (err) {
+    console.error("SAVE STUDENT ERROR:", err);
+    alert("Unable to save student.");
+  } finally {
+    setSaving(false);
+  }
+}
   function Input(label, name, type = "text") {
     return (
       <div>
