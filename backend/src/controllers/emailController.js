@@ -1398,33 +1398,8 @@ async function getPanelMemberContact(panel) {
 }
 
 /* ======================================================
-   SEND VIVA SCHEDULE FOR PANEL CONFIRMATION
-======================================================
-
-FLOW:
-
-Admin sets proposed date/time
-        ↓
-Send schedule
-        ↓
-ALL panel members receive email
-        ↓
-Each gets unique PanelResponseLink
-        ↓
-Panel member:
-    ACCEPT
-       OR
-    CANNOT ATTEND + suggest date/time
-        ↓
-Panel sheet updated
-        ↓
-System checks required members
-        ↓
-If all required accept:
-    Viva = Confirmed
-Else:
-    Waiting for Panel Confirmation
-
+   SEND VIVA SCHEDULE
+   SEND DIRECTLY TO ASSIGNED EXAMINERS
 ====================================================== */
 
 export const sendVivaSchedule = async (
@@ -1433,11 +1408,17 @@ export const sendVivaSchedule = async (
   next
 ) => {
   try {
+
+    /* ==================================================
+       CASE ID
+    ================================================== */
+
     const caseID = req.params.id;
 
-    /* ==========================
-       GET VIVA
-    ========================== */
+
+    /* ==================================================
+       GET VIVA CASE
+    ================================================== */
 
     const viva = await findRow(
       VIVA_SHEET,
@@ -1452,9 +1433,10 @@ export const sendVivaSchedule = async (
       });
     }
 
-    /* ==========================
+
+    /* ==================================================
        GET STUDENT
-    ========================== */
+    ================================================== */
 
     const student = await findRow(
       STUDENT_SHEET,
@@ -1469,24 +1451,52 @@ export const sendVivaSchedule = async (
       });
     }
 
-    /* ==========================
-       GET PANEL
-    ========================== */
 
-    const panels =
-      await getVivaPanelMembers(caseID);
+    /* ==================================================
+       GET ASSIGNED EXAMINERS
+       DIRECTLY FROM VivaCases
+    ================================================== */
 
-    if (panels.length === 0) {
+    const examinerAssignments = [
+      {
+        id: viva.InternalExaminer1ID,
+        type: "Internal Examiner 1",
+      },
+      {
+        id: viva.InternalExaminer2ID,
+        type: "Internal Examiner 2",
+      },
+      {
+        id: viva.ExternalExaminer1ID,
+        type: "External Examiner 1",
+      },
+      {
+        id: viva.ExternalExaminer2ID,
+        type: "External Examiner 2",
+      },
+    ].filter(
+      (item) =>
+        item.id &&
+        String(item.id).trim() !== ""
+    );
+
+
+    /* ==================================================
+       CHECK EXAMINERS
+    ================================================== */
+
+    if (examinerAssignments.length === 0) {
       return res.status(404).json({
         success: false,
         message:
-          "No Viva Panel members found for this case.",
+          "No examiners assigned to this Viva case.",
       });
     }
 
-    /* ==========================
-       CHECK DATE
-    ========================== */
+
+    /* ==================================================
+       CHECK PROPOSED DATE
+    ================================================== */
 
     const proposedDate =
       viva.TentativeVivaDate ||
@@ -1494,7 +1504,8 @@ export const sendVivaSchedule = async (
       "";
 
     const proposedTime =
-      viva.VivaTime || "";
+      viva.VivaTime ||
+      "";
 
     if (!proposedDate) {
       return res.status(400).json({
@@ -1504,228 +1515,286 @@ export const sendVivaSchedule = async (
       });
     }
 
-    /* ==========================
+
+    /* ==================================================
        TEMPLATE
-    ========================== */
+    ================================================== */
 
     const template =
       scheduleEmail();
+
+
+    /* ==================================================
+       EMAIL SUBJECT
+    ================================================== */
 
     const subject =
       viva.EmailSubject ||
       `Viva Voce Schedule Confirmation - ${student.StudentName}`;
 
-    /* ==========================
-       FRONTEND
-    ========================== */
+
+    /* ==================================================
+       FRONTEND URL
+    ================================================== */
 
     const frontendURL =
-  process.env.FRONTEND_URL ||
-  "https://vivavocetrack.onrender.com";
+      process.env.FRONTEND_URL ||
+      "https://vivavocetrack.onrender.com";
+
+
+    /* ==================================================
+       RECIPIENTS
+    ================================================== */
 
     const recipients = [];
 
-    /* ==========================
-       SEND TO EACH PANEL MEMBER
-    ========================== */
 
-    for (const panel of panels) {
+    /* ==================================================
+       SEND TO EACH EXAMINER
+    ================================================== */
+
+    for (
+      const assignment
+      of examinerAssignments
+    ) {
+
       try {
-        const contact =
-          await getPanelMemberContact(panel);
 
-        if (!contact) {
+        /* ==============================================
+           GET EXAMINER
+        ============================================== */
+
+        const examiner =
+          await findRow(
+            EXAMINER_SHEET,
+            "ExaminerID",
+            assignment.id
+          );
+
+
+        if (!examiner) {
+
           recipients.push({
-            panelID: panel.PanelID,
+            examinerID:
+              assignment.id,
+
             name: "",
+
             email: "",
-            role: panel.Role,
-            status: "Failed",
+
+            type:
+              assignment.type,
+
+            status:
+              "Failed",
+
             error:
-              "Panel member could not be found.",
+              "Examiner not found.",
           });
 
           continue;
         }
 
-        if (!contact.email) {
+
+        /* ==============================================
+           CHECK EMAIL
+        ============================================== */
+
+        if (!examiner.Email) {
+
           recipients.push({
-            panelID: panel.PanelID,
-            name: contact.name,
+            examinerID:
+              assignment.id,
+
+            name:
+              examiner.ExaminerName || "",
+
             email: "",
-            role: panel.Role,
-            status: "Failed",
+
+            type:
+              assignment.type,
+
+            status:
+              "Failed",
+
             error:
-              "Panel member has no email address.",
+              "Examiner has no email address.",
           });
 
           continue;
         }
 
-        /* ==========================
+
+        /* ==============================================
            UNIQUE RESPONSE LINK
-        ========================== */
+        ============================================== */
 
         const responseLink =
-  `${frontendURL}/panel-response?panelID=${encodeURIComponent(
-    panel.PanelID
-  )}`;
+          `${frontendURL}/panel-response?caseID=${encodeURIComponent(
+            caseID
+          )}&examinerID=${encodeURIComponent(
+            assignment.id
+          )}`;
 
-        /* ==========================
+
+        /* ==============================================
            EXAMINER OBJECT
-        ========================== */
+        ============================================== */
 
-        const examiner = {
+        const examinerForTemplate = {
+
+          ExaminerID:
+            examiner.ExaminerID ||
+            assignment.id,
+
           ExaminerName:
-            contact.name,
+            examiner.ExaminerName ||
+            "",
 
           Title:
-            contact.title,
+            examiner.Title ||
+            "",
 
           ExaminerType:
-            contact.type,
+            assignment.type,
+
         };
 
-        /* ==========================
-           PANEL LINK
-        ========================== */
+
+        /* ==============================================
+           PANEL OBJECT
+           ONLY USED FOR TEMPLATE LINK
+        ============================================== */
 
         const panelWithLink = {
-          ...panel,
+
           PanelResponseLink:
             responseLink,
+
+          PanelID:
+            assignment.id,
+
+          Role:
+            assignment.type,
+
         };
 
-        /* ==========================
-           HTML
-        ========================== */
+
+        /* ==============================================
+           REPLACE TEMPLATE
+        ============================================== */
 
         let html =
           replaceTemplate(
             template,
             student,
-            examiner,
+            examinerForTemplate,
             viva,
             panelWithLink
           );
 
-        /* ==========================
+
+        /* ==============================================
            EXTRA REPLACEMENTS
-        ========================== */
+        ============================================== */
 
-        html = html
-          .replaceAll(
-            "{{PanelResponseLink}}",
-            responseLink
-          )
-          .replaceAll(
-            "{{ProposedDate}}",
-            formatDate(proposedDate)
-          )
-          .replaceAll(
-            "{{ProposedTime}}",
-            proposedTime
-          );
+        html =
+          html
 
-        /* ==========================
-           SEND
-        ========================== */
+            .replaceAll(
+              "{{PanelResponseLink}}",
+              responseLink
+            )
+
+            .replaceAll(
+              "{{ProposedDate}}",
+              formatDate(
+                proposedDate
+              )
+            )
+
+            .replaceAll(
+              "{{ProposedTime}}",
+              proposedTime
+            );
+
+
+        /* ==============================================
+           SEND EMAIL
+        ============================================== */
 
         await sendEmail({
-          to: contact.email,
+          to:
+            examiner.Email,
+
           subject,
+
           html,
         });
 
-        /* ==========================
-           UPDATE PANEL
-        ========================== */
 
-        const panelRowNumber =
-          await findRowNumber(
-            PANEL_SHEET,
-            "PanelID",
-            panel.PanelID
-          );
-
-        if (panelRowNumber !== -1) {
-          await updateRow(
-            PANEL_SHEET,
-            panelRowNumber,
-            {
-              ...panel,
-
-              InvitationSent:
-                "Yes",
-
-              InvitationDate:
-                new Date().toISOString(),
-
-              Accepted:
-                "Pending",
-
-              ResponseDate:
-                "",
-
-              SuggestedDate:
-                "",
-
-              SuggestedTime:
-                "",
-
-              Remarks:
-                panel.Remarks || "",
-            }
-          );
-        }
+        /* ==============================================
+           SUCCESS
+        ============================================== */
 
         recipients.push({
-          panelID:
-            panel.PanelID,
+
+          examinerID:
+            assignment.id,
 
           name:
-            contact.name,
+            examiner.ExaminerName || "",
 
           email:
-            contact.email,
+            examiner.Email,
 
-          role:
-            panel.Role,
+          type:
+            assignment.type,
 
           status:
             "Sent",
 
           responseLink,
+
         });
+
+
       } catch (err) {
+
         console.error(
-          `Failed to send panel email for ${panel.PanelID}`,
+          `Failed to send schedule email to examiner ${assignment.id}`,
           err
         );
 
+
         recipients.push({
-          panelID:
-            panel.PanelID,
+
+          examinerID:
+            assignment.id,
 
           name: "",
 
           email: "",
 
-          role:
-            panel.Role,
+          type:
+            assignment.type,
 
           status:
             "Failed",
 
           error:
             err.message,
+
         });
+
       }
+
     }
 
-    /* ==========================
-       UPDATE VIVA
-    ========================== */
+
+    /* ==================================================
+       UPDATE VIVA CASE
+    ================================================== */
 
     const rowNumber =
       await findRowNumber(
@@ -1734,41 +1803,55 @@ export const sendVivaSchedule = async (
         caseID
       );
 
-    await updateRow(
-      VIVA_SHEET,
-      rowNumber,
-      {
-        ...viva,
 
-        TentativeVivaDate:
-          proposedDate,
+    if (rowNumber !== -1) {
 
-        VivaTime:
-          proposedTime,
+      await updateRow(
+        VIVA_SHEET,
+        rowNumber,
+        {
 
-        CurrentStatus:
-          "Waiting for Panel Confirmation",
+          ...viva,
 
-        EmailStatus:
-          "Waiting for Panel Confirmation",
+          TentativeVivaDate:
+            proposedDate,
 
-        ScheduleEmailSent:
-          "Yes",
+          VivaTime:
+            proposedTime,
 
-        ScheduleEmailDate:
-          new Date().toISOString(),
+          CurrentStatus:
+            "Waiting for Panel Confirmation",
 
-        LastUpdated:
-          new Date().toISOString(),
-      }
-    );
+          EmailStatus:
+            "Waiting for Panel Confirmation",
 
-    /* ==========================
+          ScheduleEmailSent:
+            "Yes",
+
+          ScheduleEmailDate:
+            new Date().toISOString(),
+
+          LastUpdated:
+            new Date().toISOString(),
+
+        }
+      );
+
+    }
+
+
+    /* ==================================================
        RESPONSE
-    ========================== */
+    ================================================== */
 
     return res.json({
+
       success: true,
+
+      caseID,
+
+      student:
+        student.StudentName || "",
 
       total:
         recipients.length,
@@ -1776,15 +1859,20 @@ export const sendVivaSchedule = async (
       recipients,
 
       message:
-        "Viva schedule sent to all panel members for confirmation.",
+        "Viva schedule sent to all assigned examiners for confirmation.",
+
     });
+
+
   } catch (err) {
+
     console.error(
       "SEND VIVA SCHEDULE ERROR:",
       err
     );
 
     next(err);
+
   }
 };
 
