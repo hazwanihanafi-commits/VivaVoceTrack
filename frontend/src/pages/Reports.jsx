@@ -5,7 +5,6 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  ExternalLink,
 } from "lucide-react";
 
 const API_BASE_URL =
@@ -15,7 +14,7 @@ const API_BASE_URL =
 const API_URL = `${API_BASE_URL}/api/reports`;
 
 export default function Report() {
-  const [cases, setCases] = useState([]);
+  const [panelReports, setPanelReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -33,13 +32,15 @@ export default function Report() {
       const response = await fetch(API_URL);
       const result = await response.json();
 
+      console.log("REPORT API RESULT:", result);
+
       if (!response.ok || !result.success) {
         throw new Error(
           result.message || "Unable to load reports."
         );
       }
 
-      setCases(result.data || []);
+      setPanelReports(result.data || []);
     } catch (err) {
       console.error("LOAD REPORTS ERROR:", err);
 
@@ -51,22 +52,114 @@ export default function Report() {
     }
   };
 
-  const isSubmitted = (value) => {
+  /*
+   * ============================================
+   * ONLY EXAMINERS SUBMIT REPORTS
+   * ============================================
+   */
+
+  const isExaminer = (item) => {
     return (
-      String(value || "").trim().toLowerCase() === "yes"
+      item.PersonType === "Examiner" ||
+      item.Role?.includes("Examiner")
     );
   };
 
-  const getProgress = (item) => {
-    const submitted = [
-      item.Internal1ReportReceived,
-      item.Internal2ReportReceived,
-      item.External1ReportReceived,
-      item.External2ReportReceived,
-    ].filter(isSubmitted).length;
+  /*
+   * ============================================
+   * GROUP PANEL DATA BY VivaID
+   * ============================================
+   */
 
-    return submitted;
+  const getVivaCases = () => {
+    const grouped = {};
+
+    panelReports.forEach((item) => {
+      const vivaID = item.VivaID;
+
+      if (!vivaID) return;
+
+      if (!grouped[vivaID]) {
+        grouped[vivaID] = {
+          VivaID: vivaID,
+
+          internal1: null,
+          internal2: null,
+          external1: null,
+          external2: null,
+        };
+      }
+
+      const role = String(
+        item.Role || ""
+      ).toLowerCase();
+
+      if (role === "internal examiner 1") {
+        grouped[vivaID].internal1 = item;
+      }
+
+      if (role === "internal examiner 2") {
+        grouped[vivaID].internal2 = item;
+      }
+
+      if (role === "external examiner 1") {
+        grouped[vivaID].external1 = item;
+      }
+
+      if (role === "external examiner 2") {
+        grouped[vivaID].external2 = item;
+      }
+    });
+
+    return Object.values(grouped);
   };
+
+  const cases = getVivaCases();
+
+  /*
+   * ============================================
+   * REPORT SUBMITTED
+   * ============================================
+   */
+
+  const isSubmitted = (item) => {
+    if (!item) return false;
+
+    return (
+      String(
+        item.ReportReceived || ""
+      )
+        .trim()
+        .toLowerCase() === "yes"
+    );
+  };
+
+  /*
+   * ============================================
+   * PROGRESS
+   * ============================================
+   */
+
+  const getProgress = (item) => {
+    const examiners = [
+      item.internal1,
+      item.internal2,
+      item.external1,
+      item.external2,
+    ];
+
+    return examiners.filter(
+      (examiner) =>
+        examiner &&
+        isSubmitted(examiner)
+    ).length;
+  };
+
+  /*
+   * ============================================
+   * STATUS
+   * ============================================
+   */
 
   const getStatus = (item) => {
     const progress = getProgress(item);
@@ -82,6 +175,12 @@ export default function Report() {
     return "Pending";
   };
 
+  /*
+   * ============================================
+   * DATE
+   * ============================================
+   */
+
   const formatDate = (date) => {
     if (!date) return "-";
 
@@ -91,45 +190,95 @@ export default function Report() {
       return date;
     }
 
-    return parsed.toLocaleDateString("en-MY", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
+    return parsed.toLocaleDateString(
+      "en-MY",
+      {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }
+    );
   };
 
-  const ReportStatus = ({ value, date }) => {
-    if (isSubmitted(value)) {
+  /*
+   * ============================================
+   * REPORT STATUS COMPONENT
+   * ============================================
+   */
+
+  const ReportStatus = ({ examiner }) => {
+
+    /*
+     * If examiner does not exist
+     */
+
+    if (!examiner) {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-500">
+          Not Assigned
+        </span>
+      );
+    }
+
+    /*
+     * Submitted
+     */
+
+    if (isSubmitted(examiner)) {
       return (
         <div>
+
           <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+
             <CheckCircle size={14} />
+
             Submitted
+
           </span>
 
-          {date && (
+          {examiner.ReportReceivedDate && (
             <div className="mt-1 text-xs text-gray-400">
-              {formatDate(date)}
+              {formatDate(
+                examiner.ReportReceivedDate
+              )}
             </div>
           )}
+
         </div>
       );
     }
 
+    /*
+     * Pending
+     */
+
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-yellow-700">
+
         <Clock size={14} />
+
         Pending
+
       </span>
     );
   };
 
+  /*
+   * ============================================
+   * STATUS BADGE
+   * ============================================
+   */
+
   const StatusBadge = ({ status }) => {
+
     if (status === "Completed") {
       return (
         <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+
           <CheckCircle size={14} />
+
           Completed
+
         </span>
       );
     }
@@ -137,41 +286,67 @@ export default function Report() {
     if (status === "In Progress") {
       return (
         <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
+
           <FileText size={14} />
+
           In Progress
+
         </span>
       );
     }
 
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-yellow-700">
+
         <Clock size={14} />
+
         Pending
+
       </span>
     );
   };
 
+  /*
+   * ============================================
+   * SUMMARY
+   * ============================================
+   */
+
   const totalCases = cases.length;
 
-  const completedCases = cases.filter(
-    (item) => getProgress(item) === 4
-  ).length;
+  const completedCases =
+    cases.filter(
+      (item) =>
+        getProgress(item) === 4
+    ).length;
 
-  const submittedCases = cases.filter(
-    (item) => getProgress(item) > 0
-  ).length;
+  const submittedCases =
+    cases.filter(
+      (item) =>
+        getProgress(item) > 0
+    ).length;
 
-  const pendingCases = cases.filter(
-    (item) => getProgress(item) === 0
-  ).length;
+  const pendingCases =
+    cases.filter(
+      (item) =>
+        getProgress(item) === 0
+    ).length;
+
+  /*
+   * ============================================
+   * PAGE
+   * ============================================
+   */
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
 
       {/* HEADER */}
+
       <div className="mb-6 flex items-center justify-between">
 
         <div>
+
           <h1 className="text-3xl font-bold text-gray-900">
             Examiner Reports
           </h1>
@@ -179,6 +354,7 @@ export default function Report() {
           <p className="mt-1 text-gray-500">
             Track Viva Voce report submissions from examiners.
           </p>
+
         </div>
 
         <button
@@ -186,22 +362,31 @@ export default function Report() {
           disabled={loading}
           className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-3 font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 disabled:opacity-50"
         >
+
           <RefreshCw
             size={18}
-            className={loading ? "animate-spin" : ""}
+            className={
+              loading
+                ? "animate-spin"
+                : ""
+            }
           />
 
           Refresh
+
         </button>
 
       </div>
 
       {/* ERROR */}
+
       {error && (
         <div className="mb-6 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
+
           <AlertCircle size={20} />
 
           <div>
+
             <div className="font-semibold">
               Unable to load reports
             </div>
@@ -209,40 +394,52 @@ export default function Report() {
             <div className="text-sm">
               {error}
             </div>
+
           </div>
+
         </div>
       )}
 
       {/* SUMMARY CARDS */}
+
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
 
         <SummaryCard
-          title="Total Cases"
+          title="Total Viva Cases"
           value={totalCases}
-          icon={<FileText size={22} />}
+          icon={
+            <FileText size={22} />
+          }
         />
 
         <SummaryCard
           title="Reports Submitted"
           value={submittedCases}
-          icon={<CheckCircle size={22} />}
+          icon={
+            <CheckCircle size={22} />
+          }
         />
 
         <SummaryCard
           title="Pending Reports"
           value={pendingCases}
-          icon={<Clock size={22} />}
+          icon={
+            <Clock size={22} />
+          }
         />
 
         <SummaryCard
           title="Fully Completed"
           value={completedCases}
-          icon={<CheckCircle size={22} />}
+          icon={
+            <CheckCircle size={22} />
+          }
         />
 
       </div>
 
       {/* TABLE */}
+
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
 
         <div className="border-b border-gray-200 px-6 py-5">
@@ -258,15 +455,20 @@ export default function Report() {
         </div>
 
         {loading ? (
+
           <div className="flex items-center justify-center py-20 text-gray-500">
+
             <RefreshCw
               size={22}
               className="mr-3 animate-spin"
             />
 
             Loading reports...
+
           </div>
+
         ) : cases.length === 0 ? (
+
           <div className="py-20 text-center">
 
             <FileText
@@ -283,10 +485,12 @@ export default function Report() {
             </p>
 
           </div>
+
         ) : (
+
           <div className="overflow-x-auto">
 
-            <table className="w-full min-w-[1100px]">
+            <table className="w-full min-w-[1200px]">
 
               <thead className="bg-gray-50">
 
@@ -294,10 +498,6 @@ export default function Report() {
 
                   <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-gray-500">
                     Case ID
-                  </th>
-
-                  <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-gray-500">
-                    Student
                   </th>
 
                   <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-gray-500">
@@ -321,10 +521,6 @@ export default function Report() {
                   </th>
 
                   <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-gray-500">
-                    Due Date
-                  </th>
-
-                  <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-gray-500">
                     Status
                   </th>
 
@@ -334,144 +530,124 @@ export default function Report() {
 
               <tbody>
 
-                {cases.map((item, index) => {
+                {cases.map(
+                  (item) => {
 
-                  const progress =
-                    getProgress(item);
+                    const progress =
+                      getProgress(item);
 
-                  const status =
-                    getStatus(item);
+                    const status =
+                      getStatus(item);
 
-                  return (
-                    <tr
-                      key={
-                        item.CaseID ||
-                        index
-                      }
-                      className="border-b border-gray-100 last:border-0 hover:bg-gray-50"
-                    >
+                    return (
+                      <tr
+                        key={item.VivaID}
+                        className="border-b border-gray-100 last:border-0 hover:bg-gray-50"
+                      >
 
-                      {/* CASE ID */}
-                      <td className="px-5 py-5">
+                        {/* CASE ID */}
 
-                        <span className="font-semibold text-purple-700">
-                          {item.CaseID || "-"}
-                        </span>
+                        <td className="px-5 py-5">
 
-                      </td>
+                          <span className="font-bold text-purple-700">
+                            {item.VivaID}
+                          </span>
 
-                      {/* STUDENT */}
-                      <td className="px-5 py-5">
+                        </td>
 
-                        <div className="font-medium text-gray-800">
-                          {item.StudentID || "-"}
-                        </div>
+                        {/* INTERNAL 1 */}
 
-                      </td>
+                        <td className="px-5 py-5">
 
-                      {/* INTERNAL 1 */}
-                      <td className="px-5 py-5">
-
-                        <ReportStatus
-                          value={
-                            item.Internal1ReportReceived
-                          }
-                          date={
-                            item.Internal1ReportDate
-                          }
-                        />
-
-                      </td>
-
-                      {/* INTERNAL 2 */}
-                      <td className="px-5 py-5">
-
-                        <ReportStatus
-                          value={
-                            item.Internal2ReportReceived
-                          }
-                          date={
-                            item.Internal2ReportDate
-                          }
-                        />
-
-                      </td>
-
-                      {/* EXTERNAL 1 */}
-                      <td className="px-5 py-5">
-
-                        <ReportStatus
-                          value={
-                            item.External1ReportReceived
-                          }
-                          date={
-                            item.External1ReportDate
-                          }
-                        />
-
-                      </td>
-
-                      {/* EXTERNAL 2 */}
-                      <td className="px-5 py-5">
-
-                        <ReportStatus
-                          value={
-                            item.External2ReportReceived
-                          }
-                          date={
-                            item.External2ReportDate
-                          }
-                        />
-
-                      </td>
-
-                      {/* PROGRESS */}
-                      <td className="px-5 py-5">
-
-                        <div className="mb-1 text-sm font-semibold text-gray-700">
-                          {progress}/4 Submitted
-                        </div>
-
-                        <div className="h-2 w-28 overflow-hidden rounded-full bg-gray-200">
-
-                          <div
-                            className="h-full rounded-full bg-purple-600 transition-all"
-                            style={{
-                              width: `${progress * 25}%`,
-                            }}
+                          <ReportStatus
+                            examiner={
+                              item.internal1
+                            }
                           />
 
-                        </div>
+                        </td>
 
-                      </td>
+                        {/* INTERNAL 2 */}
 
-                      {/* DUE DATE */}
-                      <td className="px-5 py-5 text-sm text-gray-600">
+                        <td className="px-5 py-5">
 
-                        {formatDate(
-                          item.ReportDueDate
-                        )}
+                          <ReportStatus
+                            examiner={
+                              item.internal2
+                            }
+                          />
 
-                      </td>
+                        </td>
 
-                      {/* STATUS */}
-                      <td className="px-5 py-5">
+                        {/* EXTERNAL 1 */}
 
-                        <StatusBadge
-                          status={status}
-                        />
+                        <td className="px-5 py-5">
 
-                      </td>
+                          <ReportStatus
+                            examiner={
+                              item.external1
+                            }
+                          />
 
-                    </tr>
-                  );
-                })}
+                        </td>
+
+                        {/* EXTERNAL 2 */}
+
+                        <td className="px-5 py-5">
+
+                          <ReportStatus
+                            examiner={
+                              item.external2
+                            }
+                          />
+
+                        </td>
+
+                        {/* PROGRESS */}
+
+                        <td className="px-5 py-5">
+
+                          <div className="mb-1 text-sm font-semibold text-gray-700">
+
+                            {progress}/4 Submitted
+
+                          </div>
+
+                          <div className="h-2 w-28 overflow-hidden rounded-full bg-gray-200">
+
+                            <div
+                              className="h-full rounded-full bg-purple-600 transition-all"
+                              style={{
+                                width:
+                                  `${progress * 25}%`,
+                              }}
+                            />
+
+                          </div>
+
+                        </td>
+
+                        {/* STATUS */}
+
+                        <td className="px-5 py-5">
+
+                          <StatusBadge
+                            status={status}
+                          />
+
+                        </td>
+
+                      </tr>
+                    );
+                  }
+                )}
 
               </tbody>
 
             </table>
 
           </div>
+
         )}
 
       </div>
@@ -479,6 +655,12 @@ export default function Report() {
     </div>
   );
 }
+
+/*
+ * ============================================
+ * SUMMARY CARD
+ * ============================================
+ */
 
 function SummaryCard({
   title,
