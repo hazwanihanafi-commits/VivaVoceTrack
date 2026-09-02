@@ -61,6 +61,11 @@ export const createSchedule = async (req, res, next) => {
         viva.ConfirmedVivaDate ??
         "",
 
+      ResponseDeadline:
+  req.body.ResponseDeadline ??
+  viva.ResponseDeadline ??
+  "",
+
       VivaTime:
         req.body.VivaTime ??
         viva.VivaTime ??
@@ -240,6 +245,11 @@ export const updateSchedule = async (
         req.body.ConfirmedVivaDate ??
         viva.ConfirmedVivaDate ??
         "",
+
+      ResponseDeadline:
+  req.body.ResponseDeadline ??
+  viva.ResponseDeadline ??
+  "",
 
       VivaTime:
         req.body.VivaTime ??
