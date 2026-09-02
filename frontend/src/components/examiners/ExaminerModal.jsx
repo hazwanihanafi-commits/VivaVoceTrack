@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 
 const API =
   import.meta.env.VITE_API_URL ||
-  "https://vivatrack-backend.onrender.com/api";
+  "https://vivatrack-backend.onrender.com";
 
 const emptyExaminer = {
   ExaminerName: "",
@@ -53,8 +53,8 @@ export default function ExaminerModal({
       setSaving(true);
 
       const url = examiner
-        ? `${API}/examiners/${examiner.ExaminerID}`
-        : `${API}/examiners`;
+        ? `${API}/api/examiners/${examiner.ExaminerID}`
+        : `${API}/api/examiners`;
 
       const method = examiner ? "PUT" : "POST";
 
