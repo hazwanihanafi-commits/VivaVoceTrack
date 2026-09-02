@@ -6,496 +6,243 @@ import VivaCaseForm from "../components/vivacases/VivaCaseForm";
 import VivaCaseTable from "../components/vivacases/VivaCaseTable";
 import CaseStatusCard from "../components/vivacases/CaseStatusCard";
 
-const API =
-  "https://vivatrack-backend.onrender.com/api";
+const API = "https://vivatrack-backend.onrender.com/api";
 
 export default function VivaCases() {
-
   const navigate = useNavigate();
 
-  /* ======================================================
-     STATE
-  ====================================================== */
+  // ======================================================
+  // STATE
+  // ======================================================
 
   const [students, setStudents] = useState([]);
   const [examiners, setExaminers] = useState([]);
   const [staff, setStaff] = useState([]);
   const [cases, setCases] = useState([]);
 
-  const [selectedStudent, setSelectedStudent] =
-    useState(null);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedCase, setSelectedCase] = useState(null);
 
-  const [selectedCase, setSelectedCase] =
-    useState(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewHtml, setPreviewHtml] = useState("");
+  const [previewSubject, setPreviewSubject] = useState("");
+  const [previewType, setPreviewType] = useState("thesis");
 
-  const [previewOpen, setPreviewOpen] =
-    useState(false);
-
-  const [previewHtml, setPreviewHtml] =
-    useState("");
-
-  const [previewSubject, setPreviewSubject] =
-    useState("");
-
-  const [previewType, setPreviewType] =
-    useState("thesis");
-
-
-  /* ======================================================
-     FORM
-  ====================================================== */
+  // ======================================================
+  // FORM
+  // ======================================================
 
   const [form, setForm] = useState({
-
     studentId: "",
-
     chairpersonId: "",
-
     secretaryId: "",
-
     internalExaminers: [""],
-
     externalExaminers: [""],
-
     driveLink: "",
-
     receivedDate: "",
-
     dueDate: "",
-
     emailSubject: "",
-
     reminder: true,
-
   });
 
-
-  /* ======================================================
-     LOAD INITIAL DATA
-  ====================================================== */
+  // ======================================================
+  // INITIAL LOAD
+  // ======================================================
 
   useEffect(() => {
-
     loadStudents();
     loadExaminers();
     loadStaff();
     loadCases();
-
   }, []);
 
-
-  /* ======================================================
-     LOAD STUDENTS
-  ====================================================== */
-
   // ======================================================
-// LOAD VIVA CASES
-// ======================================================
-
-async function loadCases() {
-  try {
-    const res = await fetch(`${API}/vivacases`);
-
-    const data = await res.json();
-
-    console.log("=================================");
-    console.log("VIVA CASES API RESPONSE:", data);
-    console.log("=================================");
-
-    if (!res.ok) {
-      console.error("LOAD CASES ERROR:", data);
-      setCases([]);
-      return;
-    }
-
-    const rawCases = Array.isArray(data.data)
-      ? data.data
-      : [];
-
-    console.log("RAW VIVA CASES:", rawCases);
-
-    // ==================================================
-    // NORMALISE OBJECT KEYS
-    // ==================================================
-
-    const normalizedCases = rawCases.map((item) => {
-
-      // Get all keys
-      const keys = Object.keys(item || {});
-
-      // Find CaseID regardless of capitalisation / spacing
-      const caseIDKey = keys.find((key) => {
-        const clean = String(key)
-          .replace(/[\s_-]/g, "")
-          .toLowerCase();
-
-        return (
-          clean === "caseid" ||
-          clean === "caseno" ||
-          clean === "casenumber"
-        );
-      });
-
-      const studentIDKey = keys.find((key) => {
-        const clean = String(key)
-          .replace(/[\s_-]/g, "")
-          .toLowerCase();
-
-        return clean === "studentid";
-      });
-
-      const internal1Key = keys.find((key) => {
-        const clean = String(key)
-          .replace(/[\s_-]/g, "")
-          .toLowerCase();
-
-        return clean === "internalexaminer1id";
-      });
-
-      const internal2Key = keys.find((key) => {
-        const clean = String(key)
-          .replace(/[\s_-]/g, "")
-          .toLowerCase();
-
-        return clean === "internalexaminer2id";
-      });
-
-      const external1Key = keys.find((key) => {
-        const clean = String(key)
-          .replace(/[\s_-]/g, "")
-          .toLowerCase();
-
-        return clean === "externalexaminer1id";
-      });
-
-      const external2Key = keys.find((key) => {
-        const clean = String(key)
-          .replace(/[\s_-]/g, "")
-          .toLowerCase();
-
-        return clean === "externalexaminer2id";
-      });
-
-      const dueDateKey = keys.find((key) => {
-        const clean = String(key)
-          .replace(/[\s_-]/g, "")
-          .toLowerCase();
-
-        return clean === "reportduedate";
-      });
-
-      const statusKey = keys.find((key) => {
-        const clean = String(key)
-          .replace(/[\s_-]/g, "")
-          .toLowerCase();
-
-        return clean === "currentstatus";
-      });
-
-      // ==================================================
-      // ACTUAL CASE ID
-      // ==================================================
-
-      const caseID = caseIDKey
-        ? String(item[caseIDKey] || "").trim()
-        : "";
-
-      console.log(
-        "CASE:",
-        caseID,
-        "ORIGINAL KEY:",
-        caseIDKey
-      );
-
-      return {
-        ...item,
-
-        CaseID: caseID,
-
-        StudentID: studentIDKey
-          ? item[studentIDKey] || ""
-          : "",
-
-        InternalExaminer1ID: internal1Key
-          ? item[internal1Key] || ""
-          : "",
-
-        InternalExaminer2ID: internal2Key
-          ? item[internal2Key] || ""
-          : "",
-
-        ExternalExaminer1ID: external1Key
-          ? item[external1Key] || ""
-          : "",
-
-        ExternalExaminer2ID: external2Key
-          ? item[external2Key] || ""
-          : "",
-
-        ReportDueDate: dueDateKey
-          ? item[dueDateKey] || ""
-          : "",
-
-        CurrentStatus: statusKey
-          ? item[statusKey] || ""
-          : "",
-      };
-    });
-
-    console.log(
-      "================================="
-    );
-
-    console.log(
-      "NORMALIZED VIVA CASES:",
-      normalizedCases
-    );
-
-    console.log(
-      "CASE IDS:",
-      normalizedCases.map(
-        (x) => x.CaseID
-      )
-    );
-
-    console.log(
-      "================================="
-    );
-
-    setCases(normalizedCases);
-
-  } catch (err) {
-
-    console.error(
-      "LOAD CASES ERROR:",
-      err
-    );
-
-    setCases([]);
-  }
-}
-
+  // LOAD STUDENTS
+  // GET /api/students
   // ======================================================
-// LOAD STUDENTS
-// ======================================================
 
-async function loadStudents() {
-  try {
-    const res = await fetch(`${API}/students`);
-    const data = await res.json();
+  async function loadStudents() {
+    try {
+      const res = await fetch(`${API}/students`);
+      const data = await res.json();
 
-    console.log("STUDENTS API RESPONSE:", data);
+      console.log("STUDENTS API RESPONSE:", data);
 
-    if (!res.ok) {
-      console.error("LOAD STUDENTS ERROR:", data);
-      setStudents([]);
-      return;
-    }
+      if (!res.ok) {
+        console.error("LOAD STUDENTS ERROR:", data);
+        setStudents([]);
+        return;
+      }
 
-    setStudents(
-      Array.isArray(data.data)
+      const studentData = Array.isArray(data.data)
         ? data.data
-        : []
-    );
+        : Array.isArray(data)
+        ? data
+        : [];
 
-  } catch (err) {
-    console.error(
-      "LOAD STUDENTS ERROR:",
-      err
-    );
+      console.log("STUDENTS:", studentData);
 
-    setStudents([]);
+      setStudents(studentData);
+    } catch (err) {
+      console.error("LOAD STUDENTS ERROR:", err);
+      setStudents([]);
+    }
   }
-}
-  /* ======================================================
-     LOAD EXAMINERS
-  ====================================================== */
+
+  // ======================================================
+  // LOAD EXAMINERS
+  // GET /api/examiners
+  // ======================================================
 
   async function loadExaminers() {
-
     try {
+      const res = await fetch(`${API}/examiners`);
+      const data = await res.json();
 
-      const res =
-        await fetch(`${API}/examiners`);
+      console.log("EXAMINERS API RESPONSE:", data);
 
-      const data =
-        await res.json();
+      if (!res.ok) {
+        console.error("LOAD EXAMINERS ERROR:", data);
+        setExaminers([]);
+        return;
+      }
 
-      setExaminers(
-        data.data || []
-      );
+      const examinerData = Array.isArray(data.data)
+        ? data.data
+        : Array.isArray(data)
+        ? data
+        : [];
 
+      setExaminers(examinerData);
     } catch (err) {
-
-      console.error(
-        "LOAD EXAMINERS ERROR:",
-        err
-      );
-
+      console.error("LOAD EXAMINERS ERROR:", err);
+      setExaminers([]);
     }
-
   }
 
-
-  /* ======================================================
-     LOAD STAFF
-  ====================================================== */
+  // ======================================================
+  // LOAD STAFF
+  // GET /api/staff
+  // ======================================================
 
   async function loadStaff() {
-
     try {
+      const res = await fetch(`${API}/staff`);
+      const data = await res.json();
 
-      const res =
-        await fetch(`${API}/staff`);
+      console.log("STAFF API RESPONSE:", data);
 
-      const data =
-        await res.json();
+      if (!res.ok) {
+        console.error("LOAD STAFF ERROR:", data);
+        setStaff([]);
+        return;
+      }
 
-      setStaff(
-        data.data || []
-      );
+      const staffData = Array.isArray(data.data)
+        ? data.data
+        : Array.isArray(data)
+        ? data
+        : [];
 
+      setStaff(staffData);
     } catch (err) {
-
-      console.error(
-        "LOAD STAFF ERROR:",
-        err
-      );
-
+      console.error("LOAD STAFF ERROR:", err);
+      setStaff([]);
     }
-
   }
 
-
-  /* ======================================================
-     LOAD VIVA CASES
-  ====================================================== */
+  // ======================================================
+  // LOAD VIVA CASES
+  // GET /api/vivacases
+  // ======================================================
 
   async function loadCases() {
-  try {
-    const res = await fetch(`${API}/vivacases`);
+    try {
+      const res = await fetch(`${API}/vivacases`);
 
-    const data = await res.json();
+      const data = await res.json();
 
-    console.log("VIVA CASES API RESPONSE:", data);
+      console.log("=================================");
+      console.log("VIVA CASES API RESPONSE:", data);
+      console.log("=================================");
 
-    if (!res.ok) {
-      console.error("LOAD CASES ERROR:", data);
-      setCases([]);
-      return;
-    }
+      if (!res.ok) {
+        console.error("LOAD CASES ERROR:", data);
+        setCases([]);
+        return;
+      }
 
-    const rawCases = Array.isArray(data.data)
-      ? data.data
-      : [];
+      const rawCases = Array.isArray(data.data)
+        ? data.data
+        : [];
 
-    console.log("RAW VIVA CASES:", rawCases);
+      console.log("RAW VIVA CASES:", rawCases);
 
-    const normalizedCases = rawCases.map((item) => ({
-      ...item,
+      // ==================================================
+      // IMPORTANT
+      //
+      // Backend getRows() already uses the Google Sheet
+      // header names. Therefore CaseID should be CaseID.
+      // No complicated key conversion is necessary.
+      // ==================================================
 
-      // ============================================
-      // CASE ID
-      // ============================================
-      CaseID:
-        item.CaseID ??
-        item.caseID ??
-        item.caseId ??
-        item["Case ID"] ??
-        item["Case No"] ??
-        item["Case Number"] ??
-        "",
+      const normalizedCases = rawCases.map((item) => ({
+        ...item,
 
-      // ============================================
-      // STUDENT
-      // ============================================
-      StudentID:
-        item.StudentID ??
-        item.studentID ??
-        item.studentId ??
-        "",
+        CaseID: String(item.CaseID || "").trim(),
 
-      // ============================================
-      // INTERNAL EXAMINER
-      // ============================================
-      InternalExaminer1ID:
-        item.InternalExaminer1ID ??
-        item.internalExaminer1ID ??
-        "",
+        StudentID: String(item.StudentID || "").trim(),
 
-      InternalExaminer2ID:
-        item.InternalExaminer2ID ??
-        item.internalExaminer2ID ??
-        "",
+        InternalExaminer1ID:
+          String(item.InternalExaminer1ID || "").trim(),
 
-      // ============================================
-      // EXTERNAL EXAMINER
-      // ============================================
-      ExternalExaminer1ID:
-        item.ExternalExaminer1ID ??
-        item.externalExaminer1ID ??
-        "",
+        InternalExaminer2ID:
+          String(item.InternalExaminer2ID || "").trim(),
 
-      ExternalExaminer2ID:
-        item.ExternalExaminer2ID ??
-        item.externalExaminer2ID ??
-        "",
+        ExternalExaminer1ID:
+          String(item.ExternalExaminer1ID || "").trim(),
 
-      // ============================================
-      // DUE DATE
-      // ============================================
-      ReportDueDate:
-        item.ReportDueDate ??
-        item.reportDueDate ??
-        item["Report Due Date"] ??
-        "",
+        ExternalExaminer2ID:
+          String(item.ExternalExaminer2ID || "").trim(),
 
-      // ============================================
-      // STATUS
-      // ============================================
-      CurrentStatus:
-        item.CurrentStatus ??
-        item.currentStatus ??
-        "",
-    }));
+        ReportDueDate:
+          item.ReportDueDate || "",
 
-    console.log(
-      "NORMALIZED VIVA CASES:",
-      normalizedCases
-    );
+        CurrentStatus:
+          item.CurrentStatus || "",
+      }));
 
-    setCases(normalizedCases);
-
-  } catch (err) {
-
-    console.error(
-      "LOAD CASES ERROR:",
-      err
-    );
-
-    setCases([]);
-  }
-}
-
-
-  /* ======================================================
-     STUDENT SELECT
-  ====================================================== */
-
-  function handleStudent(id) {
-
-    const student =
-      students.find(
-        (s) =>
-          s.StudentID === id
+      console.log(
+        "NORMALIZED VIVA CASES:",
+        normalizedCases
       );
 
-    setSelectedStudent(
-      student || null
+      console.log(
+        "CASE IDS:",
+        normalizedCases.map((item) => item.CaseID)
+      );
+
+      setCases(normalizedCases);
+    } catch (err) {
+      console.error("LOAD CASES ERROR:", err);
+      setCases([]);
+    }
+  }
+
+  // ======================================================
+  // STUDENT SELECT
+  // ======================================================
+
+  function handleStudent(id) {
+    const student = students.find(
+      (s) =>
+        String(s.StudentID || "").trim() ===
+        String(id || "").trim()
     );
 
-    setForm((prev) => ({
+    setSelectedStudent(student || null);
 
+    setForm((prev) => ({
       ...prev,
 
       studentId: id,
@@ -508,18 +255,14 @@ async function loadStudents() {
         }), ${
           student?.Programme || ""
         }, PKTAAB, Universiti Sains Malaysia`,
-
     }));
-
   }
 
-
-  /* ======================================================
-     FORM UPDATE
-  ====================================================== */
+  // ======================================================
+  // FORM UPDATE
+  // ======================================================
 
   function updateField(e) {
-
     const {
       name,
       value,
@@ -528,227 +271,185 @@ async function loadStudents() {
       index,
     } = e.target;
 
-
     setForm((prev) => {
+      // ==================================================
+      // ADD INTERNAL
+      // ==================================================
 
-
-      /* -----------------------------------------------
-         ADD INTERNAL
-      ----------------------------------------------- */
-
-      if (
-        name === "addInternal"
-      ) {
-
+      if (name === "addInternal") {
         return {
-
           ...prev,
-
           internalExaminers: [
             ...prev.internalExaminers,
             "",
           ],
-
         };
-
       }
 
+      // ==================================================
+      // REMOVE INTERNAL
+      // ==================================================
 
-      /* -----------------------------------------------
-         REMOVE INTERNAL
-      ----------------------------------------------- */
-
-      if (
-        name === "removeInternal"
-      ) {
-
+      if (name === "removeInternal") {
         return {
-
           ...prev,
 
           internalExaminers:
             prev.internalExaminers.filter(
-              (_, i) =>
-                i !== index
+              (_, i) => i !== index
             ),
-
         };
-
       }
 
+      // ==================================================
+      // ADD EXTERNAL
+      // ==================================================
 
-      /* -----------------------------------------------
-         ADD EXTERNAL
-      ----------------------------------------------- */
-
-      if (
-        name === "addExternal"
-      ) {
-
+      if (name === "addExternal") {
         return {
-
           ...prev,
 
           externalExaminers: [
             ...prev.externalExaminers,
             "",
           ],
-
         };
-
       }
 
+      // ==================================================
+      // REMOVE EXTERNAL
+      // ==================================================
 
-      /* -----------------------------------------------
-         REMOVE EXTERNAL
-      ----------------------------------------------- */
-
-      if (
-        name === "removeExternal"
-      ) {
-
+      if (name === "removeExternal") {
         return {
-
           ...prev,
 
           externalExaminers:
             prev.externalExaminers.filter(
-              (_, i) =>
-                i !== index
+              (_, i) => i !== index
             ),
-
         };
-
       }
 
+      // ==================================================
+      // INTERNAL EXAMINER
+      // ==================================================
 
-      /* -----------------------------------------------
-         INTERNAL EXAMINER
-      ----------------------------------------------- */
-
-      if (
-        name ===
-        "internalExaminer"
-      ) {
-
+      if (name === "internalExaminer") {
         const list = [
           ...prev.internalExaminers,
         ];
 
-        list[index] =
-          value;
+        list[index] = value;
 
         return {
-
           ...prev,
 
-          internalExaminers:
-            list,
-
+          internalExaminers: list,
         };
-
       }
 
+      // ==================================================
+      // EXTERNAL EXAMINER
+      // ==================================================
 
-      /* -----------------------------------------------
-         EXTERNAL EXAMINER
-      ----------------------------------------------- */
-
-      if (
-        name ===
-        "externalExaminer"
-      ) {
-
+      if (name === "externalExaminer") {
         const list = [
           ...prev.externalExaminers,
         ];
 
-        list[index] =
-          value;
+        list[index] = value;
 
         return {
-
           ...prev,
 
-          externalExaminers:
-            list,
-
+          externalExaminers: list,
         };
-
       }
 
-
-      /* -----------------------------------------------
-         NORMAL FIELD
-      ----------------------------------------------- */
+      // ==================================================
+      // NORMAL FIELD
+      // ==================================================
 
       return {
-
         ...prev,
 
         [name]:
           type === "checkbox"
             ? checked
             : value,
-
       };
-
     });
-
   }
 
-
-  /* ======================================================
-     OPEN SCHEDULE PAGE
-  ====================================================== */
+  // ======================================================
+  // OPEN SCHEDULE PAGE
+  // ======================================================
 
   function handleSchedule(item) {
+    const caseID = String(
+      item?.CaseID || ""
+    ).trim();
 
-    if (!item?.CaseID) {
+    console.log(
+      "SCHEDULE CASE ID:",
+      caseID
+    );
 
+    if (!caseID) {
       alert(
         "Viva Case ID is required."
       );
-
       return;
-
     }
 
     navigate(
       `/schedule?caseID=${encodeURIComponent(
-        item.CaseID
+        caseID
       )}`
     );
-
   }
 
-
-  /* ======================================================
-     MANAGE CASE
-  ====================================================== */
+  // ======================================================
+  // MANAGE CASE
+  // ======================================================
 
   function handleManage(item) {
-
-    setSelectedCase(
+    console.log(
+      "MANAGE CASE:",
       item
     );
 
+    const caseID = String(
+      item?.CaseID || ""
+    ).trim();
 
-    const student =
-      students.find(
-        (s) =>
-          s.StudentID ===
-          item.StudentID
+    if (!caseID) {
+      console.error(
+        "MANAGE CASE: CaseID missing",
+        item
       );
 
+      alert(
+        "This Viva Case does not have a valid Case ID."
+      );
+
+      return;
+    }
+
+    setSelectedCase(item);
+
+    const student = students.find(
+      (s) =>
+        String(s.StudentID || "").trim() ===
+        String(item.StudentID || "").trim()
+    );
 
     setSelectedStudent(
       student || null
     );
 
-
     setForm({
-
       studentId:
         item.StudentID || "",
 
@@ -759,23 +460,13 @@ async function loadStudents() {
         item.SecretaryID || "",
 
       internalExaminers: [
-
-        item.InternalExaminer1ID ||
-          "",
-
-        item.InternalExaminer2ID ||
-          "",
-
+        item.InternalExaminer1ID || "",
+        item.InternalExaminer2ID || "",
       ].filter(Boolean),
 
       externalExaminers: [
-
-        item.ExternalExaminer1ID ||
-          "",
-
-        item.ExternalExaminer2ID ||
-          "",
-
+        item.ExternalExaminer1ID || "",
+        item.ExternalExaminer2ID || "",
       ].filter(Boolean),
 
       driveLink:
@@ -791,202 +482,211 @@ async function loadStudents() {
         item.EmailSubject || "",
 
       reminder:
-        item.ReminderEnabled ===
-        "No"
+        item.ReminderEnabled === "No"
           ? false
           : true,
-
     });
-
 
     window.scrollTo({
-
       top: 0,
-
       behavior: "smooth",
-
     });
-
   }
 
-
-  /* ======================================================
-     PREVIEW EMAIL
-  ====================================================== */
+  // ======================================================
+  // PREVIEW EMAIL
+  // ======================================================
 
   async function previewEmailHandler(
     type = "thesis"
   ) {
-
-    if (!selectedCase) {
-
+    if (!selectedCase?.CaseID) {
       alert(
         "Please save the draft first. A Viva Case Number will be generated automatically. After that, select the case from the table below before previewing or sending emails."
       );
 
       return;
-
     }
 
-
     try {
+      const caseID = String(
+        selectedCase.CaseID
+      ).trim();
 
-      const res =
-        await fetch(
-          `${API}/emails/${selectedCase.CaseID}/preview/${type}`
-        );
+      const res = await fetch(
+        `${API}/emails/${encodeURIComponent(
+          caseID
+        )}/preview/${type}`
+      );
 
-
-      const data =
-        await res.json();
-
+      const data = await res.json();
 
       if (!res.ok) {
-
         alert(
           data.message ||
             "Unable to preview email."
         );
 
         return;
-
       }
 
-
-      setPreviewType(
-        type
-      );
-
+      setPreviewType(type);
       setPreviewSubject(
-        data.subject
+        data.subject || ""
       );
-
       setPreviewHtml(
-        data.html
+        data.html || ""
       );
-
-      setPreviewOpen(
-        true
-      );
-
+      setPreviewOpen(true);
     } catch (err) {
-
       console.error(
+        "PREVIEW EMAIL ERROR:",
         err
       );
 
       alert(
         "Unable to load email preview."
       );
-
     }
-
   }
 
-
-  /* ======================================================
-     DELETE CASE
-  ====================================================== */
+  // ======================================================
+  // DELETE CASE
+  // ======================================================
 
   async function deleteCase(caseID) {
-  const id = String(caseID || "").trim();
+    const id = String(
+      caseID || ""
+    ).trim();
 
-  console.log("DELETE CASE ID:", id);
+    console.log(
+      "================================="
+    );
 
-  if (!id) {
-    alert("Case ID is missing.");
-    return;
-  }
+    console.log(
+      "DELETE CLICKED"
+    );
 
-  const ok = window.confirm(
-    `Are you sure you want to delete ${id}?`
-  );
+    console.log(
+      "DELETE CASE ID:",
+      id
+    );
 
-  if (!ok) return;
+    console.log(
+      "================================="
+    );
 
-  try {
-    const url = `${API}/vivacases/${encodeURIComponent(id)}`;
+    if (!id) {
+      alert(
+        "Case ID is missing."
+      );
 
-    console.log("DELETE URL:", url);
-
-    const res = await fetch(url, {
-      method: "DELETE",
-    });
-
-    const data = await res.json();
-
-    console.log("DELETE RESPONSE:", data);
-
-    if (!res.ok) {
-      alert(data.message || "Unable to delete case.");
       return;
     }
 
-    alert(`Viva Case ${id} deleted successfully.`);
+    const ok = window.confirm(
+      `Are you sure you want to delete ${id}?`
+    );
 
-    // refresh table
-    await loadCases();
-
-    // clear form
-    setSelectedCase(null);
-    setSelectedStudent(null);
-
-    setForm({
-      studentId: "",
-      chairpersonId: "",
-      secretaryId: "",
-      internalExaminers: [""],
-      externalExaminers: [""],
-      driveLink: "",
-      receivedDate: "",
-      dueDate: "",
-      emailSubject: "",
-      reminder: true,
-    });
-
-  } catch (err) {
-    console.error("DELETE CASE ERROR:", err);
-
-    alert("Server connection failed.");
-  }
-}
-
-  /* ======================================================
-     SAVE DRAFT
-  ====================================================== */
-
-  async function saveDraft() {
+    if (!ok) {
+      return;
+    }
 
     try {
+      const url =
+        `${API}/vivacases/${encodeURIComponent(
+          id
+        )}`;
 
+      console.log(
+        "DELETE URL:",
+        url
+      );
 
+      const res = await fetch(
+        url,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const data =
+        await res.json();
+
+      console.log(
+        "DELETE RESPONSE:",
+        data
+      );
+
+      if (!res.ok) {
+        alert(
+          data.message ||
+            "Unable to delete case."
+        );
+
+        return;
+      }
+
+      alert(
+        `Viva Case ${id} deleted successfully.`
+      );
+
+      // ==================================================
+      // REFRESH CASE LIST
+      // ==================================================
+
+      await loadCases();
+
+      // ==================================================
+      // CLEAR SELECTED CASE
+      // ==================================================
+
+      setSelectedCase(null);
+      setSelectedStudent(null);
+
+      // ==================================================
+      // RESET FORM
+      // ==================================================
+
+      setForm({
+        studentId: "",
+        chairpersonId: "",
+        secretaryId: "",
+        internalExaminers: [""],
+        externalExaminers: [""],
+        driveLink: "",
+        receivedDate: "",
+        dueDate: "",
+        emailSubject: "",
+        reminder: true,
+      });
+    } catch (err) {
+      console.error(
+        "DELETE CASE ERROR:",
+        err
+      );
+
+      alert(
+        "Server connection failed."
+      );
+    }
+  }
+
+  // ======================================================
+  // SAVE DRAFT
+  // ======================================================
+
+  async function saveDraft() {
+    try {
       const payload = {
-
         StudentID:
           form.studentId,
 
-
-        /* ===============================================
-           CHAIRPERSON
-        =============================================== */
-
         ChairpersonID:
-          form.chairpersonId ||
-          "",
-
-
-        /* ===============================================
-           SECRETARY
-        =============================================== */
+          form.chairpersonId || "",
 
         SecretaryID:
-          form.secretaryId ||
-          "",
-
-
-        /* ===============================================
-           INTERNAL EXAMINERS
-        =============================================== */
+          form.secretaryId || "",
 
         InternalExaminer1ID:
           form.internalExaminers[0] ||
@@ -996,11 +696,6 @@ async function loadStudents() {
           form.internalExaminers[1] ||
           "",
 
-
-        /* ===============================================
-           EXTERNAL EXAMINERS
-        =============================================== */
-
         ExternalExaminer1ID:
           form.externalExaminers[0] ||
           "",
@@ -1009,206 +704,211 @@ async function loadStudents() {
           form.externalExaminers[1] ||
           "",
 
-
-        /* ===============================================
-           DOCUMENT
-        =============================================== */
-
         GoogleDriveLink:
-          form.driveLink,
-
-
-        /* ===============================================
-           DATES
-        =============================================== */
+          form.driveLink || "",
 
         DateReceivedFromIPS:
-          form.receivedDate,
+          form.receivedDate || "",
 
         ReportDueDate:
-          form.dueDate,
-
-
-        /* ===============================================
-           EMAIL
-        =============================================== */
+          form.dueDate || "",
 
         EmailSubject:
-          form.emailSubject,
+          form.emailSubject || "",
 
         ReminderEnabled:
           form.reminder
             ? "Yes"
             : "No",
 
-
-        /* ===============================================
-           STATUS
-        =============================================== */
-
         CurrentStatus:
           "Draft",
-
       };
 
+      console.log(
+        "SAVE PAYLOAD:",
+        payload
+      );
 
       let res;
 
-
-      /* ==================================================
-         UPDATE EXISTING CASE
-      ================================================== */
+      // ==================================================
+      // UPDATE EXISTING CASE
+      // ==================================================
 
       if (
         selectedCase?.CaseID
       ) {
+        const caseID = String(
+          selectedCase.CaseID
+        ).trim();
 
-        res =
-          await fetch(
-            `${API}/vivacases/${selectedCase.CaseID}`,
-            {
+        console.log(
+          "UPDATING CASE:",
+          caseID
+        );
 
-              method:
-                "PUT",
+        res = await fetch(
+          `${API}/vivacases/${encodeURIComponent(
+            caseID
+          )}`,
+          {
+            method: "PUT",
 
-              headers: {
-                "Content-Type":
-                  "application/json",
-              },
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
 
-              body:
-                JSON.stringify(
-                  payload
-                ),
-
-            }
-          );
-
+            body:
+              JSON.stringify(
+                payload
+              ),
+          }
+        );
       }
 
-
-      /* ==================================================
-         CREATE NEW CASE
-      ================================================== */
+      // ==================================================
+      // CREATE NEW CASE
+      // ==================================================
 
       else {
+        console.log(
+          "CREATING NEW VIVA CASE"
+        );
 
-        res =
-          await fetch(
-            `${API}/vivacases`,
-            {
+        res = await fetch(
+          `${API}/vivacases`,
+          {
+            method: "POST",
 
-              method:
-                "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
 
-              headers: {
-                "Content-Type":
-                  "application/json",
-              },
-
-              body:
-                JSON.stringify(
-                  payload
-                ),
-
-            }
-          );
-
+            body:
+              JSON.stringify(
+                payload
+              ),
+          }
+        );
       }
-
 
       const data =
         await res.json();
 
+      console.log(
+        "SAVE RESPONSE:",
+        data
+      );
 
       if (!res.ok) {
-
         alert(
           data.message ||
             "Unable to save draft."
         );
 
         return;
-
       }
 
+      // ==================================================
+      // EXISTING CASE
+      // ==================================================
 
-      /* ==================================================
-         EXISTING CASE
-      ================================================== */
+      if (data.existing) {
+        const existing =
+          data.data;
 
-      if (
-        data.existing
-      ) {
+        if (existing) {
+          setSelectedCase(
+            existing
+          );
 
-        setSelectedCase(
-          data.data
-        );
+          const student =
+            students.find(
+              (s) =>
+                String(
+                  s.StudentID || ""
+                ).trim() ===
+                String(
+                  existing.StudentID ||
+                    ""
+                ).trim()
+            );
 
+          setSelectedStudent(
+            student || null
+          );
+        }
 
         alert(
           `Existing Viva Case found.\n\nCase ID: ${data.caseID}\n\nThe existing case has been opened instead of creating a duplicate.`
         );
-
       }
 
-
-      /* ==================================================
-         NEW CASE
-      ================================================== */
+      // ==================================================
+      // NEW CASE
+      // ==================================================
 
       else if (
         data.caseID
       ) {
-
         alert(
           `Draft saved successfully.\n\nCase ID: ${data.caseID}`
         );
-
       }
 
-
-      /* ==================================================
-         REFRESH
-      ================================================== */
+      // ==================================================
+      // REFRESH
+      // ==================================================
 
       await loadCases();
 
+      // ==================================================
+      // GET LATEST CASE
+      // ==================================================
 
       const refreshed =
         await fetch(
           `${API}/vivacases`
         );
 
-
       const json =
         await refreshed.json();
 
+      const targetCaseID =
+        data.caseID ||
+        data.data?.CaseID ||
+        selectedCase?.CaseID;
 
       const latest =
-        json.data?.find(
-          (c) =>
-            c.CaseID ===
-            data.caseID
-        ) ||
-        json.data?.find(
-          (c) =>
-            c.CaseID ===
-            data.data?.CaseID
-        );
+        Array.isArray(
+          json.data
+        )
+          ? json.data.find(
+              (c) =>
+                String(
+                  c.CaseID || ""
+                ).trim() ===
+                String(
+                  targetCaseID ||
+                    ""
+                ).trim()
+            )
+          : null;
 
+      console.log(
+        "LATEST CASE:",
+        latest
+      );
 
       if (latest) {
-
         handleManage(
           latest
         );
-
       }
-
-
     } catch (err) {
-
       console.error(
         "SAVE DRAFT ERROR:",
         err
@@ -1217,442 +917,378 @@ async function loadStudents() {
       alert(
         "Unable to connect to server."
       );
-
     }
-
   }
 
-
-  /* ======================================================
-     SEND APPOINTMENT
-  ====================================================== */
+  // ======================================================
+  // SEND APPOINTMENT
+  // ======================================================
 
   async function sendAppointment() {
-
-    if (!selectedCase) {
-
+    if (!selectedCase?.CaseID) {
       alert(
         "Please save the draft first. A Viva Case Number will be generated automatically. After that, select the case from the table below before previewing or sending emails."
       );
 
       return;
-
     }
 
-
     try {
+      const caseID = String(
+        selectedCase.CaseID
+      ).trim();
 
       const res =
         await fetch(
-          `${API}/emails/${selectedCase.CaseID}/send-appointment`,
+          `${API}/emails/${encodeURIComponent(
+            caseID
+          )}/send-appointment`,
           {
-            method:
-              "POST",
+            method: "POST",
           }
         );
-
 
       const data =
         await res.json();
 
-
       if (!res.ok) {
-
         alert(
-          data.message
+          data.message ||
+            "Unable to send appointment email."
         );
 
         return;
-
       }
-
 
       alert(
         data.message
       );
 
-
       await loadCases();
-
-
     } catch (err) {
-
       console.error(
+        "SEND APPOINTMENT ERROR:",
         err
       );
 
       alert(
         "Unable to send appointment email."
       );
-
     }
-
   }
 
-
-  /* ======================================================
-     SEND THESIS
-  ====================================================== */
+  // ======================================================
+  // SEND THESIS
+  // ======================================================
 
   async function sendThesis() {
-
-    if (!selectedCase) {
-
+    if (!selectedCase?.CaseID) {
       alert(
         "Please save the draft first. A Viva Case Number will be generated automatically. After that, select the case from the Viva Case List below before previewing or sending emails."
       );
 
       return;
-
     }
 
-
     try {
+      const caseID = String(
+        selectedCase.CaseID
+      ).trim();
 
       const res =
         await fetch(
-          `${API}/emails/${selectedCase.CaseID}/send-thesis`,
+          `${API}/emails/${encodeURIComponent(
+            caseID
+          )}/send-thesis`,
           {
-            method:
-              "POST",
+            method: "POST",
           }
         );
-
 
       const data =
         await res.json();
 
-
       if (!res.ok) {
-
         alert(
-          data.message
+          data.message ||
+            "Unable to send thesis email."
         );
 
         return;
-
       }
-
 
       alert(
         data.message
       );
 
-
       await loadCases();
-
-
     } catch (err) {
-
       console.error(
+        "SEND THESIS ERROR:",
         err
       );
 
       alert(
         "Unable to send thesis email."
       );
-
     }
-
   }
 
-
-  /* ======================================================
-     SEND REMINDER
-  ====================================================== */
+  // ======================================================
+  // SEND REMINDER
+  // ======================================================
 
   async function sendReminder() {
-
-    if (!selectedCase) {
-
+    if (!selectedCase?.CaseID) {
       alert(
         "Please save the draft first. A Viva Case Number will be generated automatically. After that, select the case from the Viva Case List below before previewing or sending emails."
       );
 
       return;
-
     }
 
-
     try {
+      const caseID = String(
+        selectedCase.CaseID
+      ).trim();
 
       const res =
         await fetch(
-          `${API}/emails/${selectedCase.CaseID}/send-reminder`,
+          `${API}/emails/${encodeURIComponent(
+            caseID
+          )}/send-reminder`,
           {
-            method:
-              "POST",
+            method: "POST",
           }
         );
-
 
       const data =
         await res.json();
 
-
       if (!res.ok) {
-
         alert(
-          data.message
+          data.message ||
+            "Unable to send reminder email."
         );
 
         return;
-
       }
-
 
       alert(
         data.message
       );
 
-
       await loadCases();
-
-
     } catch (err) {
-
       console.error(
+        "SEND REMINDER ERROR:",
         err
       );
 
       alert(
         "Unable to send reminder email."
       );
-
     }
-
   }
 
-
-  /* ======================================================
-     SEND SCHEDULE
-     
-     NOTE:
-     Schedule is now handled on the Schedule page.
-     We therefore do NOT save schedule fields here.
-  ====================================================== */
+  // ======================================================
+  // SEND SCHEDULE
+  // ======================================================
 
   async function sendSchedule() {
-
-    if (!selectedCase) {
-
+    if (!selectedCase?.CaseID) {
       alert(
         "Please save the draft first. A Viva Case Number will be generated automatically. After that, select the case from the Viva Case List below before previewing or sending emails."
       );
 
       return;
-
     }
 
-
     try {
+      const caseID = String(
+        selectedCase.CaseID
+      ).trim();
 
       const res =
         await fetch(
-          `${API}/emails/${selectedCase.CaseID}/send-schedule`,
+          `${API}/emails/${encodeURIComponent(
+            caseID
+          )}/send-schedule`,
           {
-            method:
-              "POST",
+            method: "POST",
           }
         );
-
 
       const data =
         await res.json();
 
-
       if (!res.ok) {
-
         alert(
           data.message ||
             "Unable to send schedule email."
         );
 
         return;
-
       }
-
 
       alert(
         data.message
       );
 
-
       await loadCases();
-
-
     } catch (err) {
-
       console.error(
+        "SEND SCHEDULE ERROR:",
         err
       );
 
       alert(
         "Unable to send schedule email."
       );
-
     }
-
   }
 
-
-  /* ======================================================
-     SEND THANK YOU
-  ====================================================== */
+  // ======================================================
+  // SEND THANK YOU
+  // ======================================================
 
   async function sendThankYou() {
-
-    if (!selectedCase) {
-
+    if (!selectedCase?.CaseID) {
       alert(
         "Please save the draft first. A Viva Case Number will be generated automatically. After that, select the case from the table below before previewing or sending emails."
       );
 
       return;
-
     }
 
-
     try {
+      const caseID = String(
+        selectedCase.CaseID
+      ).trim();
 
       const res =
         await fetch(
-          `${API}/emails/${selectedCase.CaseID}/send-thankyou`,
+          `${API}/emails/${encodeURIComponent(
+            caseID
+          )}/send-thankyou`,
           {
-            method:
-              "POST",
+            method: "POST",
           }
         );
-
 
       const data =
         await res.json();
 
-
       if (!res.ok) {
-
         alert(
-          data.message
+          data.message ||
+            "Unable to send thank-you email."
         );
 
         return;
-
       }
-
 
       alert(
         data.message
       );
 
-
       await loadCases();
-
-
     } catch (err) {
-
       console.error(
+        "SEND THANK YOU ERROR:",
         err
       );
 
       alert(
         "Unable to send thank-you email."
       );
-
     }
-
   }
 
+  // ======================================================
+  // CREATE GOOGLE DRIVE FOLDER
+  // ======================================================
 
-  /**
- * ======================================================
- * CREATE GOOGLE DRIVE FOLDER
- * ======================================================
- */
-async function createDriveFolder() {
-
-  if (!selectedCase?.CaseID) {
-
-    alert(
-      "Please save the Viva Case first before creating the Google Drive folder."
-    );
-
-    return;
-  }
-
-  try {
-
-    const res = await fetch(
-      `${API}/vivacases/${selectedCase.CaseID}/create-drive-folder`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    const data = await res.json();
-
-    if (!res.ok) {
-
+  async function createDriveFolder() {
+    if (!selectedCase?.CaseID) {
       alert(
-        data.message ||
-        "Unable to create Google Drive folder."
+        "Please save the Viva Case first before creating the Google Drive folder."
       );
 
       return;
     }
 
-    // ============================================
-    // UPDATE FORM
-    // ============================================
+    try {
+      const caseID = String(
+        selectedCase.CaseID
+      ).trim();
 
-    setForm((prev) => ({
-      ...prev,
-      driveLink:
-        data.googleDriveLink || "",
-    }));
+      const res =
+        await fetch(
+          `${API}/vivacases/${encodeURIComponent(
+            caseID
+          )}/create-drive-folder`,
+          {
+            method: "POST",
 
-    // ============================================
-    // UPDATE SELECTED CASE
-    // ============================================
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+          }
+        );
 
-    setSelectedCase((prev) => ({
-      ...prev,
-      GoogleDriveLink:
-        data.googleDriveLink || "",
-    }));
+      const data =
+        await res.json();
 
-    // ============================================
-    // REFRESH CASE LIST
-    // ============================================
+      if (!res.ok) {
+        alert(
+          data.message ||
+            "Unable to create Google Drive folder."
+        );
 
-    await loadCases();
+        return;
+      }
 
-    alert(
-      `Google Drive folder created successfully.\n\nCase ID: ${data.caseID}`
-    );
+      setForm((prev) => ({
+        ...prev,
 
-  } catch (err) {
+        driveLink:
+          data.googleDriveLink ||
+          "",
+      }));
 
-    console.error(
-      "CREATE DRIVE FOLDER ERROR:",
-      err
-    );
+      setSelectedCase((prev) => ({
+        ...prev,
 
-    alert(
-      "Unable to connect to the server."
-    );
+        GoogleDriveLink:
+          data.googleDriveLink ||
+          "",
+      }));
+
+      await loadCases();
+
+      alert(
+        `Google Drive folder created successfully.\n\nCase ID: ${data.caseID}`
+      );
+    } catch (err) {
+      console.error(
+        "CREATE DRIVE FOLDER ERROR:",
+        err
+      );
+
+      alert(
+        "Unable to connect to the server."
+      );
+    }
   }
-}
-  /* ======================================================
-     RENDER
-  ====================================================== */
+
+  // ======================================================
+  // RENDER
+  // ======================================================
 
   return (
-
     <div className="space-y-8">
-
 
       {/* ==================================================
           SUMMARY
@@ -1662,18 +1298,15 @@ async function createDriveFolder() {
         cases={cases}
       />
 
-
       {/* ==================================================
           FORM + STATUS
       ================================================== */}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
-
         <div className="lg:col-span-2">
 
           <VivaCaseForm
-
             selectedCase={
               selectedCase
             }
@@ -1734,16 +1367,12 @@ async function createDriveFolder() {
               previewEmailHandler
             }
 
-              createDriveFolder={
-    createDriveFolder
-  }
-
-            
-
+            createDriveFolder={
+              createDriveFolder
+            }
           />
 
         </div>
-
 
         <CaseStatusCard
           selectedCase={
@@ -1753,13 +1382,11 @@ async function createDriveFolder() {
 
       </div>
 
-
       {/* ==================================================
           CASE TABLE
       ================================================== */}
 
       <VivaCaseTable
-
         cases={
           cases
         }
@@ -1783,33 +1410,24 @@ async function createDriveFolder() {
         onDelete={
           deleteCase
         }
-
       />
-
 
       {/* ==================================================
           EMAIL PREVIEW MODAL
       ================================================== */}
 
       {previewOpen && (
-
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
 
           <div className="w-[95vw] max-w-7xl rounded-lg bg-white p-6 shadow-xl">
 
-
-            {/* --------------------------------------------
-                TITLE
-            -------------------------------------------- */}
+            {/* TITLE */}
 
             <h2 className="mb-4 text-xl font-bold">
               Email Preview
             </h2>
 
-
-            {/* --------------------------------------------
-                SUBJECT
-            -------------------------------------------- */}
+            {/* SUBJECT + BODY */}
 
             <div className="mb-4 rounded border bg-gray-50 p-4">
 
@@ -1822,7 +1440,6 @@ async function createDriveFolder() {
                 <div className="mb-4 rounded border bg-gray-100 p-3">
                   {previewSubject}
                 </div>
-
 
                 <p className="font-semibold">
                   Body
@@ -1844,13 +1461,9 @@ async function createDriveFolder() {
 
             </div>
 
-
-            {/* --------------------------------------------
-                BUTTONS
-            -------------------------------------------- */}
+            {/* BUTTONS */}
 
             <div className="flex justify-end gap-3">
-
 
               {/* CLOSE */}
 
@@ -1865,62 +1478,40 @@ async function createDriveFolder() {
                 Close
               </button>
 
-
               {/* SEND */}
 
               <button
                 onClick={async () => {
-
                   setPreviewOpen(
                     false
                   );
 
-
                   switch (
                     previewType
                   ) {
-
                     case "appointment":
-
                       await sendAppointment();
-
                       break;
-
 
                     case "thesis":
-
                       await sendThesis();
-
                       break;
-
 
                     case "reminder":
-
                       await sendReminder();
-
                       break;
-
 
                     case "schedule":
-
                       await sendSchedule();
-
                       break;
-
 
                     case "thankyou":
-
                       await sendThankYou();
-
                       break;
-
 
                     default:
-
                       break;
-
                   }
-
                 }}
                 className="rounded bg-purple-600 px-4 py-2 text-white"
               >
@@ -1932,11 +1523,8 @@ async function createDriveFolder() {
           </div>
 
         </div>
-
       )}
 
     </div>
-
   );
-
 }
