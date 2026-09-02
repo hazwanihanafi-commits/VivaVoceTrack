@@ -6,6 +6,8 @@ import {
 } from "../services/sheetsService.js";
 
 const SHEET = "Panel";
+const VIVA_SHEET = "VivaCases";
+const STUDENT_SHEET = "Students";
 
 
 /**
@@ -22,7 +24,6 @@ export const getAllPanelResponses =
 
       const rows =
         await getRows(SHEET);
-
 
       return res.json({
 
@@ -54,6 +55,14 @@ export const getAllPanelResponses =
  *
  * GET /api/panel/viva/:vivaID
  * ======================================================
+ *
+ * Returns Panel records together with:
+ *
+ * - Student information
+ * - Viva information
+ * - ResponseDeadline
+ *
+ * ======================================================
  */
 export const getVivaPanel =
   async (req, res, next) => {
@@ -80,6 +89,12 @@ export const getVivaPanel =
       }
 
 
+      /**
+       * ==================================================
+       * GET PANEL
+       * ==================================================
+       */
+
       const rows =
         await getRows(SHEET);
 
@@ -93,15 +108,140 @@ export const getVivaPanel =
         );
 
 
+      /**
+       * ==================================================
+       * GET VIVA
+       * ==================================================
+       */
+
+      const viva =
+        await findRow(
+          VIVA_SHEET,
+          "CaseID",
+          vivaID
+        );
+
+
+      /**
+       * ==================================================
+       * GET STUDENT
+       * ==================================================
+       */
+
+      let student = null;
+
+      if (viva?.StudentID) {
+
+        student =
+          await findRow(
+            STUDENT_SHEET,
+            "StudentID",
+            viva.StudentID
+          );
+
+      }
+
+
+      /**
+       * ==================================================
+       * COMBINE DATA
+       * ==================================================
+       */
+
+      const result =
+        panel.map((item) => ({
+
+          ...item,
+
+          // ----------------------------------------------
+          // VIVA
+          // ----------------------------------------------
+
+          CaseID:
+            viva?.CaseID ||
+            item.VivaID ||
+            "",
+
+          VivaID:
+            viva?.CaseID ||
+            item.VivaID ||
+            "",
+
+          ResponseDeadline:
+            viva?.ResponseDeadline ||
+            item.ResponseDeadline ||
+            "",
+
+          TentativeVivaDate:
+            viva?.TentativeVivaDate ||
+            "",
+
+          VivaDate:
+            viva?.VivaDate ||
+            "",
+
+          VivaTime:
+            viva?.VivaTime ||
+            "",
+
+          Venue:
+            viva?.Venue ||
+            viva?.VivaVenue ||
+            "",
+
+          VivaMode:
+            viva?.VivaMode ||
+            "",
+
+          // ----------------------------------------------
+          // STUDENT
+          // ----------------------------------------------
+
+          StudentID:
+            student?.StudentID ||
+            viva?.StudentID ||
+            "",
+
+          StudentName:
+            student?.StudentName ||
+            "",
+
+          MatricNo:
+            student?.MatricNo ||
+            "",
+
+          Programme:
+            student?.Programme ||
+            "",
+
+          School:
+            student?.School ||
+            "",
+
+          Faculty:
+            student?.Faculty ||
+            "",
+
+          Supervisor:
+            student?.Supervisor ||
+            "",
+
+          CoSupervisor:
+            student?.CoSupervisor ||
+            "",
+
+        }));
+
+
       return res.json({
 
         success: true,
 
         total:
-          panel.length,
+          result.length,
 
         data:
-          panel,
+          result,
 
       });
 
@@ -122,6 +262,26 @@ export const getVivaPanel =
  * GET ONE PANEL RECORD
  *
  * GET /api/panel/:panelID
+ * ======================================================
+ *
+ * IMPORTANT:
+ *
+ * PanelResponse.jsx calls this endpoint when the
+ * invitation URL contains:
+ *
+ * /panel-response?panelID=VP001
+ *
+ * This function combines:
+ *
+ * Panel
+ *   +
+ * VivaCases
+ *   +
+ * Students
+ *
+ * Therefore ResponseDeadline will be available even
+ * if the Panel record itself does not contain it.
+ *
  * ======================================================
  */
 export const getPanelMember =
@@ -149,6 +309,12 @@ export const getPanelMember =
       }
 
 
+      /**
+       * ==================================================
+       * GET PANEL
+       * ==================================================
+       */
+
       const panel =
         await findRow(
           SHEET,
@@ -171,12 +337,232 @@ export const getPanelMember =
       }
 
 
+      /**
+       * ==================================================
+       * GET VIVA
+       * ==================================================
+       */
+
+      const vivaID =
+        String(
+          panel.VivaID || ""
+        ).trim();
+
+
+      let viva = null;
+
+
+      if (vivaID) {
+
+        viva =
+          await findRow(
+            VIVA_SHEET,
+            "CaseID",
+            vivaID
+          );
+
+      }
+
+
+      /**
+       * ==================================================
+       * GET STUDENT
+       * ==================================================
+       */
+
+      let student = null;
+
+
+      const studentID =
+        viva?.StudentID ||
+        panel.StudentID ||
+        "";
+
+
+      if (studentID) {
+
+        student =
+          await findRow(
+            STUDENT_SHEET,
+            "StudentID",
+            studentID
+          );
+
+      }
+
+
+      /**
+       * ==================================================
+       * COMBINE PANEL + VIVA + STUDENT
+       * ==================================================
+       */
+
+      const data = {
+
+        // ==================================================
+        // PANEL
+        // ==================================================
+
+        ...panel,
+
+
+        // ==================================================
+        // VIVA
+        // ==================================================
+
+        CaseID:
+          viva?.CaseID ||
+          panel.VivaID ||
+          "",
+
+        VivaID:
+          viva?.CaseID ||
+          panel.VivaID ||
+          "",
+
+
+        ResponseDeadline:
+          viva?.ResponseDeadline ||
+          panel.ResponseDeadline ||
+          "",
+
+
+        TentativeVivaDate:
+          viva?.TentativeVivaDate ||
+          "",
+
+
+        VivaDate:
+          viva?.VivaDate ||
+          "",
+
+
+        VivaTime:
+          viva?.VivaTime ||
+          "",
+
+
+        Venue:
+          viva?.Venue ||
+          viva?.VivaVenue ||
+          panel.Venue ||
+          "",
+
+
+        VivaVenue:
+          viva?.VivaVenue ||
+          viva?.Venue ||
+          "",
+
+
+        VivaMode:
+          viva?.VivaMode ||
+          viva?.Mode ||
+          "",
+
+
+        MeetingLink:
+          viva?.MeetingLink ||
+          "",
+
+
+        // ==================================================
+        // STUDENT
+        // ==================================================
+
+        StudentID:
+          student?.StudentID ||
+          viva?.StudentID ||
+          panel.StudentID ||
+          "",
+
+
+        StudentName:
+          student?.StudentName ||
+          "",
+
+
+        MatricNo:
+          student?.MatricNo ||
+          "",
+
+
+        Programme:
+          student?.Programme ||
+          "",
+
+
+        Degree:
+          student?.Degree ||
+          student?.Programme ||
+          "",
+
+
+        School:
+          student?.School ||
+          "",
+
+
+        Faculty:
+          student?.Faculty ||
+          "",
+
+
+        ResearchArea:
+          student?.ResearchArea ||
+          "",
+
+
+        Supervisor:
+          student?.Supervisor ||
+          "",
+
+
+        CoSupervisor:
+          student?.CoSupervisor ||
+          "",
+
+
+        StudentEmail:
+          student?.Email ||
+          "",
+
+      };
+
+
+      /**
+       * ==================================================
+       * LOG FOR DEBUGGING
+       * ==================================================
+       */
+
+      console.log(
+        `Panel ${panelID} loaded.`
+      );
+
+      console.log(
+        `Viva: ${viva?.CaseID || "NOT FOUND"}`
+      );
+
+      console.log(
+        `ResponseDeadline: ${
+          data.ResponseDeadline ||
+          "NOT SPECIFIED"
+        }`
+      );
+
+
+      /**
+       * ==================================================
+       * RETURN
+       * ==================================================
+       */
+
       return res.json({
 
         success: true,
 
-        data:
-          panel,
+        data,
 
       });
 
@@ -197,6 +583,7 @@ export const getPanelMember =
  * RESPOND TO PANEL INVITATION
  *
  * POST /api/panel/:panelID/respond
+ * ======================================================
  *
  * Works for:
  *
@@ -233,6 +620,7 @@ export const respondToPanelInvitation =
        * CHECK PANEL ID
        * ==================================================
        */
+
       if (!panelID) {
 
         return res.status(400).json({
@@ -252,6 +640,7 @@ export const respondToPanelInvitation =
        * FIND PANEL
        * ==================================================
        */
+
       const panel =
         await findRow(
           SHEET,
@@ -276,25 +665,66 @@ export const respondToPanelInvitation =
 
       /**
        * ==================================================
+       * GET VIVA
+       *
+       * Used as fallback for deadline.
+       * ==================================================
+       */
+
+      let viva = null;
+
+
+      if (panel.VivaID) {
+
+        viva =
+          await findRow(
+            VIVA_SHEET,
+            "CaseID",
+            panel.VivaID
+          );
+
+      }
+
+
+      /**
+       * ==================================================
+       * RESPONSE DEADLINE
+       *
+       * Priority:
+       *
+       * 1. VivaCases.ResponseDeadline
+       * 2. Panel.ResponseDeadline
+       * ==================================================
+       */
+
+      const responseDeadline =
+        viva?.ResponseDeadline ||
+        panel.ResponseDeadline ||
+        "";
+
+
+      /**
+       * ==================================================
        * CHECK DEADLINE
        * ==================================================
        */
-      if (panel.ResponseDeadline) {
+
+      if (responseDeadline) {
 
         const deadline =
-          new Date(
-            panel.ResponseDeadline
+          parseSheetDate(
+            responseDeadline
           );
+
 
         const now =
           new Date();
 
 
         if (
-          !Number.isNaN(
+          deadline &&
+          now.getTime() >
             deadline.getTime()
-          ) &&
-          now > deadline
         ) {
 
           return res.status(400).json({
@@ -307,6 +737,7 @@ export const respondToPanelInvitation =
           });
 
         }
+
       }
 
 
@@ -315,6 +746,7 @@ export const respondToPanelInvitation =
        * VALID RESPONSE
        * ==================================================
        */
+
       const allowedResponses = [
         "Yes",
         "No",
@@ -345,6 +777,7 @@ export const respondToPanelInvitation =
        * VALIDATE SUGGESTION
        * ==================================================
        */
+
       if (
         response === "Suggest" &&
         (
@@ -370,6 +803,7 @@ export const respondToPanelInvitation =
        * FIND ACTUAL SHEET ROW
        * ==================================================
        */
+
       const rowNumber =
         await findRowNumber(
           SHEET,
@@ -398,16 +832,9 @@ export const respondToPanelInvitation =
       /**
        * ==================================================
        * UPDATE RESPONSE
-       *
-       * IMPORTANT:
-       *
-       * Accepted = Yes / No / Suggest
-       *
-       * SuggestedDate/Time only when Suggest.
-       *
-       * Student uses exactly the same mechanism.
        * ==================================================
        */
+
       const updated = {
 
         Accepted:
@@ -437,6 +864,7 @@ export const respondToPanelInvitation =
        * SAVE
        * ==================================================
        */
+
       await updateRow(
         SHEET,
         rowNumber,
@@ -449,6 +877,7 @@ export const respondToPanelInvitation =
        * GET SAVED RECORD
        * ==================================================
        */
+
       const saved =
         await findRow(
           SHEET,
@@ -459,9 +888,62 @@ export const respondToPanelInvitation =
 
       /**
        * ==================================================
+       * RETURN UPDATED DATA
+       *
+       * Include deadline and Viva data so frontend
+       * can immediately refresh.
+       * ==================================================
+       */
+
+      const savedData = {
+
+        ...saved,
+
+        CaseID:
+          viva?.CaseID ||
+          saved?.VivaID ||
+          "",
+
+        VivaID:
+          viva?.CaseID ||
+          saved?.VivaID ||
+          "",
+
+        ResponseDeadline:
+          viva?.ResponseDeadline ||
+          saved?.ResponseDeadline ||
+          "",
+
+        TentativeVivaDate:
+          viva?.TentativeVivaDate ||
+          "",
+
+        VivaDate:
+          viva?.VivaDate ||
+          "",
+
+        VivaTime:
+          viva?.VivaTime ||
+          "",
+
+        Venue:
+          viva?.Venue ||
+          viva?.VivaVenue ||
+          "",
+
+        VivaMode:
+          viva?.VivaMode ||
+          "",
+
+      };
+
+
+      /**
+       * ==================================================
        * MESSAGE
        * ==================================================
        */
+
       let message =
         "Your response has been recorded successfully.";
 
@@ -499,7 +981,7 @@ export const respondToPanelInvitation =
         message,
 
         data:
-          saved,
+          savedData,
 
       });
 
@@ -513,3 +995,111 @@ export const respondToPanelInvitation =
       next(err);
     }
   };
+
+
+/**
+ * ======================================================
+ * PARSE GOOGLE SHEET DATE
+ * ======================================================
+ *
+ * Supports:
+ *
+ * YYYY-MM-DD
+ * DD/MM/YYYY
+ * ISO date
+ *
+ * ======================================================
+ */
+function parseSheetDate(value) {
+
+  if (!value) {
+    return null;
+  }
+
+
+  const text =
+    String(value).trim();
+
+
+  /**
+   * YYYY-MM-DD
+   */
+  if (
+    /^\d{4}-\d{2}-\d{2}$/.test(
+      text
+    )
+  ) {
+
+    const [
+      year,
+      month,
+      day,
+    ] =
+      text
+        .split("-")
+        .map(Number);
+
+
+    return new Date(
+      year,
+      month - 1,
+      day,
+      23,
+      59,
+      59
+    );
+
+  }
+
+
+  /**
+   * DD/MM/YYYY
+   */
+  if (
+    /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(
+      text
+    )
+  ) {
+
+    const [
+      day,
+      month,
+      year,
+    ] =
+      text
+        .split("/")
+        .map(Number);
+
+
+    return new Date(
+      year,
+      month - 1,
+      day,
+      23,
+      59,
+      59
+    );
+
+  }
+
+
+  /**
+   * Normal / ISO date
+   */
+  const date =
+    new Date(text);
+
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+
+    return null;
+
+  }
+
+
+  return date;
+}
