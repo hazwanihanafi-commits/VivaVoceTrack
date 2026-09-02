@@ -319,19 +319,22 @@ export const createVivaCase = async (
       body.MeetingLink || "",
 
       // 33 ChairpersonID
-      body.ChairpersonID || "",
+body.ChairpersonID || "",
 
-      // 34 SecretaryID
-      body.SecretaryID || "",
+// 34 SecretaryID
+body.SecretaryID || "",
 
-      // 35 MainSupervisorID
-      mainSupervisorID,
+// 35 ResponseDeadline
+body.ResponseDeadline || "",
 
-      // 36 CoSupervisorID
-      body.CoSupervisorID || "",
+// 36 MainSupervisorID
+mainSupervisorID,
 
-      // 37 StudentConfirmed
-      body.StudentConfirmed || "No",
+// 37 CoSupervisorID
+body.CoSupervisorID || "",
+
+// 38 StudentConfirmed
+body.StudentConfirmed || "No",
 
       // 38 Internal1ReportReceived
       "",
@@ -412,16 +415,23 @@ export const createVivaCase = async (
         body.ExternalExaminer2ID || "",
 
       ChairpersonID:
-        body.ChairpersonID || "",
+  body.ChairpersonID ??
+  row.ChairpersonID,
 
-      SecretaryID:
-        body.SecretaryID || "",
+SecretaryID:
+  body.SecretaryID ??
+  row.SecretaryID,
 
-      MainSupervisorID:
-        mainSupervisorID,
+ResponseDeadline:
+  body.ResponseDeadline ??
+  row.ResponseDeadline,
 
-      CoSupervisorNames:
-        coSupervisorNames,
+MainSupervisorID:
+  mainSupervisorID,
+
+CoSupervisorID:
+  body.CoSupervisorID ??
+  row.CoSupervisorID,
     };
 
     await createVivaPanel(
