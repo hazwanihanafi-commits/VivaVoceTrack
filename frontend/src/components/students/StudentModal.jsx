@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 
-const API = import.meta.env.VITE_API_URL;
+const API =
+  import.meta.env.VITE_API_URL ||
+  "https://vivatrack-backend.onrender.com";
 
 const emptyStudent = {
   MatricNo: "",
