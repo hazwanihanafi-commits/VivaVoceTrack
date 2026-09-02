@@ -1299,6 +1299,88 @@ export default function VivaCases() {
   }
 
 
+  /**
+ * ======================================================
+ * CREATE GOOGLE DRIVE FOLDER
+ * ======================================================
+ */
+async function createDriveFolder() {
+
+  if (!selectedCase?.CaseID) {
+
+    alert(
+      "Please save the Viva Case first before creating the Google Drive folder."
+    );
+
+    return;
+  }
+
+  try {
+
+    const res = await fetch(
+      `${API}/vivacases/${selectedCase.CaseID}/create-drive-folder`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+
+      alert(
+        data.message ||
+        "Unable to create Google Drive folder."
+      );
+
+      return;
+    }
+
+    // ============================================
+    // UPDATE FORM
+    // ============================================
+
+    setForm((prev) => ({
+      ...prev,
+      driveLink:
+        data.googleDriveLink || "",
+    }));
+
+    // ============================================
+    // UPDATE SELECTED CASE
+    // ============================================
+
+    setSelectedCase((prev) => ({
+      ...prev,
+      GoogleDriveLink:
+        data.googleDriveLink || "",
+    }));
+
+    // ============================================
+    // REFRESH CASE LIST
+    // ============================================
+
+    await loadCases();
+
+    alert(
+      `Google Drive folder created successfully.\n\nCase ID: ${data.caseID}`
+    );
+
+  } catch (err) {
+
+    console.error(
+      "CREATE DRIVE FOLDER ERROR:",
+      err
+    );
+
+    alert(
+      "Unable to connect to the server."
+    );
+  }
+}
   /* ======================================================
      RENDER
   ====================================================== */
@@ -1387,6 +1469,12 @@ export default function VivaCases() {
             previewEmailHandler={
               previewEmailHandler
             }
+
+              createDriveFolder={
+    createDriveFolder
+  }
+
+            
 
           />
 
