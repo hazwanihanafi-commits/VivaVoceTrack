@@ -314,31 +314,45 @@ function replaceTemplate(
       meetingLinkSection
     )
 
-    .replaceAll(
+        .replaceAll(
       "{{DriveLink}}",
       viva.GoogleDriveLink || ""
     )
 
+    /* ======================================================
+       SYSTEM LINKS
+    ====================================================== */
+
     .replaceAll(
-  "{{ExaminerReportLink}}",
-  process.env.EXAMINER_REPORT_LINK || ""
-)
+      "{{ExaminerReportLink}}",
+      process.env.EXAMINER_REPORT_LINK ||
+      "https://docs.google.com/document/d/1xiAJnOCRz_ZGdrZdPaAcsQkwE78oiJix/edit"
+    )
 
-.replaceAll(
-  "{{AcknowledgementLink}}",
-  viva.AcknowledgementLink || ""
-)
+    .replaceAll(
+      "{{AcknowledgementLink}}",
+      `${process.env.FRONTEND_URL || "https://vivavocetrack.onrender.com"}/acknowledgement?caseID=${encodeURIComponent(
+        viva.CaseID || ""
+      )}&examinerID=${encodeURIComponent(
+        examiner?.ExaminerID || ""
+      )}`
+    )
 
-.replaceAll(
-  "{{ReportSubmissionLink}}",
-  viva.ReportSubmissionLink || ""
-)
+    .replaceAll(
+      "{{ReportSubmissionLink}}",
+      viva.ReportSubmissionLink ||
+      process.env.REPORT_SUBMISSION_LINK ||
+      ""
+    )
 
-.replaceAll(
-  "{{AnnotatedThesisUploadLink}}",
-  viva.AnnotatedThesisUploadLink || ""
-)
+    .replaceAll(
+      "{{AnnotatedThesisUploadLink}}",
+      viva.AnnotatedThesisUploadLink ||
+      process.env.ANNOTATED_THESIS_UPLOAD_LINK ||
+      ""
+    )
 
+    
     /* Panel response */
     .replaceAll(
       "{{PanelResponseLink}}",
