@@ -17,7 +17,7 @@ const SHEET = "VivaCases";
  * ======================================================
  */
 
-cron.schedule("0 8 * * *", async () => {
+cron.schedule("* * * * *", async () => {
 
   console.log("Running Viva Reminder Job...");
 
