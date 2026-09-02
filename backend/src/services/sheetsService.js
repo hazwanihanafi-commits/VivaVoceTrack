@@ -2,7 +2,9 @@ import { sheets } from "../config/google.js";
 import { SPREADSHEET_ID } from "../config/sheets.js";
 
 /**
- * Read all rows
+ * ======================================================
+ * READ ALL ROWS
+ * ======================================================
  */
 export async function getRows(sheetName) {
   const response = await sheets.spreadsheets.values.get({
@@ -12,7 +14,9 @@ export async function getRows(sheetName) {
 
   const values = response.data.values || [];
 
-  if (values.length === 0) return [];
+  if (values.length === 0) {
+    return [];
+  }
 
   const headers = values[0];
 
@@ -27,8 +31,11 @@ export async function getRows(sheetName) {
   });
 }
 
+
 /**
- * Read header row
+ * ======================================================
+ * READ HEADER ROW
+ * ======================================================
  */
 export async function getHeaders(sheetName) {
   const response = await sheets.spreadsheets.values.get({
@@ -39,8 +46,11 @@ export async function getHeaders(sheetName) {
   return response.data.values?.[0] || [];
 }
 
+
 /**
- * Append new row
+ * ======================================================
+ * APPEND NEW ROW
+ * ======================================================
  */
 export async function addRow(sheetName, values) {
   await sheets.spreadsheets.values.append({
@@ -56,53 +66,114 @@ export async function addRow(sheetName, values) {
   return true;
 }
 
+
 /**
- * Find first row
+ * ======================================================
+ * FIND FIRST ROW
+ * ======================================================
  */
-export async function findRow(sheetName, columnName, value) {
+export async function findRow(
+  sheetName,
+  columnName,
+  value
+) {
   const rows = await getRows(sheetName);
+
+  const target = String(value ?? "")
+    .trim()
+    .toLowerCase();
 
   return (
-    rows.find(
-      (row) =>
-        String(row[columnName]).trim() === String(value).trim()
-    ) || null
+    rows.find((row) => {
+      const current = String(
+        row[columnName] ?? ""
+      )
+        .trim()
+        .toLowerCase();
+
+      return current === target;
+    }) || null
   );
 }
 
+
 /**
- * Find multiple rows
+ * ======================================================
+ * FIND MULTIPLE ROWS
+ * ======================================================
  */
-export async function findRows(sheetName, columnName, value) {
+export async function findRows(
+  sheetName,
+  columnName,
+  value
+) {
   const rows = await getRows(sheetName);
 
+  const target = String(value ?? "")
+    .trim()
+    .toLowerCase();
+
   return rows.filter((row) =>
-    String(row[columnName] || "")
+    String(row[columnName] ?? "")
+      .trim()
       .toLowerCase()
-      .includes(String(value).toLowerCase())
+      .includes(target)
   );
 }
 
+
 /**
- * Find spreadsheet row number
+ * ======================================================
+ * FIND GOOGLE SHEET ROW NUMBER
+ *
+ * Header = row 1
+ * First data row = row 2
+ * ======================================================
  */
-export async function findRowNumber(sheetName, columnName, value) {
-  const response = await sheets.spreadsheets.values.get({
-    spreadsheetId: SPREADSHEET_ID,
-    range: sheetName,
-  });
+export async function findRowNumber(
+  sheetName,
+  columnName,
+  value
+) {
+  const response =
+    await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: sheetName,
+    });
 
-  const values = response.data.values || [];
+  const values =
+    response.data.values || [];
 
-  if (values.length === 0) return -1;
+  if (values.length === 0) {
+    return -1;
+  }
 
   const headers = values[0];
-  const columnIndex = headers.indexOf(columnName);
 
-  if (columnIndex === -1) return -1;
+  const columnIndex =
+    headers.indexOf(columnName);
 
-  for (let i = 1; i < values.length; i++) {
-    if ((values[i][columnIndex] || "") === String(value)) {
+  if (columnIndex === -1) {
+    return -1;
+  }
+
+  const target = String(value ?? "")
+    .trim()
+    .toLowerCase();
+
+  for (
+    let i = 1;
+    i < values.length;
+    i++
+  ) {
+    const current =
+      String(
+        values[i][columnIndex] ?? ""
+      )
+        .trim()
+        .toLowerCase();
+
+    if (current === target) {
       return i + 1;
     }
   }
@@ -110,18 +181,87 @@ export async function findRowNumber(sheetName, columnName, value) {
   return -1;
 }
 
+
 /**
- * Update row
+ * ======================================================
+ * UPDATE ROW
+ *
+ * IMPORTANT:
+ * This version PRESERVES existing values.
+ *
+ * Only fields supplied in `data` are changed.
+ * ======================================================
  */
-export async function updateRow(sheetName, rowNumber, data) {
-  const headers = await getHeaders(sheetName);
+export async function updateRow(
+  sheetName,
+  rowNumber,
+  data
+) {
+  if (!rowNumber || rowNumber < 2) {
+    throw new Error(
+      "Invalid spreadsheet row number."
+    );
+  }
 
-  const values = headers.map((header) => data[header] ?? "");
+  /**
+   * Get existing row
+   */
+  const existingResponse =
+    await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${sheetName}!${rowNumber}:${rowNumber}`,
+    });
 
+  const existingValues =
+    existingResponse.data.values?.[0] || [];
+
+  /**
+   * Get headers
+   */
+  const headers =
+    await getHeaders(sheetName);
+
+  if (headers.length === 0) {
+    throw new Error(
+      `No headers found in sheet '${sheetName}'.`
+    );
+  }
+
+  /**
+   * Build updated row
+   */
+  const values = headers.map(
+    (header, index) => {
+      /**
+       * If data contains this field,
+       * use new value.
+       */
+      if (
+        Object.prototype.hasOwnProperty.call(
+          data,
+          header
+        )
+      ) {
+        return data[header] ?? "";
+      }
+
+      /**
+       * Otherwise preserve existing value.
+       */
+      return existingValues[index] ?? "";
+    }
+  );
+
+  /**
+   * Save row
+   */
   await sheets.spreadsheets.values.update({
     spreadsheetId: SPREADSHEET_ID,
+
     range: `${sheetName}!A${rowNumber}`,
+
     valueInputOption: "USER_ENTERED",
+
     requestBody: {
       values: [values],
     },
@@ -130,42 +270,66 @@ export async function updateRow(sheetName, rowNumber, data) {
   return true;
 }
 
-/**
- * Get Google Sheet numeric ID
- */
-export async function getSheetId(sheetName) {
-  const spreadsheet = await sheets.spreadsheets.get({
-    spreadsheetId: SPREADSHEET_ID,
-  });
 
-  const sheet = spreadsheet.data.sheets.find(
-    (s) => s.properties.title === sheetName
-  );
+/**
+ * ======================================================
+ * GET GOOGLE SHEET NUMERIC ID
+ * ======================================================
+ */
+export async function getSheetId(
+  sheetName
+) {
+  const spreadsheet =
+    await sheets.spreadsheets.get({
+      spreadsheetId: SPREADSHEET_ID,
+    });
+
+  const sheet =
+    spreadsheet.data.sheets.find(
+      (s) =>
+        s.properties.title ===
+        sheetName
+    );
 
   if (!sheet) {
-    throw new Error(`Sheet '${sheetName}' not found.`);
+    throw new Error(
+      `Sheet '${sheetName}' not found.`
+    );
   }
 
   return sheet.properties.sheetId;
 }
 
+
 /**
- * Delete row
+ * ======================================================
+ * DELETE ROW
+ * ======================================================
  */
-export async function deleteRow(sheetName, rowNumber) {
-  const sheetId = await getSheetId(sheetName);
+export async function deleteRow(
+  sheetName,
+  rowNumber
+) {
+  const sheetId =
+    await getSheetId(sheetName);
 
   await sheets.spreadsheets.batchUpdate({
     spreadsheetId: SPREADSHEET_ID,
+
     requestBody: {
       requests: [
         {
           deleteDimension: {
             range: {
               sheetId,
+
               dimension: "ROWS",
-              startIndex: rowNumber - 1,
-              endIndex: rowNumber,
+
+              startIndex:
+                rowNumber - 1,
+
+              endIndex:
+                rowNumber,
             },
           },
         },
@@ -176,37 +340,72 @@ export async function deleteRow(sheetName, rowNumber) {
   return true;
 }
 
+
 /**
- * Total rows
+ * ======================================================
+ * TOTAL ROWS
+ * ======================================================
  */
-export async function totalRows(sheetName) {
-  const rows = await getRows(sheetName);
+export async function totalRows(
+  sheetName
+) {
+  const rows =
+    await getRows(sheetName);
+
   return rows.length;
 }
 
+
 /**
- * Generate next ID
+ * ======================================================
+ * GENERATE NEXT ID
+ *
  * Example:
- * ST0001
- * EX0001
- * VC0001
+ * ST001
+ * EX001
+ * VC001
+ * VP001
+ * ======================================================
  */
-export async function generateID(prefix, sheetName, idColumn) {
-  const rows = await getRows(sheetName);
+export async function generateID(
+  prefix,
+  sheetName,
+  idColumn
+) {
+  const rows =
+    await getRows(sheetName);
 
   let max = 0;
 
   rows.forEach((row) => {
-    const id = row[idColumn] || "";
+    const id =
+      String(row[idColumn] || "")
+        .trim();
 
-    if (id.startsWith(prefix)) {
-      const num = parseInt(id.replace(prefix, ""), 10);
+    if (
+      id.toUpperCase()
+        .startsWith(
+          prefix.toUpperCase()
+        )
+    ) {
+      const number =
+        parseInt(
+          id.substring(
+            prefix.length
+          ),
+          10
+        );
 
-      if (!isNaN(num) && num > max) {
-        max = num;
+      if (
+        !isNaN(number) &&
+        number > max
+      ) {
+        max = number;
       }
     }
   });
 
-  return `${prefix}${String(max + 1).padStart(3, "0")}`;
+  return `${prefix}${String(
+    max + 1
+  ).padStart(3, "0")}`;
 }
