@@ -9,6 +9,29 @@ const SHEET = "Panel";
 
 /**
  * ======================================================
+ * GET ALL PANEL RESPONSES
+ * GET /api/panel
+ * ======================================================
+ */
+export const getAllPanelResponses = async (req, res, next) => {
+  try {
+    const rows = await getRows(SHEET);
+
+    return res.json({
+      success: true,
+      total: rows.length,
+      data: rows,
+    });
+
+  } catch (err) {
+    console.error("GET ALL PANEL RESPONSES ERROR:", err);
+    next(err);
+  }
+};
+
+
+/**
+ * ======================================================
  * GET PANEL FOR ONE VIVA
  * GET /api/panel/viva/:vivaID
  * ======================================================
@@ -20,7 +43,9 @@ export const getVivaPanel = async (req, res, next) => {
     const rows = await getRows(SHEET);
 
     const panel = rows.filter(
-      (row) => String(row.VivaID).trim() === String(vivaID).trim()
+      (row) =>
+        String(row.VivaID).trim() ===
+        String(vivaID).trim()
     );
 
     return res.json({
@@ -28,6 +53,7 @@ export const getVivaPanel = async (req, res, next) => {
       total: panel.length,
       data: panel,
     });
+
   } catch (err) {
     console.error("GET VIVA PANEL ERROR:", err);
     next(err);
@@ -62,6 +88,7 @@ export const getPanelMember = async (req, res, next) => {
       success: true,
       data: panel,
     });
+
   } catch (err) {
     console.error("GET PANEL MEMBER ERROR:", err);
     next(err);
@@ -72,14 +99,7 @@ export const getPanelMember = async (req, res, next) => {
 /**
  * ======================================================
  * RESPOND TO PANEL INVITATION
- *
  * POST /api/panel/:panelID/respond
- *
- * Accepted values:
- *
- * Accepted = Yes
- * Accepted = No
- * Accepted = Suggest
  * ======================================================
  */
 export const respondToPanelInvitation = async (
@@ -110,47 +130,30 @@ export const respondToPanelInvitation = async (
       });
     }
 
-    /**
- * ======================================================
- * GET ALL PANEL RESPONSES
- *
- * GET /api/panel
- * ======================================================
- */
-export const getAllPanelResponses = async (req, res, next) => {
-  try {
-    const rows = await getRows(SHEET);
+    // Check deadline
+    if (panel.ResponseDeadline) {
+      const deadline = new Date(
+        panel.ResponseDeadline
+      );
 
-    return res.json({
-      success: true,
-      total: rows.length,
-      data: rows,
-    });
+      const now = new Date();
 
-  } catch (err) {
-    console.error("GET ALL PANEL RESPONSES ERROR:", err);
-    next(err);
-  }
-};
+      if (
+        !isNaN(deadline.getTime()) &&
+        now > deadline
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "The response deadline has passed. Please contact the VivaTrack Secretariat.",
+        });
+      }
+    }
 
-    // ======================================================
-// CHECK RESPONSE DEADLINE
-// ======================================================
-
-if (panel.ResponseDeadline) {
-  const deadline = new Date(panel.ResponseDeadline);
-  const now = new Date();
-
-  if (!isNaN(deadline.getTime()) && now > deadline) {
-    return res.status(400).json({
-      success: false,
-      message:
-        "The response deadline has passed. Please contact the VivaTrack Secretariat.",
-    });
-  }
-}
-
-    if (!["Yes", "No", "Suggest"].includes(response)) {
+    // Validate response
+    if (
+      !["Yes", "No", "Suggest"].includes(response)
+    ) {
       return res.status(400).json({
         success: false,
         message:
@@ -158,6 +161,7 @@ if (panel.ResponseDeadline) {
       });
     }
 
+    // Validate suggested schedule
     if (
       response === "Suggest" &&
       (!suggestedDate || !suggestedTime)
@@ -184,14 +188,14 @@ if (panel.ResponseDeadline) {
         new Date().toISOString(),
 
       SuggestedDate:
-  response === "Suggest"
-    ? suggestedDate
-    : "",
+        response === "Suggest"
+          ? suggestedDate
+          : "",
 
-SuggestedTime:
-  response === "Suggest"
-    ? suggestedTime
-    : "",
+      SuggestedTime:
+        response === "Suggest"
+          ? suggestedTime
+          : "",
 
       Remarks:
         remarks || panel.Remarks || "",
@@ -205,12 +209,14 @@ SuggestedTime:
 
     return res.json({
       success: true,
+
       message:
         response === "Yes"
           ? "Your Viva Voce availability has been recorded."
           : response === "No"
           ? "Your response has been recorded as unavailable."
           : "Your suggested date and time have been recorded.",
+
       data: updated,
     });
 
