@@ -22,7 +22,6 @@ export const getAllPanelResponses = async (req, res, next) => {
       total: rows.length,
       data: rows,
     });
-
   } catch (err) {
     console.error("GET ALL PANEL RESPONSES ERROR:", err);
     next(err);
@@ -32,7 +31,7 @@ export const getAllPanelResponses = async (req, res, next) => {
 
 /**
  * ======================================================
- * GET PANEL FOR ONE VIVA
+ * GET ALL PANEL MEMBERS FOR ONE VIVA
  * GET /api/panel/viva/:vivaID
  * ======================================================
  */
@@ -44,8 +43,8 @@ export const getVivaPanel = async (req, res, next) => {
 
     const panel = rows.filter(
       (row) =>
-        String(row.VivaID).trim() ===
-        String(vivaID).trim()
+        String(row.VivaID || "").trim() ===
+        String(vivaID || "").trim()
     );
 
     return res.json({
@@ -53,7 +52,6 @@ export const getVivaPanel = async (req, res, next) => {
       total: panel.length,
       data: panel,
     });
-
   } catch (err) {
     console.error("GET VIVA PANEL ERROR:", err);
     next(err);
@@ -70,6 +68,13 @@ export const getVivaPanel = async (req, res, next) => {
 export const getPanelMember = async (req, res, next) => {
   try {
     const panelID = req.params.panelID;
+
+    if (!panelID) {
+      return res.status(400).json({
+        success: false,
+        message: "Panel ID is required.",
+      });
+    }
 
     const panel = await findRow(
       SHEET,
@@ -88,7 +93,6 @@ export const getPanelMember = async (req, res, next) => {
       success: true,
       data: panel,
     });
-
   } catch (err) {
     console.error("GET PANEL MEMBER ERROR:", err);
     next(err);
@@ -99,6 +103,7 @@ export const getPanelMember = async (req, res, next) => {
 /**
  * ======================================================
  * RESPOND TO PANEL INVITATION
+ *
  * POST /api/panel/:panelID/respond
  * ======================================================
  */
@@ -117,6 +122,19 @@ export const respondToPanelInvitation = async (
       remarks,
     } = req.body;
 
+    if (!panelID) {
+      return res.status(400).json({
+        success: false,
+        message: "Panel ID is required.",
+      });
+    }
+
+    /**
+     * --------------------------------------------------
+     * FIND PANEL
+     * --------------------------------------------------
+     */
+
     const panel = await findRow(
       SHEET,
       "PanelID",
@@ -130,7 +148,13 @@ export const respondToPanelInvitation = async (
       });
     }
 
-    // Check deadline
+
+    /**
+     * --------------------------------------------------
+     * CHECK RESPONSE DEADLINE
+     * --------------------------------------------------
+     */
+
     if (panel.ResponseDeadline) {
       const deadline = new Date(
         panel.ResponseDeadline
@@ -150,18 +174,30 @@ export const respondToPanelInvitation = async (
       }
     }
 
-    // Validate response
+
+    /**
+     * --------------------------------------------------
+     * VALIDATE RESPONSE
+     * --------------------------------------------------
+     */
+
     if (
       !["Yes", "No", "Suggest"].includes(response)
     ) {
       return res.status(400).json({
         success: false,
         message:
-          "Invalid response. Use Yes, No or Suggest.",
+          "Invalid response. Please select Yes, No or Suggest.",
       });
     }
 
-    // Validate suggested schedule
+
+    /**
+     * --------------------------------------------------
+     * VALIDATE SUGGESTED DATE/TIME
+     * --------------------------------------------------
+     */
+
     if (
       response === "Suggest" &&
       (!suggestedDate || !suggestedTime)
@@ -169,15 +205,37 @@ export const respondToPanelInvitation = async (
       return res.status(400).json({
         success: false,
         message:
-          "Please provide suggested date and time.",
+          "Please provide the suggested date and time.",
       });
     }
+
+
+    /**
+     * --------------------------------------------------
+     * FIND SHEET ROW
+     * --------------------------------------------------
+     */
 
     const rowNumber = await findRowNumber(
       SHEET,
       "PanelID",
       panelID
     );
+
+    if (!rowNumber) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Panel record row could not be found.",
+      });
+    }
+
+
+    /**
+     * --------------------------------------------------
+     * UPDATE PANEL RESPONSE
+     * --------------------------------------------------
+     */
 
     const updated = {
       ...panel,
@@ -198,8 +256,15 @@ export const respondToPanelInvitation = async (
           : "",
 
       Remarks:
-        remarks || panel.Remarks || "",
+        remarks || "",
     };
+
+
+    /**
+     * --------------------------------------------------
+     * SAVE
+     * --------------------------------------------------
+     */
 
     await updateRow(
       SHEET,
@@ -207,16 +272,34 @@ export const respondToPanelInvitation = async (
       updated
     );
 
+
+    /**
+     * --------------------------------------------------
+     * RESPONSE MESSAGE
+     * --------------------------------------------------
+     */
+
+    let message;
+
+    if (response === "Yes") {
+      message =
+        "Your Viva Voce availability has been recorded successfully.";
+    }
+
+    if (response === "No") {
+      message =
+        "Your response has been recorded as unavailable.";
+    }
+
+    if (response === "Suggest") {
+      message =
+        "Your suggested date and time have been recorded successfully.";
+    }
+
+
     return res.json({
       success: true,
-
-      message:
-        response === "Yes"
-          ? "Your Viva Voce availability has been recorded."
-          : response === "No"
-          ? "Your response has been recorded as unavailable."
-          : "Your suggested date and time have been recorded.",
-
+      message,
       data: updated,
     });
 
