@@ -6,23 +6,75 @@ import {
   createVivaCase,
   updateVivaCase,
   deleteVivaCase,
+  createDriveFolderForCase,
 } from "../controllers/vivaCaseController.js";
 
 const router = express.Router();
 
-// Get all viva cases
-router.get("/", getVivaCases);
+/**
+ * ======================================================
+ * GET ALL VIVA CASES
+ * GET /api/vivacases
+ * ======================================================
+ */
+router.get(
+  "/",
+  getVivaCases
+);
 
-// Get one viva case
-router.get("/:id", getVivaCase);
+/**
+ * ======================================================
+ * CREATE NEW VIVA CASE
+ * POST /api/vivacases
+ * ======================================================
+ */
+router.post(
+  "/",
+  createVivaCase
+);
 
-// Create new viva case
-router.post("/", createVivaCase);
+/**
+ * ======================================================
+ * CREATE GOOGLE DRIVE FOLDER
+ * POST /api/vivacases/:id/create-drive-folder
+ * ======================================================
+ */
+router.post(
+  "/:id/create-drive-folder",
+  createDriveFolderForCase
+);
 
-// Update existing viva case
-router.put("/:id", updateVivaCase);
+/**
+ * ======================================================
+ * GET ONE VIVA CASE
+ * GET /api/vivacases/:id
+ * ======================================================
+ */
+router.get(
+  "/:id",
+  getVivaCase
+);
 
-// Delete viva case
-router.delete("/:id", deleteVivaCase);
+/**
+ * ======================================================
+ * UPDATE VIVA CASE
+ * PUT /api/vivacases/:id
+ * ======================================================
+ */
+router.put(
+  "/:id",
+  updateVivaCase
+);
+
+/**
+ * ======================================================
+ * DELETE VIVA CASE
+ * DELETE /api/vivacases/:id
+ * ======================================================
+ */
+router.delete(
+  "/:id",
+  deleteVivaCase
+);
 
 export default router;
