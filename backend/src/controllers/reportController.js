@@ -9,122 +9,59 @@ import {
   uploadFileToDrive,
 } from "../services/googleDriveService.js";
 
-const PANEL_SHEET = "Panel";
 const VIVA_SHEET = "VivaCases";
+const PANEL_SHEET = "Panel";
+const STUDENT_SHEET = "Students";
+const EXAMINER_SHEET = "Examiners";
 
 /**
  * ======================================================
  * GET ALL REPORTS
- *
- * GET /api/reports
  * ======================================================
  */
-export const getReports = async (
-  req,
-  res,
-  next
-) => {
+export const getReports = async (req, res, next) => {
   try {
-    const rows = await getRows(PANEL_SHEET);
-
-    const reports = rows.map((row) => ({
-      PanelID: row.PanelID || "",
-      VivaID: row.VivaID || "",
-      PersonID: row.PersonID || "",
-      PersonType: row.PersonType || "",
-      Role: row.Role || "",
-
-      Accepted: row.Accepted || "",
-      ResponseDate: row.ResponseDate || "",
-
-      ReportReceived:
-        row.ReportReceived || "",
-
-      ReportReceivedDate:
-        row.ReportReceivedDate || "",
-
-      ReportFileName:
-        row.ReportFileName || "",
-
-      ReportFileID:
-        row.ReportFileID || "",
-
-      ReportFileURL:
-        row.ReportFileURL || "",
-
-      ReportUploadedBy:
-        row.ReportUploadedBy || "",
-
-      ReportUploadedDate:
-        row.ReportUploadedDate || "",
-
-      ReportApproved:
-        row.ReportApproved || "",
-
-      ReportApprovedDate:
-        row.ReportApprovedDate || "",
-
-      Remarks:
-        row.Remarks || "",
-    }));
+    const rows = await getRows(VIVA_SHEET);
 
     return res.json({
       success: true,
-      total: reports.length,
-      data: reports,
+      reports: rows,
     });
   } catch (err) {
-    console.error(
-      "GET REPORTS ERROR:",
-      err
-    );
-
     next(err);
   }
 };
 
-
 /**
  * ======================================================
  * GET ONE REPORT
- *
- * GET /api/reports/:id
  * ======================================================
  */
-export const getReport = async (
-  req,
-  res,
-  next
-) => {
+export const getReport = async (req, res, next) => {
   try {
-    const report = await findRow(
-      PANEL_SHEET,
-      "PanelID",
-      req.params.id
+    const caseID = req.params.id;
+
+    const viva = await findRow(
+      VIVA_SHEET,
+      "CaseID",
+      caseID
     );
 
-    if (!report) {
+    if (!viva) {
       return res.status(404).json({
         success: false,
-        message:
-          "Panel report not found.",
+        message: "Viva case not found.",
       });
     }
 
     return res.json({
       success: true,
-      data: report,
+      report: viva,
     });
   } catch (err) {
-    console.error(
-      "GET REPORT ERROR:",
-      err
-    );
-
     next(err);
   }
 };
-
 
 /**
  * ======================================================
@@ -133,536 +70,658 @@ export const getReport = async (
  * GET
  * /api/reports/submit-info?caseID=VC001&examinerID=EX001
  *
- * This is the link placed inside examiner email.
+ * Used by frontend before displaying upload form.
  * ======================================================
  */
-export const getReportSubmissionInfo =
-  async (
-    req,
-    res,
-    next
-  ) => {
-    try {
-      const {
-        caseID,
-        examinerID,
-      } = req.query;
+export const getReportSubmissionInfo = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const { caseID, examinerID } = req.query;
 
-      if (!caseID || !examinerID) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "caseID and examinerID are required.",
-        });
-      }
-
-      /**
-       * Find panel record using
-       * VivaID + PersonID
-       */
-      const panelRows =
-        await getRows(PANEL_SHEET);
-
-      const panel =
-        panelRows.find(
-          (row) =>
-            String(
-              row.VivaID || ""
-            )
-              .trim()
-              .toLowerCase() ===
-              String(caseID)
-                .trim()
-                .toLowerCase() &&
-            String(
-              row.PersonID || ""
-            )
-              .trim()
-              .toLowerCase() ===
-              String(examinerID)
-                .trim()
-                .toLowerCase()
-        );
-
-      if (!panel) {
-        return res.status(404).json({
-          success: false,
-          message:
-            "Panel invitation has not been created yet.",
-        });
-      }
-
-      /**
-       * Find Viva Case
-       */
-      const viva =
-        await findRow(
-          VIVA_SHEET,
-          "CaseID",
-          caseID
-        );
-
-      if (!viva) {
-        return res.status(404).json({
-          success: false,
-          message:
-            "Viva case not found.",
-        });
-      }
-
-      return res.json({
-        success: true,
-
-        data: {
-          CaseID: viva.CaseID || "",
-
-          PanelID:
-            panel.PanelID || "",
-
-          PersonID:
-            panel.PersonID || "",
-
-          PersonType:
-            panel.PersonType || "",
-
-          Role:
-            panel.Role || "",
-
-          StudentID:
-            viva.StudentID || "",
-
-          ReportDueDate:
-            viva.ReportDueDate || "",
-
-          ReportReceived:
-            panel.ReportReceived || "",
-
-          ReportReceivedDate:
-            panel.ReportReceivedDate || "",
-
-          ReportFileName:
-            panel.ReportFileName || "",
-
-          ReportFileURL:
-            panel.ReportFileURL || "",
-        },
+    if (!caseID) {
+      return res.status(400).json({
+        success: false,
+        message: "Case ID is required.",
       });
-    } catch (err) {
-      console.error(
-        "GET REPORT SUBMISSION INFO ERROR:",
-        err
+    }
+
+    if (!examinerID) {
+      return res.status(400).json({
+        success: false,
+        message: "Examiner ID is required.",
+      });
+    }
+
+    /**
+     * ==================================================
+     * GET VIVA CASE
+     * ==================================================
+     */
+
+    const viva = await findRow(
+      VIVA_SHEET,
+      "CaseID",
+      caseID
+    );
+
+    if (!viva) {
+      return res.status(404).json({
+        success: false,
+        message:
+          `Viva case ${caseID} not found.`,
+      });
+    }
+
+    /**
+     * ==================================================
+     * GET STUDENT
+     * ==================================================
+     */
+
+    const student = await findRow(
+      STUDENT_SHEET,
+      "StudentID",
+      viva.StudentID
+    );
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found.",
+      });
+    }
+
+    /**
+     * ==================================================
+     * GET EXAMINER
+     * ==================================================
+     */
+
+    const examiner = await findRow(
+      EXAMINER_SHEET,
+      "ExaminerID",
+      examinerID
+    );
+
+    if (!examiner) {
+      return res.status(404).json({
+        success: false,
+        message: "Examiner not found.",
+      });
+    }
+
+    /**
+     * ==================================================
+     * CHECK EXAMINER ASSIGNED
+     * ==================================================
+     */
+
+    const examinerAssignments = [
+      {
+        id: viva.InternalExaminer1ID,
+        type: "Internal Examiner 1",
+        reportField: "Internal1ReportReceived",
+        dateField: "Internal1ReportDate",
+      },
+
+      {
+        id: viva.InternalExaminer2ID,
+        type: "Internal Examiner 2",
+        reportField: "Internal2ReportReceived",
+        dateField: "Internal2ReportDate",
+      },
+
+      {
+        id: viva.ExternalExaminer1ID,
+        type: "External Examiner 1",
+        reportField: "External1ReportReceived",
+        dateField: "External1ReportDate",
+      },
+
+      {
+        id: viva.ExternalExaminer2ID,
+        type: "External Examiner 2",
+        reportField: "External2ReportReceived",
+        dateField: "External2ReportDate",
+      },
+    ];
+
+    const assignment =
+      examinerAssignments.find(
+        (item) =>
+          String(item.id || "").trim() ===
+          String(examinerID).trim()
       );
 
-      next(err);
+    if (!assignment) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "This examiner is not assigned to this Viva case.",
+      });
     }
-  };
 
+    /**
+     * ==================================================
+     * CURRENT REPORT STATUS
+     * ==================================================
+     */
+
+    const currentStatus =
+      viva[assignment.reportField] || "";
+
+    return res.json({
+      success: true,
+
+      case: {
+        CaseID: viva.CaseID,
+        StudentID: viva.StudentID,
+        ReportDueDate:
+          viva.ReportDueDate || "",
+      },
+
+      student: {
+        StudentID:
+          student.StudentID || "",
+
+        StudentName:
+          student.StudentName || "",
+
+        MatricNo:
+          student.MatricNo || "",
+
+        Programme:
+          student.Programme || "",
+
+        School:
+          student.School || "",
+
+        ThesisTitle:
+          student.ThesisTitle || "",
+      },
+
+      examiner: {
+        ExaminerID:
+          examiner.ExaminerID || "",
+
+        ExaminerName:
+          examiner.ExaminerName || "",
+
+        Title:
+          examiner.Title || "",
+
+        Email:
+          examiner.Email || "",
+
+        ExaminerType:
+          assignment.type,
+      },
+
+      report: {
+        status:
+          currentStatus || "Not Submitted",
+
+        reportField:
+          assignment.reportField,
+
+        dateField:
+          assignment.dateField,
+      },
+    });
+  } catch (err) {
+    console.error(
+      "GET REPORT SUBMISSION INFO ERROR:",
+      err
+    );
+
+    next(err);
+  }
+};
 
 /**
  * ======================================================
- * UPLOAD PANEL REPORT
+ * UPLOAD EXAMINER REPORT
  *
  * POST
  * /api/reports/panel/:panelID/upload
  *
- * multipart/form-data
- * field = report
+ * IMPORTANT
+ * ------------------------------------------------------
+ * panelID is expected to identify the examiner/panel.
  *
- * IMPORTANT:
+ * We also accept:
  *
- * 1. Upload file to Google Drive
- * 2. Update Panel
- * 3. Update corresponding VivaCases
+ * caseID
+ * examinerID
+ *
+ * from req.body.
  * ======================================================
  */
-export const uploadPanelReport =
-  async (
-    req,
-    res,
-    next
-  ) => {
-    try {
-      const panelID =
-        req.params.panelID;
+export const uploadPanelReport = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    /**
+     * ==================================================
+     * INPUT
+     * ==================================================
+     */
 
-      if (!panelID) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "PanelID is required.",
-        });
-      }
+    const { panelID } = req.params;
 
-      if (!req.file) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Please select a report file.",
-        });
-      }
+    const caseID =
+      req.body.caseID ||
+      req.body.CaseID;
 
-      /**
-       * --------------------------------------------------
-       * FIND PANEL
-       * --------------------------------------------------
-       */
-      const panel =
-        await findRow(
-          PANEL_SHEET,
-          "PanelID",
-          panelID
-        );
+    const examinerID =
+      req.body.examinerID ||
+      req.body.ExaminerID;
 
-      if (!panel) {
-        return res.status(404).json({
-          success: false,
-          message:
-            "Panel invitation not found.",
-        });
-      }
+    /**
+     * ==================================================
+     * VALIDATION
+     * ==================================================
+     */
 
-      /**
-       * --------------------------------------------------
-       * FILE TYPE
-       * --------------------------------------------------
-       */
-      const allowedTypes = [
-        "application/pdf",
-
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      ];
-
-      if (
-        !allowedTypes.includes(
-          req.file.mimetype
-        )
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Only PDF and DOCX files are allowed.",
-        });
-      }
-
-      /**
-       * --------------------------------------------------
-       * UPLOAD TO GOOGLE DRIVE
-       * --------------------------------------------------
-       */
-      const driveFile =
-        await uploadFileToDrive({
-          buffer:
-            req.file.buffer,
-
-          originalName:
-            `${panel.VivaID || "Viva"}_${panel.PanelID || "Panel"}_${req.file.originalname}`,
-
-          mimeType:
-            req.file.mimetype,
-        });
-
-      const now =
-        new Date().toISOString();
-
-      /**
-       * --------------------------------------------------
-       * UPDATE PANEL
-       * --------------------------------------------------
-       */
-      const panelRowNumber =
-        await findRowNumber(
-          PANEL_SHEET,
-          "PanelID",
-          panelID
-        );
-
-      const updatedPanel = {
-        ...panel,
-
-        ReportReceived: "Yes",
-
-        ReportReceivedDate:
-          now,
-
-        ReportFileName:
-          driveFile.name,
-
-        ReportFileID:
-          driveFile.id,
-
-        ReportFileURL:
-          driveFile.webViewLink,
-
-        ReportUploadedBy:
-          panel.PersonID || "",
-
-        ReportUploadedDate:
-          now,
-
-        LastUpdated:
-          now,
-      };
-
-      await updateRow(
-        PANEL_SHEET,
-        panelRowNumber,
-        updatedPanel
-      );
-
-      /**
-       * --------------------------------------------------
-       * UPDATE VIVACASES
-       * --------------------------------------------------
-       *
-       * Determine which field belongs
-       * to this examiner.
-       */
-      const caseID =
-        panel.VivaID;
-
-      const viva =
-        await findRow(
-          VIVA_SHEET,
-          "CaseID",
-          caseID
-        );
-
-      if (!viva) {
-        throw new Error(
-          `Viva case '${caseID}' not found.`
-        );
-      }
-
-      const vivaRowNumber =
-        await findRowNumber(
-          VIVA_SHEET,
-          "CaseID",
-          caseID
-        );
-
-      let vivaUpdate = {};
-
-      const role =
-        String(
-          panel.Role || ""
-        )
-          .trim()
-          .toLowerCase();
-
-      if (
-        role ===
-        "internal examiner 1"
-      ) {
-        vivaUpdate = {
-          Internal1ReportReceived:
-            "Yes",
-
-          Internal1ReportDate:
-            now,
-        };
-      }
-
-      else if (
-        role ===
-        "internal examiner 2"
-      ) {
-        vivaUpdate = {
-          Internal2ReportReceived:
-            "Yes",
-
-          Internal2ReportDate:
-            now,
-        };
-      }
-
-      else if (
-        role ===
-        "external examiner 1"
-      ) {
-        vivaUpdate = {
-          External1ReportReceived:
-            "Yes",
-
-          External1ReportDate:
-            now,
-        };
-      }
-
-      else if (
-        role ===
-        "external examiner 2"
-      ) {
-        vivaUpdate = {
-          External2ReportReceived:
-            "Yes",
-
-          External2ReportDate:
-            now,
-        };
-      }
-
-      else {
-        console.warn(
-          `Report uploaded but role '${panel.Role}' does not map to a VivaCases report field.`
-        );
-      }
-
-      /**
-       * Always update LastUpdated.
-       */
-      vivaUpdate.LastUpdated =
-        now;
-
-      await updateRow(
-        VIVA_SHEET,
-        vivaRowNumber,
-        vivaUpdate
-      );
-
-      /**
-       * --------------------------------------------------
-       * RESPONSE
-       * --------------------------------------------------
-       */
-      return res.json({
-        success: true,
-
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
         message:
-          "Your report has been uploaded successfully.",
-
-        data: {
-          PanelID:
-            updatedPanel.PanelID,
-
-          VivaID:
-            updatedPanel.VivaID,
-
-          Role:
-            updatedPanel.Role,
-
-          ReportReceived:
-            "Yes",
-
-          ReportFileName:
-            updatedPanel.ReportFileName,
-
-          ReportFileURL:
-            updatedPanel.ReportFileURL,
-
-          ReportUploadedDate:
-            updatedPanel.ReportUploadedDate,
-
-          VivaCaseUpdated:
-            Object.keys(
-              vivaUpdate
-            ).filter(
-              (key) =>
-                key !==
-                "LastUpdated"
-            ),
-        },
+          "Please select an examiner report file.",
       });
-    } catch (err) {
-      console.error(
-        "UPLOAD PANEL REPORT ERROR:",
-        err
+    }
+
+    if (!caseID) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Case ID is required.",
+      });
+    }
+
+    if (!examinerID) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Examiner ID is required.",
+      });
+    }
+
+    /**
+     * ==================================================
+     * GET VIVA
+     * ==================================================
+     */
+
+    const viva = await findRow(
+      VIVA_SHEET,
+      "CaseID",
+      caseID
+    );
+
+    if (!viva) {
+      return res.status(404).json({
+        success: false,
+        message:
+          `Viva case ${caseID} not found.`,
+      });
+    }
+
+    /**
+     * ==================================================
+     * FIND EXAMINER ASSIGNMENT
+     * ==================================================
+     */
+
+    const assignments = [
+      {
+        id: viva.InternalExaminer1ID,
+        type: "Internal Examiner 1",
+        receivedField:
+          "Internal1ReportReceived",
+        dateField:
+          "Internal1ReportDate",
+      },
+
+      {
+        id: viva.InternalExaminer2ID,
+        type: "Internal Examiner 2",
+        receivedField:
+          "Internal2ReportReceived",
+        dateField:
+          "Internal2ReportDate",
+      },
+
+      {
+        id: viva.ExternalExaminer1ID,
+        type: "External Examiner 1",
+        receivedField:
+          "External1ReportReceived",
+        dateField:
+          "External1ReportDate",
+      },
+
+      {
+        id: viva.ExternalExaminer2ID,
+        type: "External Examiner 2",
+        receivedField:
+          "External2ReportReceived",
+        dateField:
+          "External2ReportDate",
+      },
+    ];
+
+    const assignment =
+      assignments.find(
+        (item) =>
+          String(item.id || "").trim() ===
+          String(examinerID).trim()
       );
 
-      next(err);
+    if (!assignment) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "This examiner is not assigned to this Viva case.",
+      });
     }
-  };
 
+    /**
+     * ==================================================
+     * GET EXAMINER
+     * ==================================================
+     */
+
+    const examiner = await findRow(
+      EXAMINER_SHEET,
+      "ExaminerID",
+      examinerID
+    );
+
+    if (!examiner) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Examiner not found.",
+      });
+    }
+
+    /**
+     * ==================================================
+     * FIND PANEL
+     *
+     * Optional verification.
+     * ==================================================
+     */
+
+    let panel = null;
+
+    if (panelID) {
+      panel = await findRow(
+        PANEL_SHEET,
+        "PanelID",
+        panelID
+      );
+    }
+
+    /**
+     * ==================================================
+     * GET STUDENT
+     * ==================================================
+     */
+
+    const student = await findRow(
+      STUDENT_SHEET,
+      "StudentID",
+      viva.StudentID
+    );
+
+    /**
+     * ==================================================
+     * CREATE SAFE FILE NAME
+     * ==================================================
+     */
+
+    const originalName =
+      req.file.originalname || "ExaminerReport";
+
+    const extension =
+      originalName.includes(".")
+        ? originalName.substring(
+            originalName.lastIndexOf(".")
+          )
+        : "";
+
+    const safeExaminerID =
+      String(examinerID)
+        .replace(/[^a-zA-Z0-9_-]/g, "");
+
+    const safeCaseID =
+      String(caseID)
+        .replace(/[^a-zA-Z0-9_-]/g, "");
+
+    const fileName =
+      `${safeCaseID}_${safeExaminerID}_ExaminerReport${extension}`;
+
+    /**
+     * ==================================================
+     * TARGET FOLDER
+     *
+     * VivaCases.GoogleDriveLink
+     * is the CASE ROOT folder.
+     *
+     * We need the "03 - Examiner Reports"
+     * folder inside it.
+     *
+     * ==================================================
+     */
+
+    const caseFolderUrl =
+      viva.GoogleDriveLink || "";
+
+    if (!caseFolderUrl) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Google Drive case folder is not available.",
+      });
+    }
+
+    /**
+     * ==================================================
+     * UPLOAD TO GOOGLE DRIVE
+     * ==================================================
+     *
+     * IMPORTANT:
+     *
+     * This assumes googleDriveService.js supports:
+     *
+     * uploadFileToDrive({
+     *   fileBuffer,
+     *   fileName,
+     *   mimeType,
+     *   parentFolderUrl,
+     *   childFolderName
+     * })
+     *
+     */
+
+    const driveResult =
+      await uploadFileToDrive({
+        fileBuffer:
+          req.file.buffer,
+
+        fileName,
+
+        mimeType:
+          req.file.mimetype,
+
+        parentFolderUrl:
+          caseFolderUrl,
+
+        childFolderName:
+          "03 - Examiner Reports",
+      });
+
+    /**
+     * ==================================================
+     * UPDATE VIVACASES
+     * ==================================================
+     */
+
+    const rowNumber =
+      await findRowNumber(
+        VIVA_SHEET,
+        "CaseID",
+        caseID
+      );
+
+    if (
+      rowNumber === -1 ||
+      !rowNumber
+    ) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Viva case row not found.",
+      });
+    }
+
+    const submissionDate =
+      new Date().toISOString();
+
+    /**
+     * Build update without replacing
+     * the entire row.
+     */
+    const updateData = {
+      [assignment.receivedField]:
+        "Yes",
+
+      [assignment.dateField]:
+        submissionDate,
+
+      CurrentStatus:
+        "Report Received",
+
+      EmailStatus:
+        "Report Received",
+
+      LastUpdated:
+        submissionDate,
+    };
+
+    await updateRow(
+      VIVA_SHEET,
+      rowNumber,
+      updateData
+    );
+
+    /**
+     * ==================================================
+     * RESPONSE
+     * ==================================================
+     */
+
+    return res.json({
+      success: true,
+
+      message:
+        "Examiner report submitted successfully.",
+
+      caseID,
+
+      examinerID,
+
+      examinerType:
+        assignment.type,
+
+      fileName,
+
+      reportField:
+        assignment.receivedField,
+
+      reportDateField:
+        assignment.dateField,
+
+      submittedAt:
+        submissionDate,
+
+      drive: driveResult || null,
+    });
+  } catch (err) {
+    console.error(
+      "UPLOAD EXAMINER REPORT ERROR:",
+      err
+    );
+
+    next(err);
+  }
+};
 
 /**
  * ======================================================
  * APPROVE REPORT
- *
- * PUT /api/reports/:id/approve
  * ======================================================
  */
-export const approveReport =
-  async (
-    req,
-    res,
-    next
-  ) => {
-    try {
-      const panelID =
-        req.params.id;
+export const approveReport = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const caseID = req.params.id;
 
-      const panel =
-        await findRow(
-          PANEL_SHEET,
-          "PanelID",
-          panelID
-        );
+    const viva = await findRow(
+      VIVA_SHEET,
+      "CaseID",
+      caseID
+    );
 
-      if (!panel) {
-        return res.status(404).json({
-          success: false,
-          message:
-            "Panel report not found.",
-        });
-      }
+    if (!viva) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Viva case not found.",
+      });
+    }
 
-      if (
-        String(
-          panel.ReportReceived || ""
-        )
-          .trim()
-          .toLowerCase() !==
-        "yes"
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "This panel has not submitted a report.",
-        });
-      }
+    const rowNumber =
+      await findRowNumber(
+        VIVA_SHEET,
+        "CaseID",
+        caseID
+      );
 
-      const rowNumber =
-        await findRowNumber(
-          PANEL_SHEET,
-          "PanelID",
-          panelID
-        );
+    const now =
+      new Date().toISOString();
 
-      const now =
-        new Date().toISOString();
+    await updateRow(
+      VIVA_SHEET,
+      rowNumber,
+      {
+        CurrentStatus:
+          "Report Approved",
 
-      const updated = {
-        ...panel,
-
-        ReportApproved:
-          "Yes",
-
-        ReportApprovedDate:
-          now,
+        EmailStatus:
+          "Report Approved",
 
         LastUpdated:
           now,
-      };
+      }
+    );
 
-      await updateRow(
-        PANEL_SHEET,
-        rowNumber,
-        updated
-      );
-
-      return res.json({
-        success: true,
-
-        message:
-          "Report approved successfully.",
-
-        data: updated,
-      });
-    } catch (err) {
-      console.error(
-        "APPROVE REPORT ERROR:",
-        err
-      );
-
-      next(err);
-    }
-  };
+    return res.json({
+      success: true,
+      message:
+        "Report approved successfully.",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
