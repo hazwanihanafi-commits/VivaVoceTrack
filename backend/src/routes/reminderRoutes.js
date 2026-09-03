@@ -27,12 +27,12 @@ router.get("/", (req, res) => {
 
 
 // ======================================================
-// TEST EMAIL
+// TEST EMAIL - GET
 //
-// POST /api/reminders/test/VC001
+// GET /api/reminders/test/VC001
 // ======================================================
 
-router.post(
+router.get(
   "/test/:caseID",
   async (req, res) => {
 
@@ -42,7 +42,6 @@ router.post(
         await testReportReminder(
           req.params.caseID
         );
-
 
       return res.json({
 
@@ -63,7 +62,6 @@ router.post(
         err
       );
 
-
       return res.status(500).json({
 
         success: false,
@@ -78,7 +76,6 @@ router.post(
 
   }
 );
-
 
 // ======================================================
 // MANUAL RUN
