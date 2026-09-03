@@ -1,26 +1,133 @@
 import express from "express";
 
+import {
+  testReportReminder,
+  runReportReminderJob,
+} from "../jobs/reportReminderJob.js";
+
 const router = express.Router();
 
-/************************************************
- * GET All Reminders
- ************************************************/
+
+// ======================================================
+// GET REMINDER STATUS
+// ======================================================
+
 router.get("/", (req, res) => {
+
   res.json({
+
     success: true,
-    data: [],
-    message: "Reminder module is under development.",
+
+    message:
+      "Reminder module is active.",
+
   });
+
 });
 
-/************************************************
- * POST Create Reminder
- ************************************************/
-router.post("/", (req, res) => {
-  res.json({
-    success: true,
-    message: "Reminder endpoint placeholder.",
-  });
-});
+
+// ======================================================
+// TEST EMAIL
+//
+// POST /api/reminders/test/VC001
+// ======================================================
+
+router.post(
+  "/test/:caseID",
+  async (req, res) => {
+
+    try {
+
+      const result =
+        await testReportReminder(
+          req.params.caseID
+        );
+
+
+      return res.json({
+
+        success: true,
+
+        message:
+          "Test reminder email sent successfully.",
+
+        data:
+          result,
+
+      });
+
+    } catch (err) {
+
+      console.error(
+        "TEST REMINDER ERROR:",
+        err
+      );
+
+
+      return res.status(500).json({
+
+        success: false,
+
+        message:
+          err.message ||
+          "Unable to send test reminder.",
+
+      });
+
+    }
+
+  }
+);
+
+
+// ======================================================
+// MANUAL RUN
+//
+// POST /api/reminders/run
+//
+// Useful for testing cron manually
+// ======================================================
+
+router.post(
+  "/run",
+  async (req, res) => {
+
+    try {
+
+      await runReportReminderJob();
+
+
+      return res.json({
+
+        success: true,
+
+        message:
+          "Report reminder job executed.",
+
+      });
+
+    } catch (err) {
+
+      console.error(
+        "MANUAL REMINDER ERROR:",
+        err
+      );
+
+
+      return res.status(500).json({
+
+        success: false,
+
+        message:
+          err.message ||
+          "Unable to run reminder job.",
+
+      });
+
+    }
+
+  }
+);
+
 
 export default router;
