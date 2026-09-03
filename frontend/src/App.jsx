@@ -17,20 +17,34 @@ export default function App() {
   return (
     <Routes>
 
-      <Route
-  path="/report-submission"
-  element={<ReportSubmission />}
-/>
+      
 
       {/* ==================================================
           EXTERNAL EXAMINER RESPONSE
           ================================================== */}
 
+<Route
+  path="/report-submission"
+  element={<ReportSubmission />}
+/>
+      
       <Route
         path="/panel-response"
         element={<PanelResponse />}
       />
 
+
+      <Route
+  path="/annotated-thesis"
+  element={<AnnotatedThesis />}
+/>
+
+
+      
+        <Route
+          path="/acknowledgement"
+          element={<Acknowledgement />}
+        />
 
       {/* ==================================================
           ADMIN APPLICATION
@@ -69,15 +83,6 @@ export default function App() {
           element={<Reports />}
         />
 
-        <Route
-  path="/annotated-thesis"
-  element={<AnnotatedThesis />}
-/>
-
-        <Route
-          path="/acknowledgement"
-          element={<Acknowledgement />}
-        />
 
       </Route>
 
