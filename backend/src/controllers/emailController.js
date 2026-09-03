@@ -1204,113 +1204,17 @@ export const sendAppointmentEmail = async (
 
     if (successfulRecipients.length > 0) {
 
-      const sentDate =
-        new Date().toISOString();
+      const sentDate = new Date().toISOString();
 
-      console.log(
-        "================================="
-      );
-
-      console.log(
-        "UPDATING VIVA CASE"
-      );
-
-      console.log(
-        "CASE:",
-        caseID
-      );
-
-      console.log(
-        "ROW:",
-        rowNumber
-      );
-
-      console.log(
-        "AppointmentEmailSent:",
-        "Yes"
-      );
-
-      console.log(
-        "AppointmentEmailDate:",
-        sentDate
-      );
-
-      console.log(
-        "================================="
-      );
-
-      await updateRow(
-        VIVA_SHEET,
-        rowNumber,
-        {
-          AppointmentEmailSent:
-            "Yes",
-
-          AppointmentEmailDate:
-            sentDate,
-
-          LastUpdated:
-            sentDate,
-        }
-      );
-
-      console.log(
-        "================================="
-      );
-
-      console.log(
-        "VIVA CASE UPDATED SUCCESSFULLY"
-      );
-
-      console.log(
-        "CASE:",
-        caseID
-      );
-
-      console.log(
-        "ROW:",
-        rowNumber
-      );
-
-      console.log(
-        "================================="
-      );
-    }
-
-    // ==========================================
-    // RESPONSE
-    // ==========================================
-
-    return res.json({
-      success: true,
-
-      total:
-        recipients.length,
-
-      sent:
-        successfulRecipients.length,
-
-      failed:
-        failedRecipients.length,
-
-      recipients,
-
-      message:
-        failedRecipients.length === 0
-          ? "Appointment emails sent successfully."
-          : "Appointment emails processed with some failures.",
-    });
-
-  } catch (err) {
-
-    console.error(
-      "SEND APPOINTMENT EMAIL ERROR:",
-      err
-    );
-
-    next(err);
+await updateRow(
+  VIVA_SHEET,
+  rowNumber,
+  {
+    AppointmentEmailSent: "Yes",
+    AppointmentEmailDate: sentDate,
+    LastUpdated: sentDate,
   }
-};
+);
 
 /* ======================================================
    SEND REMINDER
