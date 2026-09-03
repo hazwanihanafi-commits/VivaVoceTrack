@@ -335,7 +335,7 @@ mainSupervisorID,
 body.CoSupervisorID || "",
 
 // 38 StudentConfirmed
-body.StudentConfirmed || "No",
+body.StudentConfirmed || "",
 
       // 39 Internal1ReportReceived
       "",
