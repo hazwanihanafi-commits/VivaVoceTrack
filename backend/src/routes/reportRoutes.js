@@ -55,18 +55,19 @@ router.get(
 );
 
 /**
- * UPLOAD EXAMINER REPORT
+ * ======================================================
+ * SUBMIT EXAMINER REPORT
  *
- * POST
- * /api/reports/panel/:panelID/upload
+ * POST /api/reports/submit
  *
  * Form-data:
- * report = PDF/DOCX
- * caseID = VC001
- * examinerID = EX001
+ * report      = PDF/DOCX
+ * caseID      = VC001
+ * examinerID  = EX001
+ * ======================================================
  */
 router.post(
-  "/panel/:panelID/upload",
+  "/submit",
   upload.single("report"),
   uploadPanelReport
 );
