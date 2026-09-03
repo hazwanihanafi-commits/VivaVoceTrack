@@ -102,6 +102,109 @@ app.use("/api/vivacases", vivaCaseRoutes);
 app.use("/api/reminders", reminderRoutes);
 
 app.use("/api/activity", activityRoutes);
+
+app.get("/api/privacy", (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>VivaTrack Privacy Policy</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          max-width: 900px;
+          margin: 40px auto;
+          padding: 20px;
+          line-height: 1.7;
+          color: #333;
+        }
+        h1, h2 {
+          color: #5B2C90;
+        }
+      </style>
+    </head>
+
+    <body>
+
+      <h1>VivaTrack Privacy Policy</h1>
+
+      <p>
+        VivaTrack is a postgraduate thesis examination management
+        system developed to support the administration and coordination
+        of Viva Voce activities.
+      </p>
+
+      <h2>Information We Collect</h2>
+
+      <p>
+        VivaTrack may process information required for postgraduate
+        thesis examination administration, including user account
+        information and information related to Viva Voce cases.
+      </p>
+
+      <h2>Google Account Information</h2>
+
+      <p>
+        When users sign in using Google OAuth, VivaTrack may receive
+        basic account information such as the user's name, email
+        address and profile information required for authentication.
+      </p>
+
+      <p>
+        Google account information is used only for authentication
+        and access control within VivaTrack.
+      </p>
+
+      <h2>Data Storage</h2>
+
+      <p>
+        Information required by VivaTrack may be stored in the
+        application's database and associated cloud services.
+      </p>
+
+      <h2>Data Sharing</h2>
+
+      <p>
+        VivaTrack does not sell users' personal information.
+        Information is only accessed by authorised users for
+        postgraduate thesis examination administration.
+      </p>
+
+      <h2>Data Security</h2>
+
+      <p>
+        Reasonable technical and organisational measures are used
+        to protect information processed by VivaTrack.
+      </p>
+
+      <h2>Contact</h2>
+
+      <p>
+        For questions regarding this Privacy Policy, please contact:
+      </p>
+
+      <p>
+        <strong>Academic & International Division</strong><br>
+        Pusat Kanser Tun Abdullah Ahmad Badawi (PKTAAB)<br>
+        Universiti Sains Malaysia
+      </p>
+
+      <p>
+        Email:
+        <a href="mailto:anissyamimi@usm.my">
+          anissyamimi@usm.my
+        </a>
+      </p>
+
+      <p>
+        Last updated: September 2026
+      </p>
+
+    </body>
+    </html>
+  `);
+});
 /************************************************
  * 404 Handler
  ************************************************/
