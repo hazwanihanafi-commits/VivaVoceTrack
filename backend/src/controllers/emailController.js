@@ -1050,7 +1050,12 @@ export const sendAppointmentEmail = async (
   next
 ) => {
   try {
-    const caseID = req.params.id;
+    const caseID =
+      String(req.params.id || "").trim();
+
+    /* ==================================================
+       GET VIVA CASE
+    ================================================== */
 
     const viva = await findRow(
       VIVA_SHEET,
@@ -1065,6 +1070,10 @@ export const sendAppointmentEmail = async (
       });
     }
 
+    /* ==================================================
+       GET STUDENT
+    ================================================== */
+
     const student = await findRow(
       STUDENT_SHEET,
       "StudentID",
@@ -1078,20 +1087,175 @@ export const sendAppointmentEmail = async (
       });
     }
 
+    /* ==================================================
+       GET ALL ASSIGNED EXAMINERS
+    ================================================== */
+
+    const examiners =
+      await getAssignedExaminers(viva);
+
+    console.log(
+      "===================================="
+    );
+
+    console.log(
+      "APPOINTMENT EMAIL - CASE:",
+      caseID
+    );
+
+    console.log(
+      "ASSIGNED EXAMINERS:"
+    );
+
+    console.log(
+      examiners.map((e) => ({
+        id: e.ExaminerID,
+        name: e.ExaminerName,
+        email: e.Email,
+        type: e.ExaminerType,
+      }))
+    );
+
+    console.log(
+      "TOTAL:",
+      examiners.length
+    );
+
+    console.log(
+      "===================================="
+    );
+
+    if (examiners.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "No assigned examiner with a valid email address was found.",
+      });
+    }
+
+    /* ==================================================
+       EMAIL SUBJECT
+    ================================================== */
+
     const subject =
       viva.EmailSubject ||
       `Appointment as ${student.Programme} Thesis Examiner`;
 
-    const body =
+    const template =
       appointmentEmail();
 
-    const recipients =
-      await sendToAllExaminers({
-        viva,
-        student,
-        subject,
-        body,
-      });
+    /* ==================================================
+       SEND EMAIL ONE BY ONE
+    ================================================== */
+
+    const recipients = [];
+
+    for (const examiner of examiners) {
+
+      console.log(
+        `Sending appointment email to ${examiner.ExaminerType}: ${examiner.Email}`
+      );
+
+      /* ----------------------------------------------
+         CREATE PERSONALISED EMAIL
+      ---------------------------------------------- */
+
+      const html =
+        replaceTemplate(
+          template,
+          student,
+          examiner,
+          viva
+        );
+
+      try {
+
+        await sendEmail({
+          to: examiner.Email,
+
+          cc: [
+            "norhisham_puteh@usm.my",
+            "anissyamimi@usm.my",
+          ],
+
+          subject,
+
+          html,
+        });
+
+        console.log(
+          `SUCCESS: ${examiner.Email}`
+        );
+
+        recipients.push({
+          examinerID:
+            examiner.ExaminerID,
+
+          name:
+            examiner.ExaminerName,
+
+          email:
+            examiner.Email,
+
+          type:
+            examiner.ExaminerType,
+
+          status:
+            "Sent",
+        });
+
+      } catch (err) {
+
+        console.error(
+          `FAILED: ${examiner.Email}`,
+          err
+        );
+
+        recipients.push({
+          examinerID:
+            examiner.ExaminerID,
+
+          name:
+            examiner.ExaminerName,
+
+          email:
+            examiner.Email,
+
+          type:
+            examiner.ExaminerType,
+
+          status:
+            "Failed",
+
+          error:
+            err.message,
+        });
+      }
+    }
+
+    /* ==================================================
+       COUNT RESULTS
+    ================================================== */
+
+    const sent =
+      recipients.filter(
+        (r) => r.status === "Sent"
+      );
+
+    const failed =
+      recipients.filter(
+        (r) => r.status === "Failed"
+      );
+
+    /* ==================================================
+       UPDATE VIVACASES
+       
+       IMPORTANT:
+       Appointment → AppointmentEmailSent
+       Appointment → AppointmentEmailDate
+
+       DO NOT UPDATE SentDate
+    ================================================== */
 
     const rowNumber =
       await findRowNumber(
@@ -1103,7 +1267,8 @@ export const sendAppointmentEmail = async (
     if (rowNumber === -1) {
       return res.status(404).json({
         success: false,
-        message: "Viva case row not found.",
+        message:
+          "Viva case row not found.",
       });
     }
 
@@ -1123,25 +1288,45 @@ export const sendAppointmentEmail = async (
           "Waiting for Reports",
 
         AppointmentEmailSent:
-          "Yes",
+          sent.length > 0
+            ? "Yes"
+            : "No",
 
         AppointmentEmailDate:
-          sentDate,
+          sent.length > 0
+            ? sentDate
+            : "",
 
         LastUpdated:
           sentDate,
       }
     );
 
+    /* ==================================================
+       RESPONSE
+    ================================================== */
+
     return res.json({
-      success: true,
-      total: recipients.length,
+      success:
+        sent.length > 0,
+
+      total:
+        recipients.length,
+
+      sent:
+        sent.length,
+
+      failed:
+        failed.length,
+
       recipients,
+
       message:
-        "Appointment emails sent successfully.",
+        `${sent.length} of ${recipients.length} appointment emails sent successfully.`,
     });
 
   } catch (err) {
+
     console.error(
       "SEND APPOINTMENT EMAIL ERROR:",
       err
