@@ -1253,7 +1253,6 @@ export const sendAppointmentEmail = async (
   }
 };
 
-
 /* ======================================================
    SEND REMINDER
 ====================================================== */
@@ -1264,12 +1263,6 @@ export const sendReminderEmail = async (
   next
 ) => {
 
-export const sendReminderEmail = async (
-  req,
-  res,
-  next
-) => {
-  
   try {
     const caseID = req.params.id;
 
