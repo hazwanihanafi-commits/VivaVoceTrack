@@ -7,6 +7,7 @@ import {
   uploadPanelReport,
   approveReport,
   getReportSubmissionInfo,
+  submitExaminerReport,
 } from "../controllers/reportController.js";
 
 const router = express.Router();
@@ -15,9 +16,8 @@ const router = express.Router();
  * ======================================================
  * MULTER
  * ======================================================
- * Files are temporarily stored in memory.
- * They will be uploaded directly to Google Drive.
  */
+
 const upload = multer({
   storage: multer.memoryStorage(),
 
@@ -43,20 +43,52 @@ const upload = multer({
   },
 });
 
+
 /**
  * ======================================================
  * REPORT SUBMISSION INFO
  *
- * GET /api/reports/submit-info
+ * GET /api/reports/submission
  *
  * Example:
- * /api/reports/submit-info?caseID=VC001&examinerID=EX001
+ * /api/reports/submission?caseID=VC001&examinerID=EX001
  * ======================================================
  */
+
 router.get(
-  "/submit-info",
+  "/submission",
   getReportSubmissionInfo
 );
+
+
+/**
+ * ======================================================
+ * SUBMIT EXAMINER REPORT
+ *
+ * POST /api/reports/submit
+ *
+ * Form-data:
+ *
+ * report     = PDF
+ * caseID     = VC001
+ * examinerID = EX001
+ *
+ * File will be uploaded to:
+ *
+ * 03 - Examiner Reports
+ *
+ * with filename:
+ *
+ * VC001_EX001_Examiner_Report.pdf
+ * ======================================================
+ */
+
+router.post(
+  "/submit",
+  upload.single("report"),
+  submitExaminerReport
+);
+
 
 /**
  * ======================================================
@@ -65,26 +97,30 @@ router.get(
  * GET /api/reports
  * ======================================================
  */
+
 router.get(
   "/",
   getReports
 );
 
+
 /**
  * ======================================================
- * UPLOAD EXAMINER REPORT
+ * OLD PANEL UPLOAD
+ *
+ * Keep this if your existing admin/panel
+ * system still uses it.
  *
  * POST /api/reports/panel/:panelID/upload
- *
- * Form-data:
- * report = PDF/DOCX
  * ======================================================
  */
+
 router.post(
   "/panel/:panelID/upload",
   upload.single("report"),
   uploadPanelReport
 );
+
 
 /**
  * ======================================================
@@ -93,10 +129,12 @@ router.post(
  * GET /api/reports/:id
  * ======================================================
  */
+
 router.get(
   "/:id",
   getReport
 );
+
 
 /**
  * ======================================================
@@ -105,9 +143,11 @@ router.get(
  * PUT /api/reports/:id/approve
  * ======================================================
  */
+
 router.put(
   "/:id/approve",
   approveReport
 );
+
 
 export default router;
