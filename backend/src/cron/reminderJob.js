@@ -44,7 +44,7 @@ const EXAMINERS = [
 // RUN EVERY DAY AT 8:00 AM
 // ======================================================
 
-cron.schedule("* * * * *", async () => {
+cron.schedule("0 8 * * *", async () => {
 
   console.log(
     "Running Viva Report Reminder Job..."
