@@ -54,6 +54,12 @@ const upload = multer({
   },
 });
 
+router.get(
+  "/submit-info",
+  getReportSubmissionInfo
+);
+
+
 /**
  * ======================================================
  * GET ALL REPORTS
