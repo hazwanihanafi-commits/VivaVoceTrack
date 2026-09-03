@@ -61,9 +61,7 @@ export const getGoogleAuthUrl = () => {
     prompt: "consent",
 
     scope: [
-      "openid",
-      "email",
-      "profile",
-    ],
+  "https://www.googleapis.com/auth/drive",
+],
   });
 };
