@@ -1,691 +1,676 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  RefreshCw,
+  Search,
+  Eye,
   FileText,
-  CheckCircle,
-  Clock,
-  AlertCircle,
+  RefreshCw,
+  CheckCircle2,
+  Clock3,
 } from "lucide-react";
 
-const API_BASE_URL =
+const API =
   import.meta.env.VITE_API_URL ||
   "https://vivatrack-backend.onrender.com";
 
-const API_URL = `${API_BASE_URL}/api/reports`;
-
-export default function Report() {
-  const [panelReports, setPanelReports] = useState([]);
+export default function ExaminerReports() {
+  const [reports, setReports] = useState([]);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    loadReports();
-  }, []);
-
-  const loadReports = async () => {
+  /**
+   * =====================================================
+   * LOAD REPORTS
+   * GET /api/reports
+   * =====================================================
+   */
+  async function loadReports() {
     try {
       setLoading(true);
       setError("");
 
-      console.log("Loading reports from:", API_URL);
+      const response = await fetch(
+        `${API}/api/reports`
+      );
 
-      const response = await fetch(API_URL);
       const result = await response.json();
 
-      console.log("REPORT API RESULT:", result);
+      console.log(
+        "EXAMINER REPORTS API:",
+        result
+      );
 
-      if (!response.ok || !result.success) {
+      if (
+        !response.ok ||
+        !result.success
+      ) {
         throw new Error(
-          result.message || "Unable to load reports."
+          result.message ||
+            "Unable to load examiner reports."
         );
       }
 
-      setPanelReports(result.data || []);
+      setReports(
+        Array.isArray(result.reports)
+          ? result.reports
+          : []
+      );
+
     } catch (err) {
-      console.error("LOAD REPORTS ERROR:", err);
+      console.error(
+        "LOAD EXAMINER REPORTS ERROR:",
+        err
+      );
 
       setError(
-        err.message || "Unable to load reports."
+        err.message ||
+          "Unable to load examiner reports."
       );
+
+      setReports([]);
+
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  /*
-   * ============================================
-   * ONLY EXAMINERS SUBMIT REPORTS
-   * ============================================
+  /**
+   * =====================================================
+   * INITIAL LOAD
+   * =====================================================
    */
+  useEffect(() => {
+    loadReports();
+  }, []);
 
-  const isExaminer = (item) => {
-    return (
-      item.PersonType === "Examiner" ||
-      item.Role?.includes("Examiner")
-    );
-  };
-
-  /*
-   * ============================================
-   * GROUP PANEL DATA BY VivaID
-   * ============================================
+  /**
+   * =====================================================
+   * FILTER
+   * =====================================================
    */
+  const filteredReports = useMemo(() => {
+    const keyword =
+      search.trim().toLowerCase();
 
-  const getVivaCases = () => {
-    const grouped = {};
+    return reports.filter((report) => {
 
-    panelReports.forEach((item) => {
-      const vivaID = item.VivaID;
+      const matchesSearch =
+        !keyword ||
+        [
+          report.CaseID,
+          report.StudentID,
+          report.ExaminerID,
+          report.ExaminerType,
+          report.ReportFileName,
+          report.CurrentStatus,
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(keyword);
 
-      if (!vivaID) return;
+      const received =
+        String(
+          report.ReportReceived || ""
+        )
+          .trim()
+          .toLowerCase();
 
-      if (!grouped[vivaID]) {
-        grouped[vivaID] = {
-          VivaID: vivaID,
+      const matchesStatus =
+        statusFilter === "All" ||
+        (statusFilter === "Received" &&
+          received === "yes") ||
+        (statusFilter === "Pending" &&
+          received !== "yes");
 
-          internal1: null,
-          internal2: null,
-          external1: null,
-          external2: null,
-        };
-      }
-
-      const role = String(
-        item.Role || ""
-      ).toLowerCase();
-
-      if (role === "internal examiner 1") {
-        grouped[vivaID].internal1 = item;
-      }
-
-      if (role === "internal examiner 2") {
-        grouped[vivaID].internal2 = item;
-      }
-
-      if (role === "external examiner 1") {
-        grouped[vivaID].external1 = item;
-      }
-
-      if (role === "external examiner 2") {
-        grouped[vivaID].external2 = item;
-      }
+      return (
+        matchesSearch &&
+        matchesStatus
+      );
     });
+  }, [
+    reports,
+    search,
+    statusFilter,
+  ]);
 
-    return Object.values(grouped);
-  };
-
-  const cases = getVivaCases();
-
-  /*
-   * ============================================
-   * REPORT SUBMITTED
-   * ============================================
+  /**
+   * =====================================================
+   * SUMMARY
+   * =====================================================
    */
+  const totalReports =
+    reports.length;
 
-  const isSubmitted = (item) => {
-    if (!item) return false;
-
-    return (
-      String(
-        item.ReportReceived || ""
-      )
-        .trim()
-        .toLowerCase() === "yes"
-    );
-  };
-
-  /*
-   * ============================================
-   * PROGRESS
-   * ============================================
-   */
-
-  const getProgress = (item) => {
-    const examiners = [
-      item.internal1,
-      item.internal2,
-      item.external1,
-      item.external2,
-    ];
-
-    return examiners.filter(
-      (examiner) =>
-        examiner &&
-        isSubmitted(examiner)
+  const submittedReports =
+    reports.filter(
+      (report) =>
+        String(
+          report.ReportReceived || ""
+        )
+          .trim()
+          .toLowerCase() === "yes"
     ).length;
-  };
 
-  /*
-   * ============================================
-   * STATUS
-   * ============================================
+  const pendingReports =
+    totalReports -
+    submittedReports;
+
+  /**
+   * =====================================================
+   * DATE FORMAT
+   * =====================================================
    */
-
-  const getStatus = (item) => {
-    const progress = getProgress(item);
-
-    if (progress === 4) {
-      return "Completed";
+  function formatDate(value) {
+    if (!value) {
+      return "-";
     }
 
-    if (progress > 0) {
-      return "In Progress";
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return value;
     }
 
-    return "Pending";
-  };
-
-  /*
-   * ============================================
-   * DATE
-   * ============================================
-   */
-
-  const formatDate = (date) => {
-    if (!date) return "-";
-
-    const parsed = new Date(date);
-
-    if (isNaN(parsed.getTime())) {
-      return date;
-    }
-
-    return parsed.toLocaleDateString(
-      "en-MY",
+    return date.toLocaleDateString(
+      "en-GB",
       {
-        day: "numeric",
+        day: "2-digit",
         month: "short",
         year: "numeric",
       }
     );
-  };
+  }
 
-  /*
-   * ============================================
-   * REPORT STATUS COMPONENT
-   * ============================================
+  /**
+   * =====================================================
+   * REPORT STATUS
+   * =====================================================
    */
-
-  const ReportStatus = ({ examiner }) => {
-
-    /*
-     * If examiner does not exist
-     */
-
-    if (!examiner) {
-      return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-500">
-          Not Assigned
-        </span>
-      );
-    }
-
-    /*
-     * Submitted
-     */
-
-    if (isSubmitted(examiner)) {
-      return (
-        <div>
-
-          <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
-
-            <CheckCircle size={14} />
-
-            Submitted
-
-          </span>
-
-          {examiner.ReportReceivedDate && (
-            <div className="mt-1 text-xs text-gray-400">
-              {formatDate(
-                examiner.ReportReceivedDate
-              )}
-            </div>
-          )}
-
-        </div>
-      );
-    }
-
-    /*
-     * Pending
-     */
-
+  function isReceived(report) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-yellow-700">
-
-        <Clock size={14} />
-
-        Pending
-
-      </span>
+      String(
+        report.ReportReceived || ""
+      )
+        .trim()
+        .toLowerCase() === "yes"
     );
-  };
+  }
 
-  /*
-   * ============================================
-   * STATUS BADGE
-   * ============================================
+  /**
+   * =====================================================
+   * VIEW REPORT
+   * =====================================================
    */
+  function viewReport(report) {
 
-  const StatusBadge = ({ status }) => {
-
-    if (status === "Completed") {
-      return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
-
-          <CheckCircle size={14} />
-
-          Completed
-
-        </span>
+    if (
+      report.ReportFileURL
+    ) {
+      window.open(
+        report.ReportFileURL,
+        "_blank",
+        "noopener,noreferrer"
       );
+
+      return;
     }
 
-    if (status === "In Progress") {
-      return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
+    if (
+      report.GoogleDriveFileID
+    ) {
+      const url =
+        `https://drive.google.com/file/d/${report.GoogleDriveFileID}/view`;
 
-          <FileText size={14} />
-
-          In Progress
-
-        </span>
+      window.open(
+        url,
+        "_blank",
+        "noopener,noreferrer"
       );
+
+      return;
     }
 
+    alert(
+      "The examiner report file is not available yet."
+    );
+  }
+
+  /**
+   * =====================================================
+   * LOADING
+   * =====================================================
+   */
+  if (loading) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-yellow-700">
-
-        <Clock size={14} />
-
-        Pending
-
-      </span>
-    );
-  };
-
-  /*
-   * ============================================
-   * SUMMARY
-   * ============================================
-   */
-
-  const totalCases = cases.length;
-
-  const completedCases =
-    cases.filter(
-      (item) =>
-        getProgress(item) === 4
-    ).length;
-
-  const submittedCases =
-    cases.filter(
-      (item) =>
-        getProgress(item) > 0
-    ).length;
-
-  const pendingCases =
-    cases.filter(
-      (item) =>
-        getProgress(item) === 0
-    ).length;
-
-  /*
-   * ============================================
-   * PAGE
-   * ============================================
-   */
-
-  return (
-    <div className="min-h-screen bg-gray-50 p-6">
-
-      {/* HEADER */}
-
-      <div className="mb-6 flex items-center justify-between">
+      <div className="space-y-6">
 
         <div>
-
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold">
             Examiner Reports
           </h1>
 
-          <p className="mt-1 text-gray-500">
-            Track Viva Voce report submissions from examiners.
+          <p className="text-gray-500">
+            Monitor examiner report submissions
+          </p>
+        </div>
+
+        <div className="rounded-2xl border bg-white p-10 text-center shadow-sm">
+
+          <RefreshCw
+            size={28}
+            className="mx-auto mb-3 animate-spin text-purple-600"
+          />
+
+          <p className="text-gray-500">
+            Loading examiner reports...
           </p>
 
+        </div>
+
+      </div>
+    );
+  }
+
+  /**
+   * =====================================================
+   * PAGE
+   * =====================================================
+   */
+  return (
+    <div className="space-y-6">
+
+      {/* =================================================
+          HEADER
+          ================================================= */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+
+        <div>
+          <h1 className="text-3xl font-bold">
+            Examiner Reports
+          </h1>
+
+          <p className="text-gray-500">
+            Monitor examiner report submissions
+          </p>
         </div>
 
         <button
           onClick={loadReports}
-          disabled={loading}
-          className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-3 font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 disabled:opacity-50"
+          className="flex items-center justify-center gap-2 rounded-xl border bg-white px-4 py-3 text-gray-700 shadow-sm hover:bg-gray-50"
         >
-
-          <RefreshCw
-            size={18}
-            className={
-              loading
-                ? "animate-spin"
-                : ""
-            }
-          />
-
+          <RefreshCw size={17} />
           Refresh
-
         </button>
 
       </div>
 
-      {/* ERROR */}
-
+      {/* =================================================
+          ERROR
+          ================================================= */}
       {error && (
-        <div className="mb-6 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
-
-          <AlertCircle size={20} />
-
-          <div>
-
-            <div className="font-semibold">
-              Unable to load reports
-            </div>
-
-            <div className="text-sm">
-              {error}
-            </div>
-
-          </div>
-
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
+          <strong>
+            Unable to load reports:
+          </strong>{" "}
+          {error}
         </div>
       )}
 
-      {/* SUMMARY CARDS */}
+      {/* =================================================
+          SUMMARY CARDS
+          ================================================= */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 
-      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
+        {/* TOTAL */}
+        <div className="rounded-2xl border bg-white p-5 shadow-sm">
 
-        <SummaryCard
-          title="Total Viva Cases"
-          value={totalCases}
-          icon={
-            <FileText size={22} />
-          }
-        />
+          <div className="flex items-center justify-between">
 
-        <SummaryCard
-          title="Reports Submitted"
-          value={submittedCases}
-          icon={
-            <CheckCircle size={22} />
-          }
-        />
+            <div>
+              <p className="text-sm text-gray-500">
+                Total Reports
+              </p>
 
-        <SummaryCard
-          title="Pending Reports"
-          value={pendingCases}
-          icon={
-            <Clock size={22} />
-          }
-        />
+              <p className="mt-1 text-3xl font-bold">
+                {totalReports}
+              </p>
+            </div>
 
-        <SummaryCard
-          title="Fully Completed"
-          value={completedCases}
-          icon={
-            <CheckCircle size={22} />
-          }
-        />
+            <div className="rounded-xl bg-purple-100 p-3 text-purple-600">
+              <FileText size={24} />
+            </div>
 
-      </div>
-
-      {/* TABLE */}
-
-      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-
-        <div className="border-b border-gray-200 px-6 py-5">
-
-          <h2 className="text-xl font-bold text-gray-900">
-            Examiner Report Tracking
-          </h2>
-
-          <p className="mt-1 text-sm text-gray-500">
-            Monitor individual examiner report submissions.
-          </p>
+          </div>
 
         </div>
 
-        {loading ? (
+        {/* SUBMITTED */}
+        <div className="rounded-2xl border bg-white p-5 shadow-sm">
 
-          <div className="flex items-center justify-center py-20 text-gray-500">
+          <div className="flex items-center justify-between">
 
-            <RefreshCw
-              size={22}
-              className="mr-3 animate-spin"
-            />
+            <div>
+              <p className="text-sm text-gray-500">
+                Submitted
+              </p>
 
-            Loading reports...
+              <p className="mt-1 text-3xl font-bold text-green-600">
+                {submittedReports}
+              </p>
+            </div>
 
-          </div>
-
-        ) : cases.length === 0 ? (
-
-          <div className="py-20 text-center">
-
-            <FileText
-              size={45}
-              className="mx-auto mb-4 text-gray-300"
-            />
-
-            <h3 className="font-semibold text-gray-700">
-              No Viva cases found
-            </h3>
-
-            <p className="mt-1 text-sm text-gray-400">
-              Viva cases will appear here when available.
-            </p>
+            <div className="rounded-xl bg-green-100 p-3 text-green-600">
+              <CheckCircle2 size={24} />
+            </div>
 
           </div>
 
-        ) : (
+        </div>
 
-          <div className="overflow-x-auto">
+        {/* PENDING */}
+        <div className="rounded-2xl border bg-white p-5 shadow-sm">
 
-            <table className="w-full min-w-[1200px]">
+          <div className="flex items-center justify-between">
 
-              <thead className="bg-gray-50">
+            <div>
+              <p className="text-sm text-gray-500">
+                Pending
+              </p>
 
-                <tr className="border-b border-gray-200 text-left">
+              <p className="mt-1 text-3xl font-bold text-orange-600">
+                {pendingReports}
+              </p>
+            </div>
 
-                  <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-gray-500">
-                    Case ID
-                  </th>
+            <div className="rounded-xl bg-orange-100 p-3 text-orange-600">
+              <Clock3 size={24} />
+            </div>
 
-                  <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-gray-500">
-                    Internal 1
-                  </th>
+          </div>
 
-                  <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-gray-500">
-                    Internal 2
-                  </th>
+        </div>
 
-                  <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-gray-500">
-                    External 1
-                  </th>
+      </div>
 
-                  <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-gray-500">
-                    External 2
-                  </th>
+      {/* =================================================
+          TABLE CONTAINER
+          ================================================= */}
+      <div className="rounded-2xl border bg-white p-5 shadow-sm">
 
-                  <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-gray-500">
-                    Progress
-                  </th>
+        {/* SEARCH + FILTER */}
+        <div className="mb-6 flex flex-col gap-3 md:flex-row">
 
-                  <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-gray-500">
-                    Status
-                  </th>
+          {/* SEARCH */}
+          <div className="relative flex-1">
+
+            <Search
+              size={18}
+              className="absolute left-4 top-3.5 text-gray-400"
+            />
+
+            <input
+              type="text"
+              placeholder="Search case, examiner, student..."
+              value={search}
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
+              className="w-full rounded-xl border py-3 pl-11 pr-4 outline-none focus:border-purple-500"
+            />
+
+          </div>
+
+          {/* STATUS FILTER */}
+          <select
+            value={statusFilter}
+            onChange={(e) =>
+              setStatusFilter(
+                e.target.value
+              )
+            }
+            className="rounded-xl border px-4 py-3 outline-none focus:border-purple-500"
+          >
+            <option value="All">
+              All Reports
+            </option>
+
+            <option value="Received">
+              Received
+            </option>
+
+            <option value="Pending">
+              Pending
+            </option>
+          </select>
+
+        </div>
+
+        {/* =================================================
+            TABLE
+            ================================================= */}
+        <div className="overflow-x-auto">
+
+          <table className="w-full min-w-[950px]">
+
+            <thead>
+
+              <tr className="border-b text-left text-sm text-gray-500">
+
+                <th className="px-3 py-3">
+                  Case ID
+                </th>
+
+                <th className="px-3 py-3">
+                  Student
+                </th>
+
+                <th className="px-3 py-3">
+                  Examiner
+                </th>
+
+                <th className="px-3 py-3">
+                  Type
+                </th>
+
+                <th className="px-3 py-3">
+                  Report Status
+                </th>
+
+                <th className="px-3 py-3">
+                  Report Date
+                </th>
+
+                <th className="px-3 py-3">
+                  Due Date
+                </th>
+
+                <th className="px-3 py-3 text-center">
+                  Action
+                </th>
+
+              </tr>
+
+            </thead>
+
+            <tbody>
+
+              {filteredReports.length === 0 ? (
+
+                <tr>
+
+                  <td
+                    colSpan={8}
+                    className="px-3 py-12 text-center text-gray-400"
+                  >
+                    No examiner reports found.
+                  </td>
 
                 </tr>
 
-              </thead>
+              ) : (
 
-              <tbody>
+                filteredReports.map(
+                  (report, index) => {
 
-                {cases.map(
-                  (item) => {
-
-                    const progress =
-                      getProgress(item);
-
-                    const status =
-                      getStatus(item);
+                    const received =
+                      isReceived(
+                        report
+                      );
 
                     return (
                       <tr
-                        key={item.VivaID}
-                        className="border-b border-gray-100 last:border-0 hover:bg-gray-50"
+                        key={`${report.CaseID}-${report.ExaminerID}-${index}`}
+                        className="border-b last:border-0 hover:bg-gray-50"
                       >
 
-                        {/* CASE ID */}
+                        {/* CASE */}
+                        <td className="px-3 py-4">
 
-                        <td className="px-5 py-5">
-
-                          <span className="font-bold text-purple-700">
-                            {item.VivaID}
+                          <span className="font-semibold">
+                            {report.CaseID ||
+                              "-"}
                           </span>
 
                         </td>
 
-                        {/* INTERNAL 1 */}
+                        {/* STUDENT */}
+                        <td className="px-3 py-4">
 
-                        <td className="px-5 py-5">
-
-                          <ReportStatus
-                            examiner={
-                              item.internal1
-                            }
-                          />
+                          <span className="text-gray-700">
+                            {report.StudentID ||
+                              "-"}
+                          </span>
 
                         </td>
 
-                        {/* INTERNAL 2 */}
+                        {/* EXAMINER */}
+                        <td className="px-3 py-4">
 
-                        <td className="px-5 py-5">
+                          <div>
+                            <p className="font-medium">
+                              {report.ExaminerID ||
+                                "-"}
+                            </p>
 
-                          <ReportStatus
-                            examiner={
-                              item.internal2
-                            }
-                          />
-
-                        </td>
-
-                        {/* EXTERNAL 1 */}
-
-                        <td className="px-5 py-5">
-
-                          <ReportStatus
-                            examiner={
-                              item.external1
-                            }
-                          />
-
-                        </td>
-
-                        {/* EXTERNAL 2 */}
-
-                        <td className="px-5 py-5">
-
-                          <ReportStatus
-                            examiner={
-                              item.external2
-                            }
-                          />
-
-                        </td>
-
-                        {/* PROGRESS */}
-
-                        <td className="px-5 py-5">
-
-                          <div className="mb-1 text-sm font-semibold text-gray-700">
-
-                            {progress}/4 Submitted
-
+                            {report.ReportFileName && (
+                              <p className="mt-1 max-w-[220px] truncate text-xs text-gray-400">
+                                {report.ReportFileName}
+                              </p>
+                            )}
                           </div>
 
-                          <div className="h-2 w-28 overflow-hidden rounded-full bg-gray-200">
+                        </td>
 
-                            <div
-                              className="h-full rounded-full bg-purple-600 transition-all"
-                              style={{
-                                width:
-                                  `${progress * 25}%`,
-                              }}
-                            />
+                        {/* TYPE */}
+                        <td className="px-3 py-4">
 
-                          </div>
+                          <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-medium text-purple-700">
+                            {report.ExaminerType ||
+                              "-"}
+                          </span>
 
                         </td>
 
                         {/* STATUS */}
+                        <td className="px-3 py-4">
 
-                        <td className="px-5 py-5">
+                          {received ? (
 
-                          <StatusBadge
-                            status={status}
-                          />
+                            <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
+                              <CheckCircle2
+                                size={14}
+                              />
+                              Received
+                            </span>
+
+                          ) : (
+
+                            <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700">
+                              <Clock3
+                                size={14}
+                              />
+                              Pending
+                            </span>
+
+                          )}
+
+                        </td>
+
+                        {/* REPORT DATE */}
+                        <td className="px-3 py-4 text-sm text-gray-600">
+                          {formatDate(
+                            report.ReportDate
+                          )}
+                        </td>
+
+                        {/* DUE DATE */}
+                        <td className="px-3 py-4 text-sm text-gray-600">
+                          {formatDate(
+                            report.ReportDueDate
+                          )}
+                        </td>
+
+                        {/* ACTION */}
+                        <td className="px-3 py-4 text-center">
+
+                          {received ? (
+
+                            <button
+                              onClick={() =>
+                                viewReport(
+                                  report
+                                )
+                              }
+                              className="inline-flex items-center gap-2 rounded-lg bg-blue-100 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-200"
+                            >
+
+                              <Eye
+                                size={16}
+                              />
+
+                              View
+
+                            </button>
+
+                          ) : (
+
+                            <span className="text-sm text-gray-400">
+                              Pending
+                            </span>
+
+                          )}
 
                         </td>
 
                       </tr>
                     );
                   }
-                )}
+                )
 
-              </tbody>
+              )}
 
-            </table>
+            </tbody>
 
-          </div>
-
-        )}
-
-      </div>
-
-    </div>
-  );
-}
-
-/*
- * ============================================
- * SUMMARY CARD
- * ============================================
- */
-
-function SummaryCard({
-  title,
-  value,
-  icon,
-}) {
-  return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-
-      <div className="flex items-center justify-between">
-
-        <div>
-
-          <p className="text-sm font-medium text-gray-500">
-            {title}
-          </p>
-
-          <p className="mt-2 text-3xl font-bold text-gray-900">
-            {value}
-          </p>
+          </table>
 
         </div>
 
-        <div className="rounded-xl bg-purple-50 p-3 text-purple-600">
-          {icon}
+        {/* =================================================
+            RESULT COUNT
+            ================================================= */}
+        <div className="mt-4 text-sm text-gray-500">
+
+          Showing{" "}
+          <strong>
+            {filteredReports.length}
+          </strong>{" "}
+          of{" "}
+          <strong>
+            {reports.length}
+          </strong>{" "}
+          reports
+
         </div>
 
       </div>
