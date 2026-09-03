@@ -20,6 +20,8 @@ import staffRoutes from "./routes/staffRoutes.js";
 import panelRoutes from "./routes/panelRoutes.js";
 import acknowledgementRoutes
   from "./routes/acknowledgementRoutes.js";
+import annotatedThesisRoutes
+  from "./routes/annotatedThesisRoutes.js";
 
 
 // Middleware
@@ -54,6 +56,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/emails", emailRoutes);
 app.use("/api/schedule", scheduleRoutes);
 app.use("/api/reports", reportRoutes);
+app.use(
+  "/api/annotated-thesis",
+  annotatedThesisRoutes
+);
 app.use("/api/auth", authRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/staff", staffRoutes);
