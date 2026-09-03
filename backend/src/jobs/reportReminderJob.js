@@ -8,1027 +8,556 @@ import {
 
 import sendEmail from "../services/sendEmail.js";
 
+import reminderEmail from "../emails/reminderEmail.js";
+
 
 // ======================================================
 // SHEETS
 // ======================================================
 
 const VIVA_SHEET = "VivaCases";
+const STUDENT_SHEET = "Students";
 const EXAMINER_SHEET = "Examiner";
 
 
 // ======================================================
-// SETTINGS
+// REPORT REMINDER JOB
+//
+// 14 days before due date
+// 7 days before due date
+// 1 day before due date
+//
+// Production:
+// Every day at 8:00 AM
 // ======================================================
 
-// TESTING
-// true  = cron runs every minute
-// false = cron runs at 8:00 AM daily
-const TEST_MODE = true;
-
-
-// ======================================================
-// HELPER
-// ======================================================
-
-function clean(value) {
-  return String(value || "").trim();
-}
-
-
-// ======================================================
-// GET EXAMINER
-// ======================================================
-
-function findExaminer(
-  examinerRows,
-  examinerID
-) {
-
-  return examinerRows.find(
-    row =>
-      clean(row.ExaminerID) ===
-      clean(examinerID)
-  );
-
-}
-
-
-// ======================================================
-// GET REPORT STATUS
-// ======================================================
-
-function getReportStatus(
-  viva,
-  examinerID
-) {
-
-  if (
-    clean(viva.InternalExaminer1ID) ===
-    clean(examinerID)
-  ) {
-
-    return clean(
-      viva.Internal1ReportReceived
-    );
-
-  }
-
-
-  if (
-    clean(viva.InternalExaminer2ID) ===
-    clean(examinerID)
-  ) {
-
-    return clean(
-      viva.Internal2ReportReceived
-    );
-
-  }
-
-
-  if (
-    clean(viva.ExternalExaminer1ID) ===
-    clean(examinerID)
-  ) {
-
-    return clean(
-      viva.External1ReportReceived
-    );
-
-  }
-
-
-  if (
-    clean(viva.ExternalExaminer2ID) ===
-    clean(examinerID)
-  ) {
-
-    return clean(
-      viva.External2ReportReceived
-    );
-
-  }
-
-
-  return "";
-
-}
-
-
-// ======================================================
-// CHECK IF REPORT RECEIVED
-// ======================================================
-
-function reportAlreadyReceived(
-  viva,
-  examinerID
-) {
-
-  const status =
-    getReportStatus(
-      viva,
-      examinerID
-    );
-
-
-  return (
-    status.toLowerCase() === "yes"
-  );
-
-}
-
-
-// ======================================================
-// CALCULATE DAYS
-// ======================================================
-
-function calculateDaysRemaining(
-  dueDate
-) {
-
-  const now = new Date();
-
-  const due =
-    new Date(dueDate);
-
-
-  return Math.ceil(
-    (
-      due.getTime() -
-      now.getTime()
-    ) /
-    (
-      1000 *
-      60 *
-      60 *
-      24
-    )
-  );
-
-}
-
-
-// ======================================================
-// GET REMINDER TYPE
-// ======================================================
-
-function getReminderType(
-  daysRemaining
-) {
-
-  if (daysRemaining === 14) {
-    return "14";
-  }
-
-  if (daysRemaining === 7) {
-    return "7";
-  }
-
-  if (daysRemaining === 1) {
-    return "1";
-  }
-
-  return null;
-
-}
-
-
-// ======================================================
-// SEND ONE REPORT REMINDER
-// ======================================================
-
-async function sendReportReminder({
-  viva,
-  examiner,
-  examinerID,
-  reminderType,
-}) {
-
-  const email =
-    clean(examiner.Email);
-
-
-  if (!email) {
-
-    console.log(
-      `⚠️ No email for examiner ${examinerID}`
-    );
-
-    return false;
-
-  }
-
-
-  const examinerName =
-    clean(
-      examiner.ExaminerName
-    ) ||
-    "Examiner";
-
-
-  const title =
-    clean(
-      examiner.Title
-    );
-
-
-  const greeting =
-    title
-      ? `Dear ${title} ${examinerName},`
-      : `Dear ${examinerName},`;
-
-
-  const subject =
-    `${reminderType}-Day Reminder - Viva Report Due - ${clean(viva.StudentName)}`;
-
-
-  const html = `
-
-    <div
-      style="
-        font-family: Arial, Helvetica, sans-serif;
-        line-height: 1.6;
-        color: #222;
-      "
-    >
-
-      <h2>
-        Viva Voce Report Reminder
-      </h2>
-
-      <p>
-        ${greeting}
-      </p>
-
-      <p>
-        This is a reminder regarding the submission
-        of your Viva Voce examination report.
-      </p>
-
-      <table
-        style="
-          border-collapse: collapse;
-          margin: 20px 0;
-        "
-      >
-
-        <tr>
-          <td
-            style="
-              padding: 8px;
-              font-weight: bold;
-            "
-          >
-            Student
-          </td>
-
-          <td style="padding: 8px;">
-            ${clean(viva.StudentName) || "-"}
-          </td>
-        </tr>
-
-
-        <tr>
-          <td
-            style="
-              padding: 8px;
-              font-weight: bold;
-            "
-          >
-            Case ID
-          </td>
-
-          <td style="padding: 8px;">
-            ${clean(viva.CaseID) || "-"}
-          </td>
-        </tr>
-
-
-        <tr>
-          <td
-            style="
-              padding: 8px;
-              font-weight: bold;
-            "
-          >
-            Report Due Date
-          </td>
-
-          <td style="padding: 8px;">
-            ${clean(viva.ReportDueDate) || "-"}
-          </td>
-        </tr>
-
-
-        <tr>
-          <td
-            style="
-              padding: 8px;
-              font-weight: bold;
-            "
-          >
-            Reminder
-          </td>
-
-          <td style="padding: 8px;">
-            ${reminderType} days remaining
-          </td>
-        </tr>
-
-      </table>
-
-
-      ${
-        clean(viva.ReportSubmissionLink)
-          ? `
-            <p>
-
-              <a
-                href="${clean(
-                  viva.ReportSubmissionLink
-                )}"
-                target="_blank"
-                style="
-                  display: inline-block;
-                  padding: 10px 16px;
-                  background: #123c69;
-                  color: white;
-                  text-decoration: none;
-                  border-radius: 6px;
-                "
-              >
-                Submit Viva Report
-              </a>
-
-            </p>
-          `
-          : ""
-      }
-
-
-      <p>
-        Kindly submit your Viva Voce report
-        before the stated deadline.
-      </p>
-
-
-      <p>
-        Thank you.
-      </p>
-
-
-      <p>
-        <strong>
-          VivaTrack Secretariat
-        </strong>
-        <br />
-        Universiti Sains Malaysia
-      </p>
-
-    </div>
-
-  `;
-
-
-  await sendEmail({
-
-    to: email,
-
-    subject,
-
-    html,
-
-  });
-
-
-  console.log(
-    `📧 ${reminderType}-day reminder sent to ${email}`
-  );
-
-
-  return true;
-
-}
-
-
-// ======================================================
-// MAIN REMINDER JOB
-// ======================================================
-
-export async function runReportReminderJob() {
-
-  console.log(
-    "================================================"
-  );
-
-  console.log(
-    "🔥 VIVA REPORT REMINDER JOB STARTED"
-  );
-
-  console.log(
-    new Date().toISOString()
-  );
-
-  console.log(
-    "================================================"
-  );
+cron.schedule("0 8 * * *", async () => {
+
+  console.log("");
+  console.log("==============================================");
+  console.log("VIVA REPORT REMINDER JOB");
+  console.log("Started:", new Date().toISOString());
+  console.log("==============================================");
 
 
   try {
 
-    // --------------------------------------------------
-    // LOAD SHEETS
-    // --------------------------------------------------
+    // ==================================================
+    // LOAD ALL DATA
+    // ==================================================
 
     const vivaRows =
-      await getRows(
-        VIVA_SHEET
-      );
+      await getRows(VIVA_SHEET);
 
+    const studentRows =
+      await getRows(STUDENT_SHEET);
 
     const examinerRows =
-      await getRows(
-        EXAMINER_SHEET
-      );
+      await getRows(EXAMINER_SHEET);
 
 
     console.log(
-      `VivaCases records: ${vivaRows.length}`
+      `VivaCases loaded: ${vivaRows.length}`
     );
 
     console.log(
-      `Examiner records: ${examinerRows.length}`
+      `Students loaded: ${studentRows.length}`
+    );
+
+    console.log(
+      `Examiners loaded: ${examinerRows.length}`
     );
 
 
-    // --------------------------------------------------
-    // LOOP VIVA CASES
-    // --------------------------------------------------
+    // ==================================================
+    // CURRENT DATE
+    // ==================================================
 
-    for (
-      const viva of vivaRows
-    ) {
-
-      const caseID =
-        clean(viva.CaseID);
+    const now = new Date();
 
 
-      if (!caseID) {
-        continue;
-      }
+    // ==================================================
+    // PROCESS EVERY VIVA
+    // ==================================================
 
+    for (const viva of vivaRows) {
 
-      // ------------------------------------------------
-      // REPORT DUE DATE
-      // ------------------------------------------------
+      try {
 
-      if (
-        !clean(viva.ReportDueDate)
-      ) {
+        console.log("");
+        console.log(
+          "----------------------------------------------"
+        );
 
         console.log(
-          `${caseID}: No ReportDueDate`
-        );
-
-        continue;
-
-      }
-
-
-      const dueDate =
-        new Date(
-          viva.ReportDueDate
+          "Processing:",
+          viva.CaseID
         );
 
 
-      if (
-        Number.isNaN(
-          dueDate.getTime()
-        )
-      ) {
+        // ==============================================
+        // BASIC CHECK
+        // ==============================================
 
-        console.log(
-          `${caseID}: Invalid ReportDueDate`
-        );
+        if (!viva.CaseID) {
 
-        continue;
+          console.log(
+            "Skipped: No CaseID"
+          );
 
-      }
-
-
-      // ------------------------------------------------
-      // DAYS REMAINING
-      // ------------------------------------------------
-
-      const daysRemaining =
-        calculateDaysRemaining(
-          viva.ReportDueDate
-        );
+          continue;
+        }
 
 
-      const reminderType =
-        getReminderType(
-          daysRemaining
-        );
-
-
-      if (!reminderType) {
-
-        console.log(
-          `${caseID}: ${daysRemaining} days remaining - no reminder`
-        );
-
-        continue;
-
-      }
-
-
-      console.log(
-        `${caseID}: ${daysRemaining} days remaining`
-      );
-
-
-      // ------------------------------------------------
-      // REMINDER FIELD
-      // ------------------------------------------------
-
-      const reminderField =
-        `Reminder${reminderType}`;
-
-
-      // ------------------------------------------------
-      // CHECK CASE REMINDER ALREADY SENT
-      // ------------------------------------------------
-
-      if (
-        clean(
-          viva[reminderField]
-        ).toLowerCase() === "yes"
-      ) {
-
-        console.log(
-          `${caseID}: ${reminderField} already sent`
-        );
-
-        continue;
-
-      }
-
-
-      // ------------------------------------------------
-      // GET EXAMINERS
-      // ------------------------------------------------
-
-      const examinerIDs = [
-
-        viva.InternalExaminer1ID,
-
-        viva.InternalExaminer2ID,
-
-        viva.ExternalExaminer1ID,
-
-        viva.ExternalExaminer2ID,
-
-      ]
-        .map(clean)
-        .filter(Boolean);
-
-
-      if (
-        examinerIDs.length === 0
-      ) {
-
-        console.log(
-          `${caseID}: No examiner IDs`
-        );
-
-        continue;
-
-      }
-
-
-      let emailSent = false;
-
-
-      // ------------------------------------------------
-      // SEND TO EXAMINERS
-      // ------------------------------------------------
-
-      for (
-        const examinerID
-        of examinerIDs
-      ) {
-
-        // ----------------------------------------------
-        // CHECK REPORT
-        // ----------------------------------------------
+        // ==============================================
+        // REMINDER ENABLED?
+        // ==============================================
 
         if (
-          reportAlreadyReceived(
-            viva,
-            examinerID
+          viva.ReminderEnabled &&
+          String(
+            viva.ReminderEnabled
+          ).toLowerCase() === "no"
+        ) {
+
+          console.log(
+            `${viva.CaseID}: Reminder disabled`
+          );
+
+          continue;
+        }
+
+
+        // ==============================================
+        // REPORT DUE DATE
+        // ==============================================
+
+        if (!viva.ReportDueDate) {
+
+          console.log(
+            `${viva.CaseID}: No ReportDueDate`
+          );
+
+          continue;
+        }
+
+
+        const dueDate =
+          new Date(
+            viva.ReportDueDate
+          );
+
+
+        if (
+          Number.isNaN(
+            dueDate.getTime()
           )
         ) {
 
           console.log(
-            `${caseID}: ${examinerID} report already received`
+            `${viva.CaseID}: Invalid ReportDueDate`,
+            viva.ReportDueDate
           );
 
           continue;
+        }
+
+
+        // ==============================================
+        // DAYS REMAINING
+        // ==============================================
+
+        const diffMs =
+          dueDate.getTime() -
+          now.getTime();
+
+
+        const diffDays =
+          Math.ceil(
+            diffMs /
+            (1000 * 60 * 60 * 24)
+          );
+
+
+        console.log(
+          `${viva.CaseID}: ${diffDays} day(s) remaining`
+        );
+
+
+        // ==============================================
+        // DETERMINE REMINDER
+        // ==============================================
+
+        let reminderType = "";
+        let reminderColumn = "";
+
+
+        if (
+          diffDays === 14 &&
+          viva.Reminder14 !== "Yes"
+        ) {
+
+          reminderType =
+            "14-Day Reminder";
+
+          reminderColumn =
+            "Reminder14";
+
+        }
+
+        else if (
+          diffDays === 7 &&
+          viva.Reminder7 !== "Yes"
+        ) {
+
+          reminderType =
+            "7-Day Reminder";
+
+          reminderColumn =
+            "Reminder7";
+
+        }
+
+        else if (
+          diffDays === 1 &&
+          viva.Reminder1 !== "Yes"
+        ) {
+
+          reminderType =
+            "1-Day Reminder";
+
+          reminderColumn =
+            "Reminder1";
 
         }
 
 
-        // ----------------------------------------------
-        // FIND EXAMINER
-        // ----------------------------------------------
+        // ==============================================
+        // NO REMINDER TODAY
+        // ==============================================
 
-        const examiner =
-          findExaminer(
-            examinerRows,
-            examinerID
-          );
-
-
-        if (!examiner) {
+        if (!reminderType) {
 
           console.log(
-            `${caseID}: Examiner ${examinerID} not found`
+            `${viva.CaseID}: No reminder required today`
           );
 
           continue;
-
         }
 
 
-        // ----------------------------------------------
-        // SEND EMAIL
-        // ----------------------------------------------
+        console.log(
+          `${viva.CaseID}: ${reminderType}`
+        );
 
-        try {
 
-          const sent =
-            await sendReportReminder({
+        // ==============================================
+        // FIND STUDENT
+        // ==============================================
 
-              viva,
+        const student =
+          studentRows.find(
+            (row) =>
+              String(
+                row.StudentID || ""
+              ).trim() ===
+              String(
+                viva.StudentID || ""
+              ).trim()
+          );
 
-              examiner,
 
-              examinerID,
+        if (!student) {
 
-              reminderType,
+          console.log(
+            `${viva.CaseID}: Student not found for StudentID ${viva.StudentID}`
+          );
+
+          continue;
+        }
+
+
+        console.log(
+          "Student:",
+          student.StudentName
+        );
+
+
+        // ==============================================
+        // EXAMINER LIST
+        // ==============================================
+
+        const examinerAssignments = [
+
+          {
+            id:
+              viva.InternalExaminer1ID,
+
+            reportReceived:
+              viva.Internal1ReportReceived,
+
+            reportDate:
+              viva.Internal1ReportDate,
+          },
+
+          {
+            id:
+              viva.InternalExaminer2ID,
+
+            reportReceived:
+              viva.Internal2ReportReceived,
+
+            reportDate:
+              viva.Internal2ReportDate,
+          },
+
+          {
+            id:
+              viva.ExternalExaminer1ID,
+
+            reportReceived:
+              viva.External1ReportReceived,
+
+            reportDate:
+              viva.External1ReportDate,
+          },
+
+          {
+            id:
+              viva.ExternalExaminer2ID,
+
+            reportReceived:
+              viva.External2ReportReceived,
+
+            reportDate:
+              viva.External2ReportDate,
+          },
+
+        ].filter(
+          (item) => item.id
+        );
+
+
+        // ==============================================
+        // FIND PENDING EXAMINERS
+        // ==============================================
+
+        let emailsSent = 0;
+
+
+        for (
+          const assignment
+          of examinerAssignments
+        ) {
+
+          // ============================================
+          // REPORT ALREADY RECEIVED
+          // ============================================
+
+          if (
+            String(
+              assignment.reportReceived || ""
+            ).trim().toLowerCase() ===
+            "yes"
+          ) {
+
+            console.log(
+              `${assignment.id}: Report already received`
+            );
+
+            continue;
+          }
+
+
+          // ============================================
+          // FIND EXAMINER
+          // ============================================
+
+          const examiner =
+            examinerRows.find(
+              (row) =>
+                String(
+                  row.ExaminerID || ""
+                ).trim() ===
+                String(
+                  assignment.id
+                ).trim()
+            );
+
+
+          if (!examiner) {
+
+            console.log(
+              `${assignment.id}: Examiner not found`
+            );
+
+            continue;
+          }
+
+
+          // ============================================
+          // CHECK EMAIL
+          // ============================================
+
+          if (!examiner.Email) {
+
+            console.log(
+              `${assignment.id}: Examiner has no email`
+            );
+
+            continue;
+          }
+
+
+          console.log(
+            `Sending reminder to: ${examiner.Email}`
+          );
+
+
+          // ============================================
+          // CREATE EMAIL
+          // ============================================
+
+          const html =
+            reminderEmail({
+
+              ExaminerTitle:
+                examiner.Title || "",
+
+              ExaminerName:
+                examiner.ExaminerName || "",
+
+              ReportDueDate:
+                viva.ReportDueDate,
+
+              StudentName:
+                student.StudentName || "",
+
+              MatricNo:
+                student.MatricNo || "",
+
+              Programme:
+                student.Programme || "",
+
+              ThesisTitle:
+                student.ThesisTitle || "",
 
             });
 
 
-          if (sent) {
-            emailSent = true;
-          }
+          // ============================================
+          // SEND EMAIL
+          // ============================================
+
+          await sendEmail({
+
+            to:
+              examiner.Email,
+
+            subject:
+              `${reminderType} - Viva Report Due - ${student.StudentName || "Candidate"}`,
+
+            html,
+
+          });
 
 
-        } catch (err) {
+          emailsSent++;
 
-          console.error(
-            `❌ Failed sending reminder to ${examinerID}:`,
-            err.message
+
+          console.log(
+            `Email sent successfully to ${examiner.Email}`
           );
 
         }
 
-      }
+
+        // ==============================================
+        // UPDATE REMINDER STATUS
+        // ==============================================
+
+        if (emailsSent > 0) {
+
+          const rowNumber =
+            await findRowNumber(
+              VIVA_SHEET,
+              "CaseID",
+              viva.CaseID
+            );
 
 
-      // ------------------------------------------------
-      // UPDATE SHEET
-      // ------------------------------------------------
+          if (
+            rowNumber === -1 ||
+            !rowNumber
+          ) {
 
-      if (emailSent) {
+            console.log(
+              `${viva.CaseID}: Could not find sheet row`
+            );
 
-        const rowNumber =
-          await findRowNumber(
-            VIVA_SHEET,
-            "CaseID",
-            caseID
-          );
+            continue;
+          }
 
-
-        if (
-          rowNumber !== -1 &&
-          rowNumber
-        ) {
 
           await updateRow(
-
             VIVA_SHEET,
-
             rowNumber,
-
             {
 
-              [reminderField]:
+              [reminderColumn]:
                 "Yes",
 
               LastUpdated:
                 new Date().toISOString(),
 
             }
-
           );
 
 
           console.log(
-            `✅ ${caseID}: ${reminderField} = Yes`
+            `${viva.CaseID}: ${reminderColumn} updated to Yes`
           );
 
         }
+
+
+        console.log(
+          `${viva.CaseID}: ${emailsSent} reminder email(s) sent`
+        );
+
+      }
+
+      catch (caseError) {
+
+        console.error(
+          `ERROR processing ${viva.CaseID}:`,
+          caseError
+        );
 
       }
 
     }
 
 
-    console.log(
-      "================================================"
-    );
+    // ==================================================
+    // COMPLETE
+    // ==================================================
 
-    console.log(
-      "✅ VIVA REPORT REMINDER JOB COMPLETED"
-    );
-
-    console.log(
-      "================================================"
-    );
+    console.log("");
+    console.log("==============================================");
+    console.log("VIVA REPORT REMINDER JOB COMPLETED");
+    console.log("==============================================");
 
 
-  } catch (err) {
+  }
+
+  catch (err) {
 
     console.error(
-      "❌ REPORT REMINDER JOB ERROR:",
+      "VIVA REPORT REMINDER JOB ERROR:",
       err
     );
 
   }
 
-}
-
-
-// ======================================================
-// TEST REPORT REMINDER
-// ======================================================
-//
-// This DOES NOT care whether the due date is 14/7/1.
-// It directly tests the email system.
-//
-// Example:
-// POST /api/reminders/test/VC001
-// ======================================================
-
-export async function testReportReminder(
-  caseID
-) {
-
-  console.log(
-    `🧪 TEST REMINDER FOR ${caseID}`
-  );
-
-
-  const vivaRows =
-    await getRows(
-      VIVA_SHEET
-    );
-
-
-  const examinerRows =
-    await getRows(
-      EXAMINER_SHEET
-    );
-
-
-  const viva =
-    vivaRows.find(
-      row =>
-        clean(row.CaseID) ===
-        clean(caseID)
-    );
-
-
-  if (!viva) {
-
-    throw new Error(
-      `Case ${caseID} not found in VivaCases sheet.`
-    );
-
-  }
-
-
-  const examinerIDs = [
-
-    viva.InternalExaminer1ID,
-
-    viva.InternalExaminer2ID,
-
-    viva.ExternalExaminer1ID,
-
-    viva.ExternalExaminer2ID,
-
-  ]
-    .map(clean)
-    .filter(Boolean);
-
-
-  if (
-    examinerIDs.length === 0
-  ) {
-
-    throw new Error(
-      `No examiner IDs found for ${caseID}.`
-    );
-
-  }
-
-
-  const sentTo = [];
-
-
-  for (
-    const examinerID
-    of examinerIDs
-  ) {
-
-    const examiner =
-      findExaminer(
-        examinerRows,
-        examinerID
-      );
-
-
-    if (!examiner) {
-
-      console.log(
-        `⚠️ Examiner ${examinerID} not found`
-      );
-
-      continue;
-
-    }
-
-
-    const email =
-      clean(
-        examiner.Email
-      );
-
-
-    if (!email) {
-
-      console.log(
-        `⚠️ No email for ${examinerID}`
-      );
-
-      continue;
-
-    }
-
-
-    await sendEmail({
-
-      to: email,
-
-      subject:
-        `[TEST] VivaTrack Report Reminder - ${clean(viva.StudentName)}`,
-
-      html: `
-
-        <div
-          style="
-            font-family: Arial, Helvetica, sans-serif;
-            line-height: 1.6;
-          "
-        >
-
-          <h2>
-            TEST - Viva Report Reminder
-          </h2>
-
-
-          <p>
-            Dear ${clean(
-              examiner.ExaminerName
-            ) || "Examiner"},
-          </p>
-
-
-          <p>
-            This is a <strong>TEST EMAIL</strong>
-            to verify that the VivaTrack report
-            reminder system is working.
-          </p>
-
-
-          <p>
-            <strong>Case ID:</strong>
-            ${clean(viva.CaseID)}
-          </p>
-
-
-          <p>
-            <strong>Student:</strong>
-            ${clean(viva.StudentName) || "-"}
-          </p>
-
-
-          <p>
-            <strong>Report Due Date:</strong>
-            ${clean(viva.ReportDueDate) || "-"}
-          </p>
-
-
-          <p>
-            <strong>Examiner ID:</strong>
-            ${examinerID}
-          </p>
-
-
-          <p>
-            If you receive this email,
-            the email system is working correctly.
-          </p>
-
-
-          <hr />
-
-
-          <p>
-            VivaTrack Secretariat
-            <br />
-            Universiti Sains Malaysia
-          </p>
-
-        </div>
-
-      `,
-
-    });
-
-
-    sentTo.push({
-
-      examinerID,
-
-      email,
-
-      examinerName:
-        clean(
-          examiner.ExaminerName
-        ),
-
-    });
-
-
-    console.log(
-      `✅ TEST EMAIL SENT: ${email}`
-    );
-
-  }
-
-
-  return sentTo;
-
-}
-
-
-// ======================================================
-// CRON
-// ======================================================
-//
-// TEST MODE:
-// Every minute
-//
-// PRODUCTION:
-// Every day at 8:00 AM
-// ======================================================
-
-if (TEST_MODE) {
-
-  cron.schedule(
-    "* * * * *",
-    runReportReminderJob
-  );
-
-  console.log(
-    "🧪 REPORT REMINDER CRON: TEST MODE - EVERY MINUTE"
-  );
-
-} else {
-
-  cron.schedule(
-    "0 8 * * *",
-    runReportReminderJob
-  );
-
-  console.log(
-    "⏰ REPORT REMINDER CRON: PRODUCTION - 8:00 AM DAILY"
-  );
-
-}
+});
