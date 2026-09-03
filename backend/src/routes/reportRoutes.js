@@ -5,6 +5,7 @@ import multer from "multer";
 import {
   getReports,
   getReport,
+  getReportSubmissionInfo,
   uploadPanelReport,
   approveReport,
 } from "../controllers/reportController.js";
