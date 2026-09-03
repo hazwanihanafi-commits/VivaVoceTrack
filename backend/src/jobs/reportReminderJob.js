@@ -8,7 +8,7 @@ import {
 
 import sendEmail from "../services/sendEmail.js";
 
-import reminderEmail from "../emails/reminderEmail.js";
+import reminderEmail from "../templates/reminderEmail.js";
 
 
 // ======================================================
