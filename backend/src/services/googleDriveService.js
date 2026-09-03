@@ -9,6 +9,7 @@ import { Readable } from "stream";
 const getGoogleAuth = () => {
   let credentials = null;
 
+  // OPTION 1: Full service account JSON
   if (process.env.GOOGLE_SERVICE_ACCOUNT) {
     try {
       credentials = JSON.parse(
@@ -22,6 +23,7 @@ const getGoogleAuth = () => {
     }
   }
 
+  // OPTION 2: Separate environment variables
   if (!credentials) {
     credentials = {
       client_email:
@@ -49,6 +51,7 @@ const getGoogleAuth = () => {
 
   return new google.auth.GoogleAuth({
     credentials,
+
     scopes: [
       "https://www.googleapis.com/auth/drive",
     ],
@@ -81,15 +84,21 @@ function extractFolderId(folderUrl) {
     );
   }
 
-  const match = String(folderUrl).match(
+  const value = String(folderUrl).trim();
+
+  // Example:
+  // https://drive.google.com/drive/folders/ABC123
+  const folderMatch = value.match(
     /\/folders\/([a-zA-Z0-9_-]+)/
   );
 
-  if (match?.[1]) {
-    return match[1];
+  if (folderMatch?.[1]) {
+    return folderMatch[1];
   }
 
-  const openIdMatch = String(folderUrl).match(
+  // Example:
+  // https://drive.google.com/open?id=ABC123
+  const openIdMatch = value.match(
     /[?&]id=([a-zA-Z0-9_-]+)/
   );
 
@@ -97,13 +106,11 @@ function extractFolderId(folderUrl) {
     return openIdMatch[1];
   }
 
-  // Allow direct folder ID
+  // Direct folder ID
   if (
-    /^[a-zA-Z0-9_-]+$/.test(
-      String(folderUrl).trim()
-    )
+    /^[a-zA-Z0-9_-]+$/.test(value)
   ) {
-    return String(folderUrl).trim();
+    return value;
   }
 
   throw new Error(
@@ -121,11 +128,17 @@ async function findChildFolder(
   parentFolderId,
   childFolderName
 ) {
+  const escapedName =
+    childFolderName.replace(
+      /'/g,
+      "\\'"
+    );
+
   const response =
     await drive.files.list({
       q: [
         `'${parentFolderId}' in parents`,
-        `name = '${childFolderName}'`,
+        `name = '${escapedName}'`,
         "mimeType = 'application/vnd.google-apps.folder'",
         "trashed = false",
       ].join(" and "),
@@ -138,33 +151,43 @@ async function findChildFolder(
       supportsAllDrives: true,
 
       includeItemsFromAllDrives: true,
+
+      pageSize: 100,
     });
 
-  return response.data.files?.[0] || null;
+  return (
+    response.data.files?.[0] ||
+    null
+  );
 }
 
 /**
  * ======================================================
  * UPLOAD FILE TO CASE SUBFOLDER
  *
- * Example:
- *
- * Case folder
- *    │
- *    ├── 01 - Thesis
- *    ├── 02 - Supporting Documents
- *    ├── 03 - Examiner Reports
- *    └── 04 - Annotated Thesis
+ * ROOT CASE FOLDER
+ *       │
+ *       ├── 01 - Thesis
+ *       ├── 02 - Supporting Documents
+ *       ├── 03 - Examiner Reports
+ *       └── 04 - Annotated Thesis
  *
  * ======================================================
  */
 export const uploadFileToDrive = async ({
   buffer,
+  fileName,
   originalName,
   mimeType,
   parentFolderUrl,
   childFolderName,
 }) => {
+  /**
+   * ==================================================
+   * VALIDATION
+   * ==================================================
+   */
+
   if (!buffer) {
     throw new Error(
       "No file buffer received."
@@ -183,21 +206,50 @@ export const uploadFileToDrive = async ({
     );
   }
 
-  const drive = await getDrive();
+  /**
+   * Support both:
+   *
+   * fileName
+   *
+   * and
+   *
+   * originalName
+   *
+   * so controller does not break.
+   */
+  const finalFileName =
+    fileName ||
+    originalName ||
+    "Examiner_Report.pdf";
 
   /**
-   * ROOT CASE FOLDER
+   * ==================================================
+   * DRIVE
+   * ==================================================
    */
+
+  const drive =
+    await getDrive();
+
+  /**
+   * ==================================================
+   * ROOT CASE FOLDER
+   * ==================================================
+   */
+
   const parentFolderId =
     extractFolderId(
       parentFolderUrl
     );
 
   /**
+   * ==================================================
    * FIND:
    *
    * 03 - Examiner Reports
+   * ==================================================
    */
+
   const childFolder =
     await findChildFolder(
       drive,
@@ -212,17 +264,24 @@ export const uploadFileToDrive = async ({
   }
 
   /**
-   * ====================================================
-   * FILE
-   * ====================================================
+   * ==================================================
+   * FILE METADATA
+   * ==================================================
    */
 
   const fileMetadata = {
-    name: originalName,
+    name: finalFileName,
+
     parents: [
       childFolder.id,
     ],
   };
+
+  /**
+   * ==================================================
+   * FILE MEDIA
+   * ==================================================
+   */
 
   const media = {
     mimeType:
@@ -234,9 +293,9 @@ export const uploadFileToDrive = async ({
   };
 
   /**
-   * ====================================================
+   * ==================================================
    * UPLOAD
-   * ====================================================
+   * ==================================================
    */
 
   const response =
@@ -255,11 +314,17 @@ export const uploadFileToDrive = async ({
   const file =
     response.data;
 
-  if (!file.id) {
+  if (!file?.id) {
     throw new Error(
       "Google Drive did not return a file ID."
     );
   }
+
+  /**
+   * ==================================================
+   * RESULT
+   * ==================================================
+   */
 
   return {
     id:
@@ -279,7 +344,8 @@ export const uploadFileToDrive = async ({
       `https://drive.google.com/file/d/${file.id}/view`,
 
     webContentLink:
-      file.webContentLink || "",
+      file.webContentLink ||
+      "",
 
     folderId:
       childFolder.id,
