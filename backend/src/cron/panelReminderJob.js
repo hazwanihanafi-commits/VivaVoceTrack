@@ -44,7 +44,7 @@ const STAFF_SHEET = "Staff";
 // Change to "0 8 * * *" for production.
 // ======================================================
 
-cron.schedule("* * * * *", async () => {
+cron.schedule("0 8 * * *", async () => {
 
   console.log("");
   console.log("==============================================");
