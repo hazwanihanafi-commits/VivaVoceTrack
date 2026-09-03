@@ -1100,12 +1100,11 @@ export const sendAppointmentEmail = async (
   next
 ) => {
   try {
-    const caseID =
-      String(req.params.id || "").trim();
+    const caseID = req.params.id;
 
-    /* ==================================================
-       GET VIVA CASE
-    ================================================== */
+    // ==========================================
+    // GET VIVA CASE
+    // ==========================================
 
     const viva = await findRow(
       VIVA_SHEET,
@@ -1120,9 +1119,9 @@ export const sendAppointmentEmail = async (
       });
     }
 
-    /* ==================================================
-       GET STUDENT
-    ================================================== */
+    // ==========================================
+    // GET STUDENT
+    // ==========================================
 
     const student = await findRow(
       STUDENT_SHEET,
@@ -1137,175 +1136,52 @@ export const sendAppointmentEmail = async (
       });
     }
 
-    /* ==================================================
-       GET ALL ASSIGNED EXAMINERS
-    ================================================== */
-
-    const examiners =
-      await getAssignedExaminers(viva);
-
-    console.log(
-      "===================================="
-    );
-
-    console.log(
-      "APPOINTMENT EMAIL - CASE:",
-      caseID
-    );
-
-    console.log(
-      "ASSIGNED EXAMINERS:"
-    );
-
-    console.log(
-      examiners.map((e) => ({
-        id: e.ExaminerID,
-        name: e.ExaminerName,
-        email: e.Email,
-        type: e.ExaminerType,
-      }))
-    );
-
-    console.log(
-      "TOTAL:",
-      examiners.length
-    );
-
-    console.log(
-      "===================================="
-    );
-
-    if (examiners.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "No assigned examiner with a valid email address was found.",
-      });
-    }
-
-    /* ==================================================
-       EMAIL SUBJECT
-    ================================================== */
+    // ==========================================
+    // EMAIL SUBJECT
+    // ==========================================
 
     const subject =
       viva.EmailSubject ||
       `Appointment as ${student.Programme} Thesis Examiner`;
 
-    const template =
-      appointmentEmail();
+    const body = appointmentEmail();
 
-    /* ==================================================
-       SEND EMAIL ONE BY ONE
-    ================================================== */
+    // ==========================================
+    // SEND EMAILS
+    // ==========================================
 
-    const recipients = [];
+    const recipients =
+      await sendToAllExaminers({
+        viva,
+        student,
+        subject,
+        body,
+      });
 
-    for (const examiner of examiners) {
+    console.log(
+      "APPOINTMENT RECIPIENT RESULTS:",
+      recipients
+    );
 
-      console.log(
-        `Sending appointment email to ${examiner.ExaminerType}: ${examiner.Email}`
-      );
+    // ==========================================
+    // CHECK SUCCESSFUL EMAILS
+    // ==========================================
 
-      /* ----------------------------------------------
-         CREATE PERSONALISED EMAIL
-      ---------------------------------------------- */
-
-      const html =
-        replaceTemplate(
-          template,
-          student,
-          examiner,
-          viva
-        );
-
-      try {
-
-        await sendEmail({
-          to: examiner.Email,
-
-          cc: [
-            "norhisham_puteh@usm.my",
-            "anissyamimi@usm.my",
-          ],
-
-          subject,
-
-          html,
-        });
-
-        console.log(
-          `SUCCESS: ${examiner.Email}`
-        );
-
-        recipients.push({
-          examinerID:
-            examiner.ExaminerID,
-
-          name:
-            examiner.ExaminerName,
-
-          email:
-            examiner.Email,
-
-          type:
-            examiner.ExaminerType,
-
-          status:
-            "Sent",
-        });
-
-      } catch (err) {
-
-        console.error(
-          `FAILED: ${examiner.Email}`,
-          err
-        );
-
-        recipients.push({
-          examinerID:
-            examiner.ExaminerID,
-
-          name:
-            examiner.ExaminerName,
-
-          email:
-            examiner.Email,
-
-          type:
-            examiner.ExaminerType,
-
-          status:
-            "Failed",
-
-          error:
-            err.message,
-        });
-      }
-    }
-
-    /* ==================================================
-       COUNT RESULTS
-    ================================================== */
-
-    const sent =
+    const successfulRecipients =
       recipients.filter(
-        (r) => r.status === "Sent"
+        (recipient) =>
+          recipient.status === "Sent"
       );
 
-    const failed =
+    const failedRecipients =
       recipients.filter(
-        (r) => r.status === "Failed"
+        (recipient) =>
+          recipient.status === "Failed"
       );
 
-    /* ==================================================
-       UPDATE VIVACASES
-       
-       IMPORTANT:
-       Appointment → AppointmentEmailSent
-       Appointment → AppointmentEmailDate
-
-       DO NOT UPDATE SentDate
-    ================================================== */
+    // ==========================================
+    // FIND VIVA ROW
+    // ==========================================
 
     const rowNumber =
       await findRowNumber(
@@ -1322,62 +1198,107 @@ export const sendAppointmentEmail = async (
       });
     }
 
-   const sentDate = new Date().toISOString();
-
-await updateRow(
-  VIVA_SHEET,
-  rowNumber,
-  {
-    ...viva,
-
-    CurrentStatus:
-      "Waiting for Reports",
-
-    EmailStatus:
-      "Waiting for Reports",
-
     // ==========================================
-    // APPOINTMENT EMAIL
+    // UPDATE SHEET ONLY IF EMAIL SENT
     // ==========================================
 
-    AppointmentEmailSent:
-      "Yes",
+    if (successfulRecipients.length > 0) {
 
-    AppointmentEmailDate:
-      sentDate,
+      const sentDate =
+        new Date().toISOString();
+
+      console.log(
+        "================================="
+      );
+
+      console.log(
+        "UPDATING VIVA CASE"
+      );
+
+      console.log(
+        "CASE:",
+        caseID
+      );
+
+      console.log(
+        "ROW:",
+        rowNumber
+      );
+
+      console.log(
+        "AppointmentEmailSent:",
+        "Yes"
+      );
+
+      console.log(
+        "AppointmentEmailDate:",
+        sentDate
+      );
+
+      console.log(
+        "================================="
+      );
+
+      await updateRow(
+        VIVA_SHEET,
+        rowNumber,
+        {
+          AppointmentEmailSent:
+            "Yes",
+
+          AppointmentEmailDate:
+            sentDate,
+
+          LastUpdated:
+            sentDate,
+        }
+      );
+
+      console.log(
+        "================================="
+      );
+
+      console.log(
+        "VIVA CASE UPDATED SUCCESSFULLY"
+      );
+
+      console.log(
+        "CASE:",
+        caseID
+      );
+
+      console.log(
+        "ROW:",
+        rowNumber
+      );
+
+      console.log(
+        "================================="
+      );
+    }
 
     // ==========================================
-    // DO NOT UPDATE SentDate HERE
+    // RESPONSE
     // ==========================================
-
-    SentDate:
-      "",
-
-    LastUpdated:
-      sentDate,
-  }
-);
-    /* ==================================================
-       RESPONSE
-    ================================================== */
 
     return res.json({
-      success:
-        sent.length > 0,
+      success: true,
 
       total:
         recipients.length,
 
       sent:
-        sent.length,
+        successfulRecipients.length,
 
       failed:
-        failed.length,
+        failedRecipients.length,
 
       recipients,
 
       message:
-        `${sent.length} of ${recipients.length} appointment emails sent successfully.`,
+        failedRecipients.length === 0
+          ? "Appointment emails sent successfully."
+          : "Appointment emails processed with some failures.",
     });
 
   } catch (err) {
@@ -1390,6 +1311,7 @@ await updateRow(
     next(err);
   }
 };
+
 /* ======================================================
    SEND REMINDER
 ====================================================== */
