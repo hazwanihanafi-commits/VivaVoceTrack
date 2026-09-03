@@ -63,35 +63,12 @@ function getExaminerAddress(examiner) {
     .join("\n");
 }
 async function getAssignedExaminers(viva) {
-
   console.log("=================================");
   console.log("DEBUG getAssignedExaminers");
   console.log("CASE:", viva.CaseID);
-
-  console.log(
-    "InternalExaminer1ID:",
-    viva.InternalExaminer1ID
-  );
-
-  console.log(
-    "InternalExaminer2ID:",
-    viva.InternalExaminer2ID
-  );
-
-  console.log(
-    "ExternalExaminer1ID:",
-    viva.ExternalExaminer1ID
-  );
-
-  console.log(
-    "ExternalExaminer2ID:",
-    viva.ExternalExaminer2ID
-  );
-
   console.log("=================================");
 
   const assigned = [];
-  const usedEmails = new Set();
 
   const examinerList = [
     {
@@ -117,7 +94,6 @@ async function getAssignedExaminers(viva) {
   ];
 
   for (const item of examinerList) {
-
     console.log(
       "CHECKING:",
       item.type,
@@ -126,10 +102,7 @@ async function getAssignedExaminers(viva) {
     );
 
     if (!item.id) {
-      console.log(
-        "SKIP - NO EXAMINER ID"
-      );
-
+      console.log("SKIP - NO EXAMINER ID");
       continue;
     }
 
@@ -139,16 +112,12 @@ async function getAssignedExaminers(viva) {
       String(item.id).trim()
     );
 
-    console.log(
-      "EXAMINER RESULT:",
-      examiner
-    );
+    console.log("EXAMINER RESULT:", examiner);
 
     if (!examiner) {
       console.log(
-        `SKIP - ${item.id} NOT FOUND IN ${EXAMINER_SHEET}`
+        `SKIP - ${item.id} NOT FOUND`
       );
-
       continue;
     }
 
@@ -156,7 +125,6 @@ async function getAssignedExaminers(viva) {
       console.log(
         `SKIP - ${item.id} HAS NO EMAIL`
       );
-
       continue;
     }
 
@@ -164,16 +132,6 @@ async function getAssignedExaminers(viva) {
       String(examiner.Email)
         .trim()
         .toLowerCase();
-
-    if (usedEmails.has(email)) {
-      console.log(
-        `SKIP - DUPLICATE EMAIL: ${email}`
-      );
-
-      continue;
-    }
-
-    usedEmails.add(email);
 
     assigned.push({
       ...examiner,
@@ -189,7 +147,7 @@ async function getAssignedExaminers(viva) {
       "ADDED:",
       item.type,
       examiner.ExaminerID,
-      examiner.Email
+      email
     );
   }
 
@@ -213,7 +171,6 @@ async function getAssignedExaminers(viva) {
 
   return assigned;
 }
-
 /* ======================================================
    REPLACE EMAIL TEMPLATE
 ====================================================== */
