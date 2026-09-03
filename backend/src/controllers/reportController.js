@@ -288,16 +288,25 @@ export const getReportSubmissionInfo = async (
  * POST
  * /api/reports/panel/:panelID/upload
  *
- * IMPORTANT
- * ------------------------------------------------------
- * panelID is expected to identify the examiner/panel.
- *
- * We also accept:
- *
+ * Body:
  * caseID
  * examinerID
  *
- * from req.body.
+ * File:
+ * report
+ *
+ * Upload destination:
+ *
+ * Case Google Drive folder
+ *       │
+ *       ├── 01 - Thesis
+ *       ├── 02 - Supporting Documents
+ *       ├── 03 - Examiner Reports  <-- HERE
+ *       └── 04 - Annotated Thesis
+ *
+ * File name:
+ *
+ * VC001_EX001_Examiner_Report.pdf
  * ======================================================
  */
 export const uploadPanelReport = async (
@@ -306,13 +315,8 @@ export const uploadPanelReport = async (
   next
 ) => {
   try {
-    /**
-     * ==================================================
-     * INPUT
-     * ==================================================
-     */
-
-    const { panelID } = req.params;
+    const { panelID } =
+      req.params;
 
     const caseID =
       req.body.caseID ||
@@ -354,15 +358,16 @@ export const uploadPanelReport = async (
 
     /**
      * ==================================================
-     * GET VIVA
+     * GET VIVA CASE
      * ==================================================
      */
 
-    const viva = await findRow(
-      VIVA_SHEET,
-      "CaseID",
-      caseID
-    );
+    const viva =
+      await findRow(
+        VIVA_SHEET,
+        "CaseID",
+        caseID
+      );
 
     if (!viva) {
       return res.status(404).json({
@@ -380,37 +385,57 @@ export const uploadPanelReport = async (
 
     const assignments = [
       {
-        id: viva.InternalExaminer1ID,
-        type: "Internal Examiner 1",
+        id:
+          viva.InternalExaminer1ID,
+
+        type:
+          "Internal Examiner 1",
+
         receivedField:
           "Internal1ReportReceived",
+
         dateField:
           "Internal1ReportDate",
       },
 
       {
-        id: viva.InternalExaminer2ID,
-        type: "Internal Examiner 2",
+        id:
+          viva.InternalExaminer2ID,
+
+        type:
+          "Internal Examiner 2",
+
         receivedField:
           "Internal2ReportReceived",
+
         dateField:
           "Internal2ReportDate",
       },
 
       {
-        id: viva.ExternalExaminer1ID,
-        type: "External Examiner 1",
+        id:
+          viva.ExternalExaminer1ID,
+
+        type:
+          "External Examiner 1",
+
         receivedField:
           "External1ReportReceived",
+
         dateField:
           "External1ReportDate",
       },
 
       {
-        id: viva.ExternalExaminer2ID,
-        type: "External Examiner 2",
+        id:
+          viva.ExternalExaminer2ID,
+
+        type:
+          "External Examiner 2",
+
         receivedField:
           "External2ReportReceived",
+
         dateField:
           "External2ReportDate",
       },
@@ -419,8 +444,10 @@ export const uploadPanelReport = async (
     const assignment =
       assignments.find(
         (item) =>
-          String(item.id || "").trim() ===
-          String(examinerID).trim()
+          String(item.id || "")
+            .trim() ===
+          String(examinerID)
+            .trim()
       );
 
     if (!assignment) {
@@ -437,11 +464,12 @@ export const uploadPanelReport = async (
      * ==================================================
      */
 
-    const examiner = await findRow(
-      EXAMINER_SHEET,
-      "ExaminerID",
-      examinerID
-    );
+    const examiner =
+      await findRow(
+        EXAMINER_SHEET,
+        "ExaminerID",
+        examinerID
+      );
 
     if (!examiner) {
       return res.status(404).json({
@@ -453,76 +481,82 @@ export const uploadPanelReport = async (
 
     /**
      * ==================================================
-     * FIND PANEL
-     *
-     * Optional verification.
+     * OPTIONAL PANEL CHECK
      * ==================================================
+     *
+     * panelID is still accepted because the frontend
+     * currently sends:
+     *
+     * /api/reports/panel/:panelID/upload
+     *
+     * But the actual examiner identity comes from
+     * examinerID + VivaCases assignment.
      */
 
     let panel = null;
 
     if (panelID) {
-      panel = await findRow(
-        PANEL_SHEET,
-        "PanelID",
-        panelID
-      );
+      panel =
+        await findRow(
+          PANEL_SHEET,
+          "PanelID",
+          panelID
+        );
     }
 
     /**
      * ==================================================
-     * GET STUDENT
+     * CREATE FILE NAME
      * ==================================================
-     */
-
-    const student = await findRow(
-      STUDENT_SHEET,
-      "StudentID",
-      viva.StudentID
-    );
-
-    /**
-     * ==================================================
-     * CREATE SAFE FILE NAME
-     * ==================================================
+     *
+     * Example:
+     *
+     * VC001_EX001_Examiner_Report.pdf
      */
 
     const originalName =
-      req.file.originalname || "ExaminerReport";
+      req.file.originalname ||
+      "Examiner_Report.pdf";
 
     const extension =
       originalName.includes(".")
         ? originalName.substring(
             originalName.lastIndexOf(".")
           )
-        : "";
-
-    const safeExaminerID =
-      String(examinerID)
-        .replace(/[^a-zA-Z0-9_-]/g, "");
+        : ".pdf";
 
     const safeCaseID =
       String(caseID)
-        .replace(/[^a-zA-Z0-9_-]/g, "");
+        .replace(
+          /[^a-zA-Z0-9_-]/g,
+          ""
+        );
+
+    const safeExaminerID =
+      String(examinerID)
+        .replace(
+          /[^a-zA-Z0-9_-]/g,
+          ""
+        );
 
     const fileName =
-      `${safeCaseID}_${safeExaminerID}_ExaminerReport${extension}`;
+      `${safeCaseID}_${safeExaminerID}_Examiner_Report${extension}`;
 
     /**
      * ==================================================
-     * TARGET FOLDER
-     *
-     * VivaCases.GoogleDriveLink
-     * is the CASE ROOT folder.
-     *
-     * We need the "03 - Examiner Reports"
-     * folder inside it.
-     *
+     * CASE GOOGLE DRIVE FOLDER
      * ==================================================
+     *
+     * VivaCases.GoogleDriveLink contains:
+     *
+     * https://drive.google.com/drive/folders/...
+     *
+     * This is the ROOT CASE FOLDER.
      */
 
     const caseFolderUrl =
-      viva.GoogleDriveLink || "";
+      viva.GoogleDriveLink ||
+      "";
 
     if (!caseFolderUrl) {
       return res.status(400).json({
@@ -534,21 +568,14 @@ export const uploadPanelReport = async (
 
     /**
      * ==================================================
-     * UPLOAD TO GOOGLE DRIVE
+     * UPLOAD
      * ==================================================
      *
-     * IMPORTANT:
+     * googleDriveService will:
      *
-     * This assumes googleDriveService.js supports:
-     *
-     * uploadFileToDrive({
-     *   fileBuffer,
-     *   fileName,
-     *   mimeType,
-     *   parentFolderUrl,
-     *   childFolderName
-     * })
-     *
+     * 1. Read Case root folder
+     * 2. Find "03 - Examiner Reports"
+     * 3. Upload the file there
      */
 
     const driveResult =
@@ -596,9 +623,21 @@ export const uploadPanelReport = async (
       new Date().toISOString();
 
     /**
-     * Build update without replacing
-     * the entire row.
+     * Only update the examiner's own
+     * report field.
+     *
+     * EX001 =
+     * Internal1ReportReceived
+     *
+     * EX002 =
+     * Internal2ReportReceived
+     *
+     * EX003 =
+     * External1ReportReceived
+     *
+     * etc.
      */
+
     const updateData = {
       [assignment.receivedField]:
         "Yes",
@@ -606,15 +645,60 @@ export const uploadPanelReport = async (
       [assignment.dateField]:
         submissionDate,
 
-      CurrentStatus:
-        "Report Received",
-
-      EmailStatus:
-        "Report Received",
-
       LastUpdated:
         submissionDate,
     };
+
+    /**
+     * If ALL required examiner reports
+     * have now been received, mark the
+     * case accordingly.
+     */
+
+    const updatedViva = {
+      ...viva,
+      ...updateData,
+    };
+
+    const requiredAssignments =
+      assignments.filter(
+        (item) => item.id
+      );
+
+    const allReportsReceived =
+      requiredAssignments.every(
+        (item) => {
+          const value =
+            updatedViva[
+              item.receivedField
+            ];
+
+          return [
+            "yes",
+            "true",
+            "received",
+            "submitted",
+          ].includes(
+            String(value || "")
+              .trim()
+              .toLowerCase()
+          );
+        }
+      );
+
+    if (allReportsReceived) {
+      updateData.CurrentStatus =
+        "All Reports Received";
+
+      updateData.EmailStatus =
+        "All Reports Received";
+    } else {
+      updateData.CurrentStatus =
+        "Report Received";
+
+      updateData.EmailStatus =
+        "Report Received";
+    }
 
     await updateRow(
       VIVA_SHEET,
@@ -634,26 +718,45 @@ export const uploadPanelReport = async (
       message:
         "Examiner report submitted successfully.",
 
-      caseID,
+      data: {
+        CaseID:
+          caseID,
 
-      examinerID,
+        ExaminerID:
+          examinerID,
 
-      examinerType:
-        assignment.type,
+        ExaminerName:
+          examiner.ExaminerName || "",
 
-      fileName,
+        ExaminerType:
+          assignment.type,
 
-      reportField:
-        assignment.receivedField,
+        PanelID:
+          panelID || "",
 
-      reportDateField:
-        assignment.dateField,
+        ReportReceived:
+          "Yes",
 
-      submittedAt:
-        submissionDate,
+        ReportUploadedDate:
+          submissionDate,
 
-      drive: driveResult || null,
+        ReportFileName:
+          fileName,
+
+        ReportFileURL:
+          driveResult.webViewLink ||
+          "",
+
+        GoogleDriveFileID:
+          driveResult.id ||
+          "",
+
+        TargetFolderID:
+          driveResult.folderId ||
+          "",
+      },
     });
+
   } catch (err) {
     console.error(
       "UPLOAD EXAMINER REPORT ERROR:",
