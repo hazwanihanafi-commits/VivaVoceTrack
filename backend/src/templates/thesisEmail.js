@@ -85,7 +85,7 @@ Report Due Date
 
 
 <!-- =====================================================
-     THESIS
+     THESIS & SUPPORTING DOCUMENTS
 ====================================================== -->
 
 <div style="
@@ -146,7 +146,7 @@ Important Information
 
 Please complete the
 <strong>Acknowledgement of Receipt</strong>
-using the link below:
+using the link below.
 
 <br><br>
 
@@ -197,32 +197,32 @@ font-weight:bold;
 
 
 <!-- =====================================================
-     REPORT SUBMISSION BUTTON
+     REPORT SUBMISSION
 ====================================================== -->
 
-<li style="margin-top:15px;">
+<li style="margin-top:20px;">
 
-After completing the examiner report, please submit it using the
-secure submission link below.
+Please complete and submit your
+<strong>Thesis Examiner's Report</strong>
+using the secure submission link below.
 
 <br><br>
 
 <div style="
-padding:18px;
+padding:20px;
 background:#F7F4FC;
+border:1px solid #E0D8ED;
 border-radius:8px;
-text-align:center;
 ">
 
-<p style="
-margin-top:0;
-font-weight:bold;
-color:#5B2C90;
-">
+<p style="margin-top:0;line-height:1.7;">
 
-📤 Submit Your Examiner's Report
+Your report will be securely associated with this Viva case
+and your examiner ID.
 
 </p>
+
+<p style="text-align:center;margin:20px 0;">
 
 <a
 href="{{ReportSubmissionLink}}"
@@ -237,17 +237,20 @@ font-weight:bold;
 text-decoration:none;
 ">
 
-Submit Examiner's Report
+📤 Submit Examiner's Report
 
 </a>
+
+</p>
 
 <p style="
 font-size:12px;
 color:#777;
 margin-bottom:0;
+text-align:center;
 ">
 
-This link is unique to you and this Viva case.
+This submission link is unique to you and this Viva case.
 
 </p>
 
@@ -260,7 +263,7 @@ This link is unique to you and this Viva case.
      ANNOTATED THESIS
 ====================================================== -->
 
-<li style="margin-top:15px;">
+<li style="margin-top:20px;">
 
 Please upload your
 <strong>Annotated Thesis</strong>
@@ -268,22 +271,7 @@ using the secure submission link below.
 
 <br><br>
 
-<div style="
-padding:18px;
-background:#F7F4FC;
-border-radius:8px;
-text-align:center;
-">
-
-<p style="
-margin-top:0;
-font-weight:bold;
-color:#5B2C90;
-">
-
-📝 Upload Annotated Thesis
-
-</p>
+<p style="text-align:center;margin:20px 0;">
 
 <a
 href="{{AnnotatedThesisUploadLink}}"
@@ -298,21 +286,21 @@ font-weight:bold;
 text-decoration:none;
 ">
 
-Upload Annotated Thesis
+📎 Upload Annotated Thesis
 
 </a>
+
+</p>
 
 <p style="
 font-size:12px;
 color:#777;
-margin-bottom:0;
+text-align:center;
 ">
 
-This link is unique to you and this Viva case.
+This submission link is unique to you and this Viva case.
 
 </p>
-
-</div>
 
 </li>
 
