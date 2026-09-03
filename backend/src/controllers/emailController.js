@@ -62,11 +62,34 @@ function getExaminerAddress(examiner) {
     )
     .join("\n");
 }
-/* ======================================================
-   GET ASSIGNED EXAMINERS
-====================================================== */
-
 async function getAssignedExaminers(viva) {
+
+  console.log("=================================");
+  console.log("DEBUG getAssignedExaminers");
+  console.log("CASE:", viva.CaseID);
+
+  console.log(
+    "InternalExaminer1ID:",
+    viva.InternalExaminer1ID
+  );
+
+  console.log(
+    "InternalExaminer2ID:",
+    viva.InternalExaminer2ID
+  );
+
+  console.log(
+    "ExternalExaminer1ID:",
+    viva.ExternalExaminer1ID
+  );
+
+  console.log(
+    "ExternalExaminer2ID:",
+    viva.ExternalExaminer2ID
+  );
+
+  console.log("=================================");
+
   const assigned = [];
   const usedEmails = new Set();
 
@@ -94,29 +117,99 @@ async function getAssignedExaminers(viva) {
   ];
 
   for (const item of examinerList) {
-    if (!item.id) continue;
+
+    console.log(
+      "CHECKING:",
+      item.type,
+      "ID:",
+      item.id
+    );
+
+    if (!item.id) {
+      console.log(
+        "SKIP - NO EXAMINER ID"
+      );
+
+      continue;
+    }
 
     const examiner = await findRow(
       EXAMINER_SHEET,
       "ExaminerID",
-      item.id
+      String(item.id).trim()
     );
 
-    if (!examiner) continue;
-    if (!examiner.Email) continue;
+    console.log(
+      "EXAMINER RESULT:",
+      examiner
+    );
 
-    const email = String(examiner.Email).trim().toLowerCase();
+    if (!examiner) {
+      console.log(
+        `SKIP - ${item.id} NOT FOUND IN ${EXAMINER_SHEET}`
+      );
 
-    if (usedEmails.has(email)) continue;
+      continue;
+    }
+
+    if (!examiner.Email) {
+      console.log(
+        `SKIP - ${item.id} HAS NO EMAIL`
+      );
+
+      continue;
+    }
+
+    const email =
+      String(examiner.Email)
+        .trim()
+        .toLowerCase();
+
+    if (usedEmails.has(email)) {
+      console.log(
+        `SKIP - DUPLICATE EMAIL: ${email}`
+      );
+
+      continue;
+    }
 
     usedEmails.add(email);
 
     assigned.push({
       ...examiner,
-      ExaminerType: item.type,
-      ReportField: item.reportField,
+
+      ExaminerType:
+        item.type,
+
+      ReportField:
+        item.reportField,
     });
+
+    console.log(
+      "ADDED:",
+      item.type,
+      examiner.ExaminerID,
+      examiner.Email
+    );
   }
+
+  console.log("=================================");
+  console.log(
+    "FINAL ASSIGNED EXAMINERS:",
+    assigned.map((e) => ({
+      id: e.ExaminerID,
+      name: e.ExaminerName,
+      email: e.Email,
+      type: e.ExaminerType,
+    }))
+  );
+
+  console.log(
+    "FINAL TOTAL:",
+    assigned.length
+  );
+
+  console.log("=================================");
 
   return assigned;
 }
