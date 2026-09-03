@@ -1102,6 +1102,11 @@ export const sendAppointmentEmail = async (
   try {
     const caseID = req.params.id;
 
+    console.log("=================================");
+    console.log("SEND APPOINTMENT EMAIL");
+    console.log("CaseID:", caseID);
+    console.log("=================================");
+
     // ==========================================
     // GET VIVA CASE
     // ==========================================
@@ -1119,6 +1124,8 @@ export const sendAppointmentEmail = async (
       });
     }
 
+    console.log("VIVA FOUND:", viva);
+
     // ==========================================
     // GET STUDENT
     // ==========================================
@@ -1135,6 +1142,8 @@ export const sendAppointmentEmail = async (
         message: "Student not found.",
       });
     }
+
+    console.log("STUDENT FOUND:", student.StudentName);
 
     // ==========================================
     // EMAIL SUBJECT
@@ -1160,7 +1169,7 @@ export const sendAppointmentEmail = async (
 
     console.log(
       "APPOINTMENT RECIPIENT RESULTS:",
-      recipients
+      JSON.stringify(recipients, null, 2)
     );
 
     // ==========================================
@@ -1170,14 +1179,28 @@ export const sendAppointmentEmail = async (
     const successfulRecipients =
       recipients.filter(
         (recipient) =>
-          recipient.status === "Sent"
+          String(recipient.status)
+            .trim()
+            .toLowerCase() === "sent"
       );
 
     const failedRecipients =
       recipients.filter(
         (recipient) =>
-          recipient.status === "Failed"
+          String(recipient.status)
+            .trim()
+            .toLowerCase() === "failed"
       );
+
+    console.log(
+      "SUCCESSFUL RECIPIENT COUNT:",
+      successfulRecipients.length
+    );
+
+    console.log(
+      "FAILED RECIPIENT COUNT:",
+      failedRecipients.length
+    );
 
     // ==========================================
     // FIND VIVA ROW
@@ -1190,6 +1213,11 @@ export const sendAppointmentEmail = async (
         caseID
       );
 
+    console.log(
+      "VIVA ROW NUMBER:",
+      rowNumber
+    );
+
     if (rowNumber === -1) {
       return res.status(404).json({
         success: false,
@@ -1198,31 +1226,75 @@ export const sendAppointmentEmail = async (
       });
     }
 
-        // ==========================================
-    // UPDATE SHEET ONLY IF EMAIL SENT
+    // ==========================================
+    // UPDATE SHEET IF EMAIL SENT
     // ==========================================
 
     if (successfulRecipients.length > 0) {
 
-      const sentDate = new Date().toISOString();
+      const sentDate =
+        new Date().toISOString();
+
+      const updateData = {
+        AppointmentEmailSent: "Yes",
+        AppointmentEmailDate: sentDate,
+        LastUpdated: sentDate,
+      };
+
+      console.log(
+        "UPDATING VIVACASES:",
+        {
+          rowNumber,
+          caseID,
+          updateData,
+        }
+      );
 
       await updateRow(
         VIVA_SHEET,
         rowNumber,
-        {
-          AppointmentEmailSent: "Yes",
-          AppointmentEmailDate: sentDate,
-          LastUpdated: sentDate,
-        }
+        updateData
       );
 
       console.log(
-        "✅ Appointment email status updated in VivaCases:",
+        "✅ APPOINTMENT STATUS UPDATED"
+      );
+
+      // ==========================================
+      // VERIFY AFTER UPDATE
+      // ==========================================
+
+      const verifyViva =
+        await findRow(
+          VIVA_SHEET,
+          "CaseID",
+          caseID
+        );
+
+      console.log(
+        "VERIFY SHEET AFTER UPDATE:",
         {
-          CaseID: caseID,
-          AppointmentEmailSent: "Yes",
-          AppointmentEmailDate: sentDate,
+          CaseID:
+            verifyViva?.CaseID,
+
+          AppointmentEmailSent:
+            verifyViva?.AppointmentEmailSent,
+
+          AppointmentEmailDate:
+            verifyViva?.AppointmentEmailDate,
+
+          LastUpdated:
+            verifyViva?.LastUpdated,
         }
+      );
+    } else {
+
+      console.log(
+        "⚠️ NO SUCCESSFUL APPOINTMENT EMAIL."
+      );
+
+      console.log(
+        "SHEET WILL NOT BE UPDATED."
       );
     }
 
@@ -1231,15 +1303,24 @@ export const sendAppointmentEmail = async (
     // ==========================================
 
     return res.json({
-      success: true,
-      total: recipients.length,
-      successful: successfulRecipients.length,
-      failed: failedRecipients.length,
+      success:
+        successfulRecipients.length > 0,
+
+      total:
+        recipients.length,
+
+      successful:
+        successfulRecipients.length,
+
+      failed:
+        failedRecipients.length,
+
       recipients,
+
       message:
         successfulRecipients.length > 0
-          ? "Appointment emails sent successfully."
-          : "No appointment emails were sent.",
+          ? "Appointment emails sent successfully and sheet updated."
+          : "No appointment emails were sent. Sheet was not updated.",
     });
 
   } catch (err) {
