@@ -1,90 +1,62 @@
 import express from "express";
-
 import multer from "multer";
 
 import {
   getReports,
   getReport,
-  getReportSubmissionInfo,
   uploadPanelReport,
   approveReport,
+  getReportSubmissionInfo,
 } from "../controllers/reportController.js";
 
-const router =
-  express.Router();
-
+const router = express.Router();
 
 /**
  * ======================================================
  * MULTER
  * ======================================================
- *
- * Files are kept temporarily in memory.
- *
- * They are immediately uploaded
- * to Google Drive.
+ * Files are temporarily stored in memory.
+ * They will be uploaded directly to Google Drive.
  */
-const upload =
-  multer({
-    storage:
-      multer.memoryStorage(),
+const upload = multer({
+  storage: multer.memoryStorage(),
 
-    limits: {
-      fileSize:
-        20 * 1024 * 1024,
-    },
+  limits: {
+    fileSize: 20 * 1024 * 1024, // 20 MB
+  },
 
-    fileFilter:
-      (
-        req,
-        file,
-        cb
-      ) => {
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
 
-        const allowedTypes = [
-          "application/pdf",
-
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        ];
-
-        if (
-          allowedTypes.includes(
-            file.mimetype
-          )
-        ) {
-          cb(
-            null,
-            true
-          );
-        }
-
-        else {
-          cb(
-            new Error(
-              "Only PDF and DOCX files are allowed."
-            )
-          );
-        }
-      },
-  });
-
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(
+        new Error(
+          "Only PDF and DOCX files are allowed."
+        )
+      );
+    }
+  },
+});
 
 /**
  * ======================================================
  * REPORT SUBMISSION INFO
  *
- * GET
+ * GET /api/reports/submit-info
+ *
+ * Example:
  * /api/reports/submit-info?caseID=VC001&examinerID=EX001
  * ======================================================
- *
- * IMPORTANT:
- * This route MUST appear before /:id
  */
 router.get(
   "/submit-info",
   getReportSubmissionInfo
 );
-
 
 /**
  * ======================================================
@@ -98,16 +70,14 @@ router.get(
   getReports
 );
 
-
 /**
  * ======================================================
- * UPLOAD REPORT
+ * UPLOAD EXAMINER REPORT
  *
- * POST
- * /api/reports/panel/:panelID/upload
+ * POST /api/reports/panel/:panelID/upload
  *
- * Form field:
- * report
+ * Form-data:
+ * report = PDF/DOCX
  * ======================================================
  */
 router.post(
@@ -115,7 +85,6 @@ router.post(
   upload.single("report"),
   uploadPanelReport
 );
-
 
 /**
  * ======================================================
@@ -129,7 +98,6 @@ router.get(
   getReport
 );
 
-
 /**
  * ======================================================
  * APPROVE REPORT
@@ -141,6 +109,5 @@ router.put(
   "/:id/approve",
   approveReport
 );
-
 
 export default router;
