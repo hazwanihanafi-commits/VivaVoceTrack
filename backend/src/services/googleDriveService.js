@@ -9,7 +9,6 @@ import { Readable } from "stream";
 const getGoogleAuth = () => {
   let credentials = null;
 
-  // GOOGLE_SERVICE_ACCOUNT = full JSON
   if (process.env.GOOGLE_SERVICE_ACCOUNT) {
     try {
       credentials = JSON.parse(
@@ -23,7 +22,6 @@ const getGoogleAuth = () => {
     }
   }
 
-  // Separate environment variables
   if (!credentials) {
     credentials = {
       client_email:
@@ -76,228 +74,155 @@ const getDrive = async () => {
  * EXTRACT GOOGLE DRIVE FOLDER ID
  * ======================================================
  */
-function extractFolderId(folderUrlOrId) {
-  if (!folderUrlOrId) {
-    return "";
+function extractFolderId(folderUrl) {
+  if (!folderUrl) {
+    throw new Error(
+      "Google Drive folder URL is required."
+    );
   }
 
-  const value = String(folderUrlOrId).trim();
-
-  // Already an ID
-  if (
-    !value.startsWith("http://") &&
-    !value.startsWith("https://")
-  ) {
-    return value;
-  }
-
-  // /folders/FOLDER_ID
-  const folderMatch = value.match(
+  const match = String(folderUrl).match(
     /\/folders\/([a-zA-Z0-9_-]+)/
   );
 
-  if (folderMatch?.[1]) {
-    return folderMatch[1];
+  if (match?.[1]) {
+    return match[1];
   }
 
-  // ?id=FOLDER_ID
-  const idMatch = value.match(
+  const openIdMatch = String(folderUrl).match(
     /[?&]id=([a-zA-Z0-9_-]+)/
   );
 
-  if (idMatch?.[1]) {
-    return idMatch[1];
+  if (openIdMatch?.[1]) {
+    return openIdMatch[1];
   }
 
-  return "";
+  // Allow direct folder ID
+  if (
+    /^[a-zA-Z0-9_-]+$/.test(
+      String(folderUrl).trim()
+    )
+  ) {
+    return String(folderUrl).trim();
+  }
+
+  throw new Error(
+    "Invalid Google Drive folder URL."
+  );
 }
 
 /**
  * ======================================================
  * FIND CHILD FOLDER
- *
- * Example:
- *
- * Case Folder
- * ├── 01 - Thesis
- * ├── 02 - Supporting Documents
- * ├── 03 - Examiner Reports   <-- target
- * └── 04 - Annotated Thesis
  * ======================================================
  */
-const findChildFolder = async (
+async function findChildFolder(
   drive,
   parentFolderId,
   childFolderName
-) => {
-  const escapedName =
-    String(childFolderName)
-      .replace(/'/g, "\\'");
-
+) {
   const response =
     await drive.files.list({
       q: [
         `'${parentFolderId}' in parents`,
-        `name = '${escapedName}'`,
+        `name = '${childFolderName}'`,
         "mimeType = 'application/vnd.google-apps.folder'",
         "trashed = false",
       ].join(" and "),
 
       fields:
-        "files(id,name,parents,webViewLink)",
+        "files(id,name,parents)",
 
       spaces: "drive",
 
-      includeItemsFromAllDrives: true,
-
       supportsAllDrives: true,
+
+      includeItemsFromAllDrives: true,
     });
 
   return response.data.files?.[0] || null;
-};
+}
 
 /**
  * ======================================================
- * UPLOAD FILE TO GOOGLE DRIVE
+ * UPLOAD FILE TO CASE SUBFOLDER
  *
- * Supports:
+ * Example:
  *
- * uploadFileToDrive({
- *   buffer,
- *   originalName,
- *   mimeType,
- *   folderId
- * })
+ * Case folder
+ *    │
+ *    ├── 01 - Thesis
+ *    ├── 02 - Supporting Documents
+ *    ├── 03 - Examiner Reports
+ *    └── 04 - Annotated Thesis
  *
- * OR:
- *
- * uploadFileToDrive({
- *   fileBuffer,
- *   fileName,
- *   mimeType,
- *   parentFolderUrl,
- *   childFolderName
- * })
- *
- * This lets old code continue working while the
- * examiner report upload uses the case folder.
  * ======================================================
  */
 export const uploadFileToDrive = async ({
   buffer,
   originalName,
-
-  // New/alternative parameter names
-  fileBuffer,
-  fileName,
-
   mimeType,
-
-  // Direct folder ID
-  folderId,
-
-  // Case root folder URL
   parentFolderUrl,
-
-  // Example: "03 - Examiner Reports"
   childFolderName,
 }) => {
-  const actualBuffer =
-    buffer || fileBuffer;
-
-  const actualName =
-    originalName || fileName;
-
-  if (!actualBuffer) {
+  if (!buffer) {
     throw new Error(
       "No file buffer received."
     );
   }
 
-  if (!actualName) {
+  if (!parentFolderUrl) {
     throw new Error(
-      "No file name received."
+      "Google Drive case folder is required."
+    );
+  }
+
+  if (!childFolderName) {
+    throw new Error(
+      "Google Drive child folder name is required."
     );
   }
 
   const drive = await getDrive();
 
   /**
-   * ====================================================
-   * DETERMINE TARGET FOLDER
-   * ====================================================
+   * ROOT CASE FOLDER
    */
-
-  let targetFolderId =
-    folderId || "";
+  const parentFolderId =
+    extractFolderId(
+      parentFolderUrl
+    );
 
   /**
-   * If parentFolderUrl is supplied,
-   * extract the Case root folder ID.
+   * FIND:
+   *
+   * 03 - Examiner Reports
    */
-  if (
-    !targetFolderId &&
-    parentFolderUrl
-  ) {
-    const parentFolderId =
-      extractFolderId(
-        parentFolderUrl
-      );
+  const childFolder =
+    await findChildFolder(
+      drive,
+      parentFolderId,
+      childFolderName
+    );
 
-    if (!parentFolderId) {
-      throw new Error(
-        "Unable to extract Google Drive folder ID."
-      );
-    }
-
-    /**
-     * If child folder is requested,
-     * find it inside the case folder.
-     */
-    if (childFolderName) {
-      const childFolder =
-        await findChildFolder(
-          drive,
-          parentFolderId,
-          childFolderName
-        );
-
-      if (!childFolder?.id) {
-        throw new Error(
-          `Google Drive folder "${childFolderName}" was not found inside the case folder.`
-        );
-      }
-
-      targetFolderId =
-        childFolder.id;
-    } else {
-      targetFolderId =
-        parentFolderId;
-    }
-  }
-
-  if (!targetFolderId) {
+  if (!childFolder?.id) {
     throw new Error(
-      "Google Drive target folder is not configured."
+      `Google Drive folder "${childFolderName}" was not found inside the case folder.`
     );
   }
 
   /**
    * ====================================================
-   * FILE METADATA
+   * FILE
    * ====================================================
    */
 
   const fileMetadata = {
-    name: actualName,
-    parents: [targetFolderId],
+    name: originalName,
+    parents: [
+      childFolder.id,
+    ],
   };
-
-  /**
-   * ====================================================
-   * FILE MEDIA
-   * ====================================================
-   */
 
   const media = {
     mimeType:
@@ -305,7 +230,7 @@ export const uploadFileToDrive = async ({
       "application/octet-stream",
 
     body:
-      Readable.from(actualBuffer),
+      Readable.from(buffer),
   };
 
   /**
@@ -336,12 +261,6 @@ export const uploadFileToDrive = async ({
     );
   }
 
-  /**
-   * ====================================================
-   * RETURN
-   * ====================================================
-   */
-
   return {
     id:
       file.id,
@@ -363,6 +282,9 @@ export const uploadFileToDrive = async ({
       file.webContentLink || "",
 
     folderId:
-      targetFolderId,
+      childFolder.id,
+
+    folderName:
+      childFolder.name,
   };
 };
