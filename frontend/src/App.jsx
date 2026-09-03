@@ -11,6 +11,7 @@ import Reports from "./pages/Reports";
 import Acknowledgement from "./pages/Acknowledgement";
 import PanelResponse from "./pages/PanelResponse";
 import ReportSubmission from "./pages/ReportSubmission";
+import AnnotatedThesis from "./pages/AnnotatedThesis";
 
 export default function App() {
   return (
@@ -67,6 +68,11 @@ export default function App() {
           path="/reports"
           element={<Reports />}
         />
+
+        <Route
+  path="/annotated-thesis"
+  element={<AnnotatedThesis />}
+/>
 
         <Route
           path="/acknowledgement"
