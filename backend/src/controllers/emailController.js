@@ -1199,23 +1199,32 @@ export const sendAppointmentEmail = async (
     }
 
     // ==========================================
-    // UPDATE SHEET ONLY IF EMAIL SENT
-    // ==========================================
+// UPDATE SHEET ONLY IF EMAIL SENT
+// ==========================================
 
-    if (successfulRecipients.length > 0) {
+if (successfulRecipients.length > 0) {
 
-      const sentDate = new Date().toISOString();
+  const sentDate = new Date().toISOString();
 
-await updateRow(
-  VIVA_SHEET,
-  rowNumber,
-  {
-    AppointmentEmailSent: "Yes",
-    AppointmentEmailDate: sentDate,
-    LastUpdated: sentDate,
-  }
-);
+  await updateRow(
+    VIVA_SHEET,
+    rowNumber,
+    {
+      AppointmentEmailSent: "Yes",
+      AppointmentEmailDate: sentDate,
+      LastUpdated: sentDate,
+    }
+  );
 
+  console.log(
+    "✅ Appointment email status updated in VivaCases:",
+    {
+      CaseID: caseID,
+      AppointmentEmailSent: "Yes",
+      AppointmentEmailDate: sentDate,
+    }
+  );
+}
 /* ======================================================
    SEND REMINDER
 ====================================================== */
