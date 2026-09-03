@@ -116,6 +116,7 @@ export default function Sidebar() {
 
           <div>
             <h4 className="font-semibold">
+              Developed by Assoc Prof Dr Hazwani Ahmad Yusof@Hanafi, PKTAAB, USM 
               Administrator
             </h4>
 
