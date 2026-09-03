@@ -230,27 +230,21 @@ export async function updateRow(
   /**
    * Build updated row
    */
-  const values = headers.map(
-    (header, index) => {
-      /**
-       * If data contains this field,
-       * use new value.
-       */
-      if (
-        Object.prototype.hasOwnProperty.call(
-          data,
-          header
-        )
-      ) {
-        return data[header] ?? "";
-      }
+  const values = headers.map((header, index) => {
 
-      /**
-       * Otherwise preserve existing value.
-       */
-      return existingValues[index] ?? "";
-    }
+  const cleanHeader = String(header).trim();
+
+  const dataKey = Object.keys(data).find(
+    (key) =>
+      String(key).trim() === cleanHeader
   );
+
+  if (dataKey !== undefined) {
+    return data[dataKey] ?? "";
+  }
+
+  return existingValues[index] ?? "";
+});
 
   /**
    * Save row
