@@ -1100,6 +1100,16 @@ export const sendAppointmentEmail = async (
         caseID
       );
 
+    if (rowNumber === -1) {
+      return res.status(404).json({
+        success: false,
+        message: "Viva case row not found.",
+      });
+    }
+
+    const sentDate =
+      new Date().toISOString();
+
     await updateRow(
       VIVA_SHEET,
       rowNumber,
@@ -1116,13 +1126,10 @@ export const sendAppointmentEmail = async (
           "Yes",
 
         AppointmentEmailDate:
-          new Date().toISOString(),
-
-        SentDate:
-          new Date().toISOString(),
+          sentDate,
 
         LastUpdated:
-          new Date().toISOString(),
+          sentDate,
       }
     );
 
@@ -1133,11 +1140,16 @@ export const sendAppointmentEmail = async (
       message:
         "Appointment emails sent successfully.",
     });
+
   } catch (err) {
+    console.error(
+      "SEND APPOINTMENT EMAIL ERROR:",
+      err
+    );
+
     next(err);
   }
 };
-
 /* ======================================================
    SEND REMINDER
 ====================================================== */
