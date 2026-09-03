@@ -1198,38 +1198,71 @@ export const sendAppointmentEmail = async (
       });
     }
 
+        // ==========================================
+    // UPDATE SHEET ONLY IF EMAIL SENT
     // ==========================================
-// UPDATE SHEET ONLY IF EMAIL SENT
-// ==========================================
 
-if (successfulRecipients.length > 0) {
+    if (successfulRecipients.length > 0) {
 
-  const sentDate = new Date().toISOString();
+      const sentDate = new Date().toISOString();
 
-  await updateRow(
-    VIVA_SHEET,
-    rowNumber,
-    {
-      AppointmentEmailSent: "Yes",
-      AppointmentEmailDate: sentDate,
-      LastUpdated: sentDate,
+      await updateRow(
+        VIVA_SHEET,
+        rowNumber,
+        {
+          AppointmentEmailSent: "Yes",
+          AppointmentEmailDate: sentDate,
+          LastUpdated: sentDate,
+        }
+      );
+
+      console.log(
+        "✅ Appointment email status updated in VivaCases:",
+        {
+          CaseID: caseID,
+          AppointmentEmailSent: "Yes",
+          AppointmentEmailDate: sentDate,
+        }
+      );
     }
-  );
 
-  console.log(
-    "✅ Appointment email status updated in VivaCases:",
-    {
-      CaseID: caseID,
-      AppointmentEmailSent: "Yes",
-      AppointmentEmailDate: sentDate,
-    }
-  );
+    // ==========================================
+    // RETURN RESPONSE
+    // ==========================================
 
-}
+    return res.json({
+      success: true,
+      total: recipients.length,
+      successful: successfulRecipients.length,
+      failed: failedRecipients.length,
+      recipients,
+      message:
+        successfulRecipients.length > 0
+          ? "Appointment emails sent successfully."
+          : "No appointment emails were sent.",
+    });
+
+  } catch (err) {
+
+    console.error(
+      "SEND APPOINTMENT EMAIL ERROR:",
+      err
+    );
+
+    next(err);
+  }
+};
+
 
 /* ======================================================
    SEND REMINDER
 ====================================================== */
+
+export const sendReminderEmail = async (
+  req,
+  res,
+  next
+) => {
 
 export const sendReminderEmail = async (
   req,
