@@ -1322,36 +1322,41 @@ export const sendAppointmentEmail = async (
       });
     }
 
-    const sentDate =
-      new Date().toISOString();
+   const sentDate = new Date().toISOString();
 
-    await updateRow(
-      VIVA_SHEET,
-      rowNumber,
-      {
-        ...viva,
+await updateRow(
+  VIVA_SHEET,
+  rowNumber,
+  {
+    ...viva,
 
-        CurrentStatus:
-          "Waiting for Reports",
+    CurrentStatus:
+      "Waiting for Reports",
 
-        EmailStatus:
-          "Waiting for Reports",
+    EmailStatus:
+      "Waiting for Reports",
 
-        AppointmentEmailSent:
-          sent.length > 0
-            ? "Yes"
-            : "No",
+    // ==========================================
+    // APPOINTMENT EMAIL
+    // ==========================================
 
-        AppointmentEmailDate:
-          sent.length > 0
-            ? sentDate
-            : "",
+    AppointmentEmailSent:
+      "Yes",
 
-        LastUpdated:
-          sentDate,
-      }
-    );
+    AppointmentEmailDate:
+      sentDate,
 
+    // ==========================================
+    // DO NOT UPDATE SentDate HERE
+    // ==========================================
+
+    SentDate:
+      "",
+
+    LastUpdated:
+      sentDate,
+  }
+);
     /* ==================================================
        RESPONSE
     ================================================== */
