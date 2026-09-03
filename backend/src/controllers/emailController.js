@@ -1223,8 +1223,7 @@ if (successfulRecipients.length > 0) {
       AppointmentEmailSent: "Yes",
       AppointmentEmailDate: sentDate,
     }
-
-   );
+  );
 
 }
 
@@ -1237,6 +1236,7 @@ export const sendReminderEmail = async (
   res,
   next
 ) => {
+  
   try {
     const caseID = req.params.id;
 
