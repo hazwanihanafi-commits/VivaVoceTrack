@@ -577,23 +577,23 @@ export const uploadPanelReport = async (
      * 2. Find "03 - Examiner Reports"
      * 3. Upload the file there
      */
+const driveResult =
+  await uploadFileToDrive({
+    buffer:
+      req.file.buffer,
 
-    const driveResult =
-      await uploadFileToDrive({
-        fileBuffer:
-          req.file.buffer,
+    originalName:
+      fileName,
 
-        fileName,
+    mimeType:
+      req.file.mimetype,
 
-        mimeType:
-          req.file.mimetype,
+    parentFolderUrl:
+      caseFolderUrl,
 
-        parentFolderUrl:
-          caseFolderUrl,
-
-        childFolderName:
-          "03 - Examiner Reports",
-      });
+    childFolderName:
+      "03 - Examiner Reports",
+  });
 
     /**
      * ==================================================
