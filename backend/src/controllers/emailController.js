@@ -1223,8 +1223,11 @@ if (successfulRecipients.length > 0) {
       AppointmentEmailSent: "Yes",
       AppointmentEmailDate: sentDate,
     }
-  );
+
+   );
+
 }
+
 /* ======================================================
    SEND REMINDER
 ====================================================== */
