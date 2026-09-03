@@ -31,7 +31,7 @@ const EXAMINER_SHEET = "Examiner";
 // Every day at 8:00 AM
 // ======================================================
 
-cron.schedule("0 8 * * *", async () => {
+cron.schedule("* * * * *", async () => {
 
   console.log("");
   console.log("==============================================");
