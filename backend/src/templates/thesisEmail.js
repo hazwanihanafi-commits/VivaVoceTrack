@@ -84,6 +84,10 @@ Report Due Date
 </table>
 
 
+<!-- =====================================================
+     THESIS
+====================================================== -->
+
 <div style="
 margin-top:25px;
 padding:20px;
@@ -128,6 +132,10 @@ The password to open the thesis PDF is your matric number:
 </div>
 
 
+<!-- =====================================================
+     IMPORTANT INFORMATION
+====================================================== -->
+
 <h3 style="color:#5B2C90;margin-top:30px;">
 Important Information
 </h3>
@@ -135,72 +143,207 @@ Important Information
 <ol style="line-height:1.8;">
 
 <li>
+
 Please complete the
 <strong>Acknowledgement of Receipt</strong>
 using the link below:
+
 <br><br>
 
 <a
 href="{{AcknowledgementLink}}"
 target="_blank"
-style="color:#5B2C90;font-weight:bold;"
->
+style="
+color:#5B2C90;
+font-weight:bold;
+">
+
 Complete Acknowledgement of Receipt
+
 </a>
 
 </li>
 
 
 <li style="margin-top:15px;">
+
 Please complete and submit the
 <strong>Thesis Examiner's Report</strong>
 by
 <strong>{{ReportDueDate}}</strong>.
+
 </li>
 
 
 <li style="margin-top:15px;">
+
 The examiner report template is available here:
+
 <br><br>
 
 <a
 href="{{ExaminerReportLink}}"
 target="_blank"
-style="color:#5B2C90;font-weight:bold;"
->
+style="
+color:#5B2C90;
+font-weight:bold;
+">
+
 📄 Download Examiner's Report Template
+
 </a>
 
 </li>
 
 
+<!-- =====================================================
+     REPORT SUBMISSION BUTTON
+====================================================== -->
+
 <li style="margin-top:15px;">
-Please upload the completed examiner report and annotated thesis
-to the same case folder provided above.
+
+After completing the examiner report, please submit it using the
+secure submission link below.
+
+<br><br>
+
+<div style="
+padding:18px;
+background:#F7F4FC;
+border-radius:8px;
+text-align:center;
+">
+
+<p style="
+margin-top:0;
+font-weight:bold;
+color:#5B2C90;
+">
+
+📤 Submit Your Examiner's Report
+
+</p>
+
+<a
+href="{{ReportSubmissionLink}}"
+target="_blank"
+style="
+display:inline-block;
+background:#5B2C90;
+color:white;
+padding:12px 24px;
+border-radius:7px;
+font-weight:bold;
+text-decoration:none;
+">
+
+Submit Examiner's Report
+
+</a>
+
+<p style="
+font-size:12px;
+color:#777;
+margin-bottom:0;
+">
+
+This link is unique to you and this Viva case.
+
+</p>
+
+</div>
+
+</li>
+
+
+<!-- =====================================================
+     ANNOTATED THESIS
+====================================================== -->
+
+<li style="margin-top:15px;">
+
+Please upload your
+<strong>Annotated Thesis</strong>
+using the secure submission link below.
+
+<br><br>
+
+<div style="
+padding:18px;
+background:#F7F4FC;
+border-radius:8px;
+text-align:center;
+">
+
+<p style="
+margin-top:0;
+font-weight:bold;
+color:#5B2C90;
+">
+
+📝 Upload Annotated Thesis
+
+</p>
+
+<a
+href="{{AnnotatedThesisUploadLink}}"
+target="_blank"
+style="
+display:inline-block;
+background:#5B2C90;
+color:white;
+padding:12px 24px;
+border-radius:7px;
+font-weight:bold;
+text-decoration:none;
+">
+
+Upload Annotated Thesis
+
+</a>
+
+<p style="
+font-size:12px;
+color:#777;
+margin-bottom:0;
+">
+
+This link is unique to you and this Viva case.
+
+</p>
+
+</div>
+
 </li>
 
 
 <li style="margin-top:15px;">
+
 All thesis documents are strictly confidential and should not be
 shared with any third party.
+
 </li>
 
 </ol>
 
 
 <p style="margin-top:30px;line-height:1.8;">
+
 We sincerely appreciate your valuable contribution towards maintaining
 the quality of postgraduate education at Universiti Sains Malaysia.
+
 </p>
 
 
 <p style="line-height:1.8;">
+
 Should you require any assistance, please contact
 Mrs Nur Anis Syamimi
 (<a href="mailto:anissyamimi@usm.my">
 anissyamimi@usm.my
 </a>),
 Assistant Registrar, Academic &amp; International Division, PKTAAB.
+
 </p>
 
 
@@ -209,9 +352,11 @@ Yours sincerely,
 </p>
 
 <p>
+
 <strong>Academic &amp; International Division</strong><br>
 Pusat Kanser Tun Abdullah Ahmad Badawi (PKTAAB)<br>
 Universiti Sains Malaysia
+
 </p>
 
 
