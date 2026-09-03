@@ -15,6 +15,7 @@ import activityRoutes from "./routes/activityRoutes.js";
 import emailRoutes from "./routes/emailRoutes.js";
 import scheduleRoutes from "./routes/scheduleRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 import staffRoutes from "./routes/staffRoutes.js";
 import panelRoutes from "./routes/panelRoutes.js";
 import acknowledgementRoutes
@@ -53,6 +54,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/emails", emailRoutes);
 app.use("/api/schedule", scheduleRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/auth", authRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/staff", staffRoutes);
 app.use("/api/panel", panelRoutes);
