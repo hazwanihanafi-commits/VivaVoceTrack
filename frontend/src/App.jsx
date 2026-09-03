@@ -10,10 +10,16 @@ import Schedule from "./pages/Schedule";
 import Reports from "./pages/Reports";
 import Acknowledgement from "./pages/Acknowledgement";
 import PanelResponse from "./pages/PanelResponse";
+import ReportSubmission from "./pages/ReportSubmission";
 
 export default function App() {
   return (
     <Routes>
+
+      <Route
+  path="/report-submission"
+  element={<ReportSubmission />}
+/>
 
       {/* ==================================================
           EXTERNAL EXAMINER RESPONSE
