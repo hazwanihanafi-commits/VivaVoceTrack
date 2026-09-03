@@ -122,9 +122,34 @@ export default function ReportSubmission() {
         }
 
 
-        setInfo(
-          result.data
-        );
+        setInfo({
+  CaseID:
+    result.case?.CaseID || "",
+
+  Role:
+    result.examiner?.ExaminerType || "",
+
+  PersonID:
+    result.examiner?.ExaminerID || "",
+
+  ExaminerName:
+    result.examiner?.ExaminerName || "",
+
+  ReportDueDate:
+    result.case?.ReportDueDate || "",
+
+  ReportReceived:
+    result.report?.status || "Not Submitted",
+
+  ReportReceivedDate:
+    result.report?.date || "",
+
+  ReportFileName:
+    result.report?.fileName || "",
+
+  ReportFileURL:
+    result.report?.fileURL || "",
+});
 
       }
 
@@ -230,145 +255,115 @@ export default function ReportSubmission() {
    * SUBMIT REPORT
    * ====================================================
    */
-  async function handleSubmit(
-    event
-  ) {
+  async function handleSubmit(event) {
+  event.preventDefault();
 
-    event.preventDefault();
-
-
-    if (!file) {
-
-      setError(
-        "Please select your report file."
-      );
-
-      return;
-
-    }
-
-
-    if (!info?.PanelID) {
-
-      setError(
-        "Panel invitation has not been created yet."
-      );
-
-      return;
-
-    }
-
-
-    try {
-
-      setUploading(true);
-
-      setError("");
-
-      setMessage("");
-
-
-      const formData =
-        new FormData();
-
-
-      formData.append(
-        "report",
-        file
-      );
-
-
-      const response =
-        await fetch(
-          `${API}/api/reports/panel/${encodeURIComponent(
-            info.PanelID
-          )}/upload`,
-          {
-            method:
-              "POST",
-
-            body:
-              formData,
-          }
-        );
-
-
-      const result =
-        await response.json();
-
-
-      if (
-        !response.ok ||
-        !result.success
-      ) {
-
-        throw new Error(
-          result.message ||
-          "Report upload failed."
-        );
-
-      }
-
-
-      setMessage(
-        "Your report has been submitted successfully."
-      );
-
-
-      /**
-       * Update screen immediately.
-       */
-      setInfo(
-        (previous) => ({
-          ...previous,
-
-          ReportReceived:
-            "Yes",
-
-          ReportReceivedDate:
-            result.data
-              ?.ReportUploadedDate ||
-            new Date().toISOString(),
-
-          ReportFileName:
-            result.data
-              ?.ReportFileName ||
-            file.name,
-
-          ReportFileURL:
-            result.data
-              ?.ReportFileURL ||
-            "",
-        })
-      );
-
-
-      setFile(null);
-
-
-    }
-
-    catch (err) {
-
-      console.error(
-        err
-      );
-
-      setError(
-        err.message
-      );
-
-    }
-
-    finally {
-
-      setUploading(false);
-
-    }
-
+  if (!file) {
+    setError(
+      "Please select your report file."
+    );
+    return;
   }
 
+  if (!caseID || !examinerID) {
+    setError(
+      "Invalid report submission link."
+    );
+    return;
+  }
 
+  try {
+    setUploading(true);
+    setError("");
+    setMessage("");
+
+    const formData = new FormData();
+
+    formData.append(
+      "report",
+      file
+    );
+
+    formData.append(
+      "caseID",
+      caseID
+    );
+
+    formData.append(
+      "examinerID",
+      examinerID
+    );
+
+    const response = await fetch(
+      `${API}/api/reports/submit`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    const result =
+      await response.json();
+
+    if (
+      !response.ok ||
+      !result.success
+    ) {
+      throw new Error(
+        result.message ||
+        "Report upload failed."
+      );
+    }
+
+    setMessage(
+      "Your report has been submitted successfully."
+    );
+
+    /**
+     * Update screen immediately
+     */
+    setInfo((previous) => ({
+      ...previous,
+
+      ReportReceived:
+        "Yes",
+
+      ReportReceivedDate:
+        result.data
+          ?.ReportUploadedDate ||
+        new Date().toISOString(),
+
+      ReportFileName:
+        result.data
+          ?.ReportFileName ||
+        file.name,
+
+      ReportFileURL:
+        result.data
+          ?.ReportFileURL ||
+        "",
+    }));
+
+    setFile(null);
+
+  } catch (err) {
+
+    console.error(
+      "SUBMIT REPORT ERROR:",
+      err
+    );
+
+    setError(
+      err.message
+    );
+
+  } finally {
+
+    setUploading(false);
+
+  }
+} 
+  
   /**
    * ====================================================
    * LOADING
