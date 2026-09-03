@@ -288,6 +288,87 @@ export const uploadPanelReport = async (
 
 /**
  * ======================================================
+ * GET REPORT SUBMISSION INFORMATION
+ *
+ * GET /api/reports/submit-info
+ *
+ * Example:
+ * /api/reports/submit-info?caseID=VC001&examinerID=EX001
+ * ======================================================
+ */
+export const getReportSubmissionInfo = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const { caseID, examinerID } = req.query;
+
+    if (!caseID || !examinerID) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "caseID and examinerID are required.",
+      });
+    }
+
+    const rows = await getRows(SHEET);
+
+    const panel = rows.find(
+      (row) =>
+        String(row.VivaID || "")
+          .trim()
+          .toLowerCase() ===
+          String(caseID)
+            .trim()
+            .toLowerCase() &&
+        String(row.PersonID || "")
+          .trim()
+          .toLowerCase() ===
+          String(examinerID)
+            .trim()
+            .toLowerCase()
+    );
+
+    if (!panel) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Panel invitation may not have been created yet.",
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: {
+        PanelID: panel.PanelID || "",
+        VivaID: panel.VivaID || "",
+        PersonID: panel.PersonID || "",
+        PersonType: panel.PersonType || "",
+        Role: panel.Role || "",
+        Accepted: panel.Accepted || "",
+        ReportReceived:
+          panel.ReportReceived || "",
+        ReportReceivedDate:
+          panel.ReportReceivedDate || "",
+        ReportFileName:
+          panel.ReportFileName || "",
+        ReportFileURL:
+          panel.ReportFileURL || "",
+      },
+    });
+  } catch (err) {
+    console.error(
+      "GET REPORT SUBMISSION INFO ERROR:",
+      err
+    );
+
+    next(err);
+  }
+};
+
+/**
+ * ======================================================
  * APPROVE REPORT
  *
  * PUT /api/reports/:id/approve
