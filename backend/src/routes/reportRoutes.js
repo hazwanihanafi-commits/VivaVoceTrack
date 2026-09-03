@@ -10,7 +10,9 @@ import {
   approveReport,
 } from "../controllers/reportController.js";
 
-const router = express.Router();
+const router =
+  express.Router();
+
 
 /**
  * ======================================================
@@ -18,43 +20,66 @@ const router = express.Router();
  * ======================================================
  *
  * Files are kept temporarily in memory.
- * They are immediately uploaded to Google Drive.
+ *
+ * They are immediately uploaded
+ * to Google Drive.
  */
-const upload = multer({
-  storage: multer.memoryStorage(),
+const upload =
+  multer({
+    storage:
+      multer.memoryStorage(),
 
-  limits: {
-    fileSize:
-      20 * 1024 * 1024, // 20 MB
-  },
+    limits: {
+      fileSize:
+        20 * 1024 * 1024,
+    },
 
-  fileFilter: (
-    req,
-    file,
-    cb
-  ) => {
-    const allowedTypes = [
-      "application/pdf",
+    fileFilter:
+      (
+        req,
+        file,
+        cb
+      ) => {
 
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    ];
+        const allowedTypes = [
+          "application/pdf",
 
-    if (
-      allowedTypes.includes(
-        file.mimetype
-      )
-    ) {
-      cb(null, true);
-    } else {
-      cb(
-        new Error(
-          "Only PDF and DOCX files are allowed."
-        )
-      );
-    }
-  },
-});
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ];
 
+        if (
+          allowedTypes.includes(
+            file.mimetype
+          )
+        ) {
+          cb(
+            null,
+            true
+          );
+        }
+
+        else {
+          cb(
+            new Error(
+              "Only PDF and DOCX files are allowed."
+            )
+          );
+        }
+      },
+  });
+
+
+/**
+ * ======================================================
+ * REPORT SUBMISSION INFO
+ *
+ * GET
+ * /api/reports/submit-info?caseID=VC001&examinerID=EX001
+ * ======================================================
+ *
+ * IMPORTANT:
+ * This route MUST appear before /:id
+ */
 router.get(
   "/submit-info",
   getReportSubmissionInfo
@@ -73,11 +98,16 @@ router.get(
   getReports
 );
 
+
 /**
  * ======================================================
- * UPLOAD PANEL REPORT
+ * UPLOAD REPORT
  *
- * POST /api/reports/panel/:panelID/upload
+ * POST
+ * /api/reports/panel/:panelID/upload
+ *
+ * Form field:
+ * report
  * ======================================================
  */
 router.post(
@@ -85,6 +115,7 @@ router.post(
   upload.single("report"),
   uploadPanelReport
 );
+
 
 /**
  * ======================================================
@@ -98,6 +129,7 @@ router.get(
   getReport
 );
 
+
 /**
  * ======================================================
  * APPROVE REPORT
@@ -109,5 +141,6 @@ router.put(
   "/:id/approve",
   approveReport
 );
+
 
 export default router;
