@@ -7,6 +7,7 @@ import {
   uploadPanelReport,
   approveReport,
   getReportSubmissionInfo,
+  submitExaminerReport,
 } from "../controllers/reportController.js";
 
 const router = express.Router();
@@ -69,7 +70,7 @@ router.get(
 router.post(
   "/submit",
   upload.single("report"),
-  uploadPanelReport
+  submitExaminerReport
 );
 
 /**
